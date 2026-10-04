@@ -41,13 +41,13 @@
 
 ## Αναφορά
 
-Αν δείτε ή δεχτείτε συμπεριφορά που παραβιάζει αυτόν τον κώδικα, ενημερώστε τον συντηρητή
-του έργου:
+Αν δείτε ή δεχτείτε συμπεριφορά που παραβιάζει αυτόν τον κώδικα:
 
-- Στο σχόλιο ή στο issue, πατήστε **«…» → «Report content»** και επιλέξτε την αναφορά προς
-  τους διαχειριστές του αποθετηρίου. Την αναφορά τη βλέπουν μόνο οι διαχειριστές.
-- Για κάτι σοβαρό (απειλές, παρενόχληση), μπορείτε να το αναφέρετε και απευθείας στο GitHub
-  μέσω της [αναφοράς κατάχρησης](https://support.github.com/contact/report-abuse).
+- Στο σχόλιο ή στο issue, πατήστε **«…» → «Report content»**. Η αναφορά πηγαίνει στην
+  ομάδα του GitHub, που μπορεί να λάβει μέτρα για τον λογαριασμό. Το ίδιο γίνεται και μέσω
+  της [αναφοράς κατάχρησης](https://support.github.com/contact/report-abuse).
+- Ο συντηρητής του έργου (@osergios) παρακολουθεί τα issues και τις συζητήσεις, και μπορεί
+  να κρύψει ή να σβήσει σχόλια και να αποκλείσει χρήστες από το έργο.
 
 Κάθε αναφορά εξετάζεται άμεσα, δίκαια και με εχεμύθεια, και η ταυτότητα όποιου την κάνει
 προστατεύεται.
@@ -109,12 +109,13 @@ public.
 
 ## Reporting
 
-If you see or experience behaviour that breaks this code, let the project's maintainer know:
+If you see or experience behaviour that breaks this code:
 
-- On the comment or issue, click **"…" → "Report content"** and choose to report it to the
-  repository's maintainers. Only the maintainers can see the report.
-- For something serious (threats, harassment), you can also report it directly to GitHub
-  through [report abuse](https://support.github.com/contact/report-abuse).
+- On the comment or issue, click **"…" → "Report content"**. The report goes to GitHub's
+  staff, who can act on the account. You can also use
+  [report abuse](https://support.github.com/contact/report-abuse).
+- The project's maintainer (@osergios) watches issues and discussions, and can hide or
+  delete comments and block users from the project.
 
 Every report is reviewed promptly, fairly and in confidence, and the reporter's identity is
 protected.
