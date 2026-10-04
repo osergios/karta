@@ -42,9 +42,12 @@ In **«Ρυθμίσεις» → «Αντίγραφα ασφαλείας»**:
    shows the same steps):
    - download rclone from [rclone.org/downloads](https://rclone.org/downloads/) and unzip
      it;
-   - in a terminal in that folder run `rclone authorize "drive"` (or `"dropbox"`); on
-     Windows: right-click the folder → «Open in Terminal» and run
-     `.\rclone.exe authorize "drive"`;
+   - open a terminal in that folder (Windows: right-click inside the folder → «Open in
+     Terminal») and run, for Google Drive:
+     - Windows: `.\rclone.exe authorize "drive"`
+     - Mac / Linux: `./rclone authorize "drive"`
+
+     (for Dropbox write `"dropbox"` instead of `"drive"`);
    - log in in the browser that opens and press «Allow»;
    - copy the text it prints (it starts with `{"access_token"`) and paste it into the
      page.

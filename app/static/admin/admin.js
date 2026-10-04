@@ -764,7 +764,8 @@
     const kind = () => provider.value === "b2" ? "b2" : "oauth";
     const oauthHelp = el("ol", { class: "small" },
       el("li", {}, "Σε έναν υπολογιστή κατεβάστε το rclone από ", el("a", { href: "https://rclone.org/downloads/", target: "_blank", rel: "noopener" }, "rclone.org/downloads"), " και αποσυμπιέστε το zip."),
-      el("li", {}, "Σε τερματικό σε εκείνο τον φάκελο τρέξτε ", el("code", { class: "cmd" }, ""), " (Windows: δεξί κλικ στον φάκελο → «Άνοιγμα στο τερματικό»)."),
+      el("li", {}, "Ανοίξτε τερματικό σε εκείνο τον φάκελο (Windows: δεξί κλικ μέσα στον φάκελο → «Άνοιγμα στο τερματικό») και τρέξτε:",
+        el("br", {}), "Windows: ", el("code", { class: "cmd-win" }, ""), el("br", {}), "Mac / Linux: ", el("code", { class: "cmd-mac" }, "")),
       el("li", {}, "Συνδεθείτε στον browser που ανοίγει και πατήστε «Allow»."),
       el("li", {}, "Αντιγράψτε το κείμενο που τυπώνει (ξεκινά με {\"access_token\") και επικολλήστε το εδώ:"));
     const b2Help = el("p", { class: "small" }, "Στο Backblaze: B2 Cloud Storage → Buckets → Create a Bucket (Private), και Application Keys → Add a New Key. Τα πρώτα 10 GB είναι δωρεάν.");
@@ -772,7 +773,8 @@
     const b2Box = el("div", { class: "brand-form" }, b2Help, account, key, bucket);
     const sync = () => {
       oauthBox.hidden = kind() !== "oauth"; b2Box.hidden = kind() !== "b2";
-      oauthHelp.querySelector(".cmd").textContent = `rclone authorize "${provider.value}"`;
+      oauthHelp.querySelector(".cmd-win").textContent = `.\\rclone.exe authorize "${provider.value}"`;
+      oauthHelp.querySelector(".cmd-mac").textContent = `./rclone authorize "${provider.value}"`;
     };
     provider.addEventListener("change", sync); sync();
     const send = existing => act(async () => {
