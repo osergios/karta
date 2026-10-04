@@ -42,6 +42,10 @@ monthly reports.
   (via [ntfy](https://ntfy.sh)).
 - **Monthly report** exported as an Excel file.
 
+📖 **Full documentation is in the [wiki](https://github.com/osergios/karta/wiki)**:
+installation, every admin tab, the shop screen, how punches reach Ergani, alerts, and an
+FAQ. The wiki pages live in [`docs/wiki/`](docs/wiki/) and are published automatically.
+
 See [`CHANGES.md`](CHANGES.md) for the detailed history.
 
 ## Requirements
