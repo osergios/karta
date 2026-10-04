@@ -1,3 +1,3 @@
 # Test-only dependencies (the app's own are in requirements.txt).
-pytest>=8,<10
-httpx>=0.27,<1
+pytest>=9.1.1,<10
+httpx>=0.28.1,<1
