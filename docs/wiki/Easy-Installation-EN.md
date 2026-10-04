@@ -6,8 +6,8 @@ This guide is for people who are **not** programmers. At the end, Karta runs on 
 machine with a secure connection (HTTPS) on your own name, e.g.
 `https://karta.yourshop.gr`, **without** touching your router's settings.
 
-Plan on about **1–2 hours** the first time. If you get stuck, see the [FAQ](FAQ-EN) or open
-an [issue](https://github.com/osergios/karta/issues/new/choose).
+Plan on about **1–2 hours** the first time. If you get stuck, see the [FAQ](FAQ-EN) or ask
+in [Discussions](https://github.com/osergios/karta/discussions/categories/q-a).
 
 > If you're more experienced, the short version is [Installation](Installation-EN).
 

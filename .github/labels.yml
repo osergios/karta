@@ -1,0 +1,80 @@
+# Issue and pull request labels. Edit this file and push: the "Labels" workflow creates or
+# updates them on GitHub. "aliases" are old names to rename (keeps them on existing issues).
+# GitHub's own "good first issue" and "help wanted" keep their English names, because GitHub
+# features them under those names.
+
+- name: "σφάλμα"
+  color: "d73a4a"
+  description: "Κάτι δεν λειτουργεί · Something isn't working"
+  aliases: ["bug"]
+
+- name: "πρόταση"
+  color: "a2eeef"
+  description: "Νέα δυνατότητα ή βελτίωση · New feature or improvement"
+  aliases: ["enhancement"]
+
+- name: "ερώτηση"
+  color: "d876e3"
+  description: "Ερώτηση, όχι σφάλμα · A question, not a bug"
+  aliases: ["question"]
+
+- name: "τεκμηρίωση"
+  color: "0075ca"
+  description: "Οδηγός χρήσης, README, wiki · Docs"
+  aliases: ["documentation"]
+
+- name: "διπλό"
+  color: "cfd3d7"
+  description: "Υπάρχει ήδη άλλο issue · Duplicate"
+  aliases: ["duplicate"]
+
+- name: "δεν ισχύει"
+  color: "e4e669"
+  description: "Δεν είναι πρόβλημα της Karta · Invalid"
+  aliases: ["invalid"]
+
+- name: "δεν θα γίνει"
+  color: "ffffff"
+  description: "Δεν θα υλοποιηθεί · Won't fix"
+  aliases: ["wontfix"]
+
+- name: "χρειάζονται πληροφορίες"
+  color: "fbca04"
+  description: "Περιμένουμε απάντηση από όποιον το ανέφερε · Waiting for details"
+
+- name: "ΕΡΓΑΝΗ"
+  color: "1d76db"
+  description: "Αποστολή ή ανάγνωση από το ΕΡΓΑΝΗ · Ergani submission or reading"
+
+- name: "οθόνη καταστήματος"
+  color: "16897b"
+  description: "Kiosk, PIN, κάρτες QR · Shop screen"
+
+- name: "διαχείριση"
+  color: "5319e7"
+  description: "Σελίδα διαχείρισης · Admin page"
+
+- name: "αναφορές"
+  color: "0e8a16"
+  description: "Αναφορές Excel για τον λογιστή · Reports"
+
+- name: "βοήθεια εγκατάστασης"
+  color: "c5def5"
+  description: "Εγκατάσταση, Docker, Cloudflare · Installation help"
+
+- name: "ασφάλεια"
+  color: "b60205"
+  description: "Θέμα ασφαλείας (όχι ευπάθειες: αυτές ιδιωτικά) · Security hardening"
+
+- name: "εξαρτήσεις"
+  color: "0366d6"
+  description: "Ενημερώσεις βιβλιοθηκών (Dependabot) · Dependency updates"
+  aliases: ["dependencies"]
+
+- name: "good first issue"
+  color: "7057ff"
+  description: "Καλό για πρώτη συνεισφορά · Good for newcomers"
+
+- name: "help wanted"
+  color: "008672"
+  description: "Θα βοηθούσε κάποιος εθελοντής · Extra attention is needed"

@@ -1,0 +1,52 @@
+# Creates or updates the repository's labels from .github/labels.yml.
+# Labels not in the file are left alone; nothing is deleted.
+name: Labels
+
+on:
+  push:
+    branches: [main]
+    paths: [".github/labels.yml", ".github/workflows/labels.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - run: python -m pip install --quiet pyyaml
+
+      - name: Sync labels
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: python
+        run: |
+          import json, subprocess, yaml
+
+          def gh(*args, check=True):
+              return subprocess.run(["gh", *args], check=check, capture_output=True, text=True)
+
+          existing = {l["name"].casefold(): l["name"] for l in
+                      json.loads(gh("label", "list", "--limit", "500", "--json", "name").stdout)}
+          for item in yaml.safe_load(open(".github/labels.yml")):
+              name, color, desc = item["name"], item["color"], item.get("description", "")
+              old = next((existing[a.casefold()] for a in item.get("aliases", []) if a.casefold() in existing), None)
+              if name.casefold() in existing:
+                  gh("label", "edit", existing[name.casefold()], "--name", name, "--color", color, "--description", desc)
+                  print("updated", name)
+              elif old:
+                  gh("label", "edit", old, "--name", name, "--color", color, "--description", desc)
+                  existing[name.casefold()] = name
+                  print("renamed", old, "->", name)
+              else:
+                  gh("label", "create", name, "--color", color, "--description", desc)
+                  existing[name.casefold()] = name
+                  print("created", name)

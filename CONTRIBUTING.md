@@ -9,6 +9,8 @@
 
 ## Αναφορά σφάλματος ή πρόταση
 
+Για **ερωτήσεις** («πώς κάνω…;») γράψτε στις [Συζητήσεις](https://github.com/osergios/karta/discussions). Τα issues είναι για σφάλματα και συγκεκριμένες προτάσεις.
+
 Ανοίξτε ένα [issue](https://github.com/osergios/karta/issues) και γράψτε:
 
 - τι κάνατε, τι περιμένατε να γίνει και τι έγινε τελικά·
@@ -127,6 +129,8 @@ user guide, a translation, or code.
 Everyone taking part follows the [code of conduct](CODE_OF_CONDUCT.md#code-of-conduct).
 
 ## Reporting a bug or suggesting something
+
+For **questions** ("how do I…?") use [Discussions](https://github.com/osergios/karta/discussions). Issues are for bugs and concrete proposals.
 
 Open an [issue](https://github.com/osergios/karta/issues) and include:
 

@@ -1,0 +1,32 @@
+title: "[Η Karta σε εμάς] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Χρησιμοποιείτε την Karta; Πείτε μας πώς! Βοηθά και άλλες επιχειρήσεις να αποφασίσουν. · Using Karta? Tell us how! It helps other businesses decide.
+
+        ⚠️ Στιγμιότυπα μόνο χωρίς πραγματικά στοιχεία εργαζομένων. · Screenshots only without real staff details.
+
+  - type: input
+    id: business
+    attributes:
+      label: "Τι είδους επιχείρηση; · What kind of business?"
+      placeholder: "π.χ. κομμωτήριο, 6 άτομα / e.g. hair salon, 6 people"
+    validations:
+      required: true
+
+  - type: input
+    id: hardware
+    attributes:
+      label: "Πού τρέχει; · Where does it run?"
+      placeholder: "π.χ. Raspberry Pi 5 στο κατάστημα, tablet για οθόνη / e.g. Raspberry Pi 5 at the shop, tablet as the screen"
+    validations:
+      required: false
+
+  - type: textarea
+    id: story
+    attributes:
+      label: "Η εμπειρία σας · Your experience"
+      description: "Τι σας βοήθησε, τι θα θέλατε να είναι καλύτερο. · What helped, what you'd like to be better."
+    validations:
+      required: true

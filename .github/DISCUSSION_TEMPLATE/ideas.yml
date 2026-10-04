@@ -1,0 +1,30 @@
+title: "[Ιδέα] "
+labels: ["πρόταση"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Μοιραστείτε μια ιδέα για την Karta και συζητήστε τη με άλλους. Όταν η ιδέα πάρει μορφή, γίνεται issue. · Share an idea for Karta and discuss it. Once it takes shape, it becomes an issue.
+
+  - type: textarea
+    id: situation
+    attributes:
+      label: "Ποια ανάγκη έχει η επιχείρησή σας; · What does your business need?"
+      placeholder: "π.χ. Έχουμε δύο καταστήματα και οι ίδιοι εργαζόμενοι δουλεύουν και στα δύο… · e.g. We have two shops and the same staff work in both…"
+    validations:
+      required: true
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: "Η ιδέα · The idea"
+    validations:
+      required: true
+
+  - type: textarea
+    id: legal
+    attributes:
+      label: "Νομικό πλαίσιο (αν υπάρχει) · Legal basis (if any)"
+      description: "Νόμος, εγκύκλιος ή οδηγία, αν αφορά ΕΡΓΑΝΗ ή ωράρια. · Law, circular or guidance, if it concerns Ergani or schedules."
+    validations:
+      required: false

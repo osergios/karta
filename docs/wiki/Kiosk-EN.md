@@ -31,6 +31,8 @@ Windows notifications.
 
 ## Punching in and out
 
+![Punching in with a PIN](https://raw.githubusercontent.com/osergios/karta/main/docs/screenshots/kiosk-punch.gif)
+
 The start screen offers two ways:
 
 - **«Κάρτα QR»:** the employee shows a QR code to the camera, either the shop's own QR

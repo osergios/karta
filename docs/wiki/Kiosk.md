@@ -33,6 +33,8 @@
 
 ## Χτύπημα κάρτας
 
+![Χτύπημα κάρτας με PIN](https://raw.githubusercontent.com/osergios/karta/main/docs/screenshots/kiosk-punch.gif)
+
 Η αρχική οθόνη προσφέρει δύο τρόπους:
 
 - **«Κάρτα QR»:** ο εργαζόμενος δείχνει έναν κωδικό QR στην κάμερα. Μπορεί να είναι η

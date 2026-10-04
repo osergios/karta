@@ -7,7 +7,7 @@
 `https://karta.tokatastimamou.gr`, **χωρίς** να πειράξετε ρυθμίσεις στο router.
 
 Θα χρειαστείτε περίπου **1–2 ώρες** την πρώτη φορά. Αν κολλήσετε κάπου, δείτε τις
-[Συχνές ερωτήσεις](FAQ) ή ανοίξτε ένα [issue](https://github.com/osergios/karta/issues/new/choose).
+[Συχνές ερωτήσεις](FAQ) ή ρωτήστε στις [Συζητήσεις](https://github.com/osergios/karta/discussions/categories/q-a).
 
 > Αν είστε πιο έμπειρος, η σύντομη έκδοση είναι στην [Εγκατάσταση](Installation).
 

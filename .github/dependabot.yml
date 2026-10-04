@@ -13,6 +13,7 @@ updates:
     groups:
       python-packages:
         patterns: ["*"]
+    labels: ["εξαρτήσεις"]
     commit-message:
       prefix: "deps"
 
@@ -21,6 +22,7 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
+    labels: ["εξαρτήσεις"]
     commit-message:
       prefix: "docker"
 
@@ -32,5 +34,6 @@ updates:
     groups:
       github-actions:
         patterns: ["*"]
+    labels: ["εξαρτήσεις"]
     commit-message:
       prefix: "ci"

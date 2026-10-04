@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
+  - name: "💬 Ερώτηση ή βοήθεια · Question or help"
+    url: https://github.com/osergios/karta/discussions/categories/q-a
+    about: "Για ερωτήσεις εγκατάστασης και χρήσης, γράψτε στις Συζητήσεις. · For setup and usage questions, use Discussions."
   - name: "🔒 Πρόβλημα ασφαλείας · Security problem"
     url: https://github.com/osergios/karta/security/advisories/new
     about: "Ιδιωτική αναφορά, μόνο ο συντηρητής τη βλέπει. · Private report, only the maintainer can see it."

@@ -2,6 +2,8 @@
 
 # FAQ and troubleshooting
 
+Didn't find the answer? Ask in [Discussions](https://github.com/osergios/karta/discussions/categories/q-a).
+
 ### How do I add an employee?
 
 Only from Ergani: «Ρυθμίσεις» → «ΕΡΓΑΝΗ» → «Έλεγχος ΕΡΓΑΝΗ», then import. The person

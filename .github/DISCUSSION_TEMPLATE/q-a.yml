@@ -1,0 +1,43 @@
+title: "[Ερώτηση] "
+labels: ["ερώτηση"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ρωτήστε ό,τι θέλετε για την εγκατάσταση ή τη χρήση της Karta. · Ask anything about installing or using Karta.
+
+        📖 Δείτε πρώτα τις [Συχνές ερωτήσεις](https://github.com/osergios/karta/wiki/FAQ) και την [Εύκολη εγκατάσταση](https://github.com/osergios/karta/wiki/Easy-Installation).
+        📖 First check the [FAQ](https://github.com/osergios/karta/wiki/FAQ-EN) and the [Easy installation](https://github.com/osergios/karta/wiki/Easy-Installation-EN) guide.
+
+        ⚠️ **Μη γράφετε πραγματικά προσωπικά δεδομένα** (ονόματα εργαζομένων, ΑΦΜ, κωδικούς ΕΡΓΑΝΗ, PIN, `.env`). · **Don't post real personal data.**
+
+  - type: dropdown
+    id: topic
+    attributes:
+      label: "Θέμα · Topic"
+      options:
+        - "Εγκατάσταση (Raspberry Pi, PC, cloud, Docker) · Installation"
+        - "Cloudflare (domain, tunnel, Access)"
+        - "ΕΡΓΑΝΗ (χρήστης, αποστολή, έλεγχος) · Ergani"
+        - "Οθόνη καταστήματος / κάρτες QR · Shop screen / QR cards"
+        - "Ωράρια, άδειες, υπερωρίες · Schedules, leave, overtime"
+        - "Αναφορές για τον λογιστή · Reports"
+        - "Άλλο · Other"
+    validations:
+      required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: "Η ερώτησή σας · Your question"
+      description: "Τι προσπαθείτε να κάνετε και τι συμβαίνει; · What are you trying to do, and what happens?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: setup
+    attributes:
+      label: "Πώς τρέχετε την Karta; (προαιρετικό) · How do you run Karta? (optional)"
+      placeholder: "π.χ. Raspberry Pi 4, docker compose, ERGANI_MODE=dry_run / e.g. Raspberry Pi 4, docker compose, dry_run"
+    validations:
+      required: false

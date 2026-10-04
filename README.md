@@ -12,9 +12,13 @@
 εγκατάσταση, κάθε καρτέλα της διαχείρισης, η οθόνη του καταστήματος, πώς φτάνουν τα
 χτυπήματα στο ΕΡΓΑΝΗ, ειδοποιήσεις και συχνές ερωτήσεις.
 
+💬 **Ερωτήσεις και ιδέες** στις [Συζητήσεις](https://github.com/osergios/karta/discussions).
+
 ## Στιγμιότυπα
 
 *Δοκιμαστική επιχείρηση με φανταστικούς εργαζόμενους, σε λειτουργία `dry_run`.*
+
+![Χτύπημα κάρτας με PIN: επιλογή ονόματος, PIN, προσέλευση](docs/screenshots/kiosk-punch.gif)
 
 | Οθόνη καταστήματος | Επιλογή ονόματος και μετά PIN |
 |---|---|
@@ -134,6 +138,8 @@ monthly reports. The app's screens are in Greek.
 📖 **Full documentation is in the [wiki](https://github.com/osergios/karta/wiki/Home-EN)**:
 installation, every admin tab, the shop screen, how punches reach Ergani, alerts, and an
 FAQ. The wiki pages live in [`docs/wiki/`](docs/wiki/) and are published automatically.
+
+💬 **Questions and ideas** go to [Discussions](https://github.com/osergios/karta/discussions).
 
 See the screenshots above.
 

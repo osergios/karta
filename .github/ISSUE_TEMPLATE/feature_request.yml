@@ -1,6 +1,6 @@
 name: "💡 Πρόταση · Feature request"
 description: "Ιδέα για νέα δυνατότητα ή βελτίωση · An idea for a new feature or an improvement"
-labels: ["enhancement"]
+labels: ["πρόταση"]
 body:
   - type: markdown
     attributes:
