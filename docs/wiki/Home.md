@@ -1,50 +1,51 @@
-# Karta wiki
+🇬🇷 **Ελληνικά** · 🇬🇧 [English](Home-EN)
 
-**Karta** is a self-hosted digital work card (*ψηφιακή κάρτα εργασίας*) for small Greek
-businesses. Staff clock in and out on a shop screen with a PIN or a QR code, and Karta
-sends every arrival and departure to **Ergani II**. The owner manages everything from a
-web admin page, and the accountant gets monthly and yearly Excel reports.
+# Karta: οδηγός χρήσης
 
-The app's screens are in Greek. This wiki is in English, and every button or label is
-quoted exactly as it appears on screen, e.g. «Αποχώρηση…».
+Η **Karta** είναι ψηφιακή κάρτα εργασίας για μικρές επιχειρήσεις, που την εγκαθιστάτε
+στον δικό σας server. Οι εργαζόμενοι χτυπούν κάρτα στην οθόνη του καταστήματος με PIN ή
+με κωδικό QR, και η Karta στέλνει κάθε προσέλευση και αποχώρηση στο **ΕΡΓΑΝΗ ΙΙ**. Ο
+ιδιοκτήτης διαχειρίζεται τα πάντα από μια σελίδα διαχείρισης στον browser, και ο λογιστής
+παίρνει μηνιαίες και ετήσιες αναφορές σε Excel.
 
-## Start here
+## Ξεκινήστε εδώ
 
-| If you want to… | Read |
+| Αν θέλετε να… | Διαβάστε |
 |---|---|
-| Install Karta on a server | [Installation](Installation) |
-| Look up a setting in `.env` | [Configuration](Configuration) |
-| Move from testing to real Ergani submissions | [Going live](Going-Live) |
-| Set up the shop laptop or tablet | [Shop screen (kiosk)](Kiosk) |
-| Give staff a QR card on their phone | [QR cards and the phone card](QR-Cards) |
+| Εγκαταστήσετε την Karta σε server | [Εγκατάσταση](Installation) |
+| Βρείτε μια ρύθμιση του `.env` | [Ρυθμίσεις server](Configuration) |
+| Περάσετε από τις δοκιμές στις πραγματικές υποβολές στο ΕΡΓΑΝΗ | [Έναρξη κανονικής λειτουργίας](Going-Live) |
+| Στήσετε το laptop ή το tablet του καταστήματος | [Οθόνη καταστήματος](Kiosk) |
+| Δώσετε στους εργαζόμενους κάρτα QR στο κινητό | [Κάρτες QR](QR-Cards) |
 
-## The admin page, tab by tab
+## Η σελίδα διαχείρισης, καρτέλα προς καρτέλα
 
-| Tab | What it's for |
+| Καρτέλα | Για τι είναι |
 |---|---|
-| «Σήμερα» | [Today](Admin-Today): who's in, who's coming, forgotten punch-outs, alerts |
-| «Προσωπικό» | [Staff](Admin-Staff): employee cards and the «Ενέργειες ▾» menu (leave, overtime, PIN, QR…) |
-| «Ωράρια & αργίες» | [Schedules and holidays](Admin-Schedules-and-Holidays) |
-| «Αναφορές» | [Reports](Admin-Reports): monthly and yearly Excel files for the accountant |
-| «Ρυθμίσεις» | [Settings](Admin-Settings): Ergani check, limits, business details, devices, movements |
+| «Σήμερα» | [Σήμερα](Admin-Today): ποιος είναι μέσα, ποιος έρχεται, ξεχασμένες αποχωρήσεις, ειδοποιήσεις |
+| «Προσωπικό» | [Προσωπικό](Admin-Staff): οι κάρτες των εργαζομένων και το μενού «Ενέργειες ▾» (άδεια, υπερωρία, PIN, QR…) |
+| «Ωράρια & αργίες» | [Ωράρια και αργίες](Admin-Schedules-and-Holidays) |
+| «Αναφορές» | [Αναφορές](Admin-Reports): μηνιαία και ετήσια αρχεία Excel για τον λογιστή |
+| «Ρυθμίσεις» | [Ρυθμίσεις](Admin-Settings): έλεγχος ΕΡΓΑΝΗ, όρια, στοιχεία επιχείρησης, συσκευές, κινήσεις |
 
-## How it works
+## Πώς λειτουργεί
 
-- [How punches reach Ergani](Ergani-Submissions): the sending queue, statuses, late declarations, and what happens when Ergani doesn't answer
-- [Alerts and reminders](Alerts-and-Reminders): shop-screen reminders and phone notifications (ntfy)
-- [Security and privacy](Security-and-Privacy)
-- [FAQ and troubleshooting](FAQ)
+- [Πώς φτάνουν τα χτυπήματα στο ΕΡΓΑΝΗ](Ergani-Submissions): η ουρά αποστολής, οι καταστάσεις, οι εκπρόθεσμες δηλώσεις, και τι γίνεται όταν το ΕΡΓΑΝΗ δεν απαντά
+- [Ειδοποιήσεις και υπενθυμίσεις](Alerts-and-Reminders): υπενθυμίσεις στην οθόνη του καταστήματος και ειδοποιήσεις στο κινητό (ntfy)
+- [Ασφάλεια και προσωπικά δεδομένα](Security-and-Privacy)
+- [Συχνές ερωτήσεις](FAQ)
 
-## A typical day
+## Μια συνηθισμένη ημέρα
 
-1. **Morning:** an employee taps their name on the shop screen and enters their PIN, or
-   shows their QR card to the camera. Karta records the arrival and sends it to Ergani
-   within seconds.
-2. **During the day:** the owner's phone gets an alert if someone hasn't punched in a few
-   minutes after their declared start time. The shop screen also shows a reminder card and
-   plays a doorbell sound.
-3. **End of shift:** the shop screen counts down the last two minutes, then reminds the
-   person to punch out. Staying on without declared overtime triggers a phone alert.
-4. **End of month:** the owner downloads the monthly report from «Αναφορές» and sends it
-   to the accountant. It covers hours, extra hours, leave, forgotten punches and the
-   retrospective declarations (*απολογιστικές δηλώσεις*) to file.
+1. **Πρωί:** ο εργαζόμενος πατά το όνομά του στην οθόνη του καταστήματος και γράφει το
+   PIN του, ή δείχνει την κάρτα QR στην κάμερα. Η Karta καταγράφει την προσέλευση και τη
+   στέλνει στο ΕΡΓΑΝΗ μέσα σε λίγα δευτερόλεπτα.
+2. **Μέσα στη μέρα:** αν κάποιος δεν έχει χτυπήσει προσέλευση λίγα λεπτά μετά την
+   έναρξη του δηλωμένου ωραρίου του, έρχεται ειδοποίηση στο κινητό του ιδιοκτήτη. Η οθόνη
+   του καταστήματος δείχνει επίσης κάρτα υπενθύμισης με ήχο κουδουνιού.
+3. **Λήξη βάρδιας:** η οθόνη μετρά αντίστροφα τα δύο τελευταία λεπτά και μετά
+   υπενθυμίζει την αποχώρηση. Αν κάποιος μείνει χωρίς δηλωμένη υπερωρία, έρχεται
+   ειδοποίηση στο κινητό.
+4. **Τέλος του μήνα:** ο ιδιοκτήτης κατεβάζει τη μηνιαία αναφορά από τις «Αναφορές» και
+   τη στέλνει στον λογιστή. Περιέχει ώρες, επιπλέον ώρες, άδειες, ξεχασμένα χτυπήματα
+   και τις απολογιστικές δηλώσεις που πρέπει να γίνουν.

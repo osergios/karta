@@ -1,65 +1,70 @@
-# Admin: «Ρυθμίσεις» (Settings)
+🇬🇷 **Ελληνικά** · 🇬🇧 [English](Admin-Settings-EN)
+
+# Διαχείριση: «Ρυθμίσεις»
 
 ## «ΕΡΓΑΝΗ»
 
-Reads from Ergani and compares with Karta. **It never submits anything.** Of everything
-Ergani returns, Karta keeps only ΑΦΜ, full name and the declared schedule (data
-minimisation; the rest is discarded and never logged).
+Διαβάζει από το ΕΡΓΑΝΗ και συγκρίνει με την Karta. **Δεν υποβάλλει ποτέ τίποτα.** Από
+όσα επιστρέφει το ΕΡΓΑΝΗ, η Karta κρατά μόνο ΑΦΜ, ονοματεπώνυμο και δηλωμένο ωράριο
+(ελαχιστοποίηση δεδομένων· τα υπόλοιπα απορρίπτονται και δεν καταγράφονται ποτέ).
 
-| Button | What it does |
+| Κουμπί | Τι κάνει |
 |---|---|
-| **«Έλεγχος ΕΡΓΑΝΗ»** | Reads the employer, branches and current staff. Each person is marked «Νέος», «Υπάρχει ✓» or «Διαφορετική γραφή ονόματος». Tick the new ones and import them: this is how employees are added. |
-| **«Ενημέρωση στοιχείων ωραρίου από ΕΡΓΑΝΗ»** | Refreshes each employee's declared schedule, weekly hours, break and flexible arrival from Ergani, shown next to their schedule for comparison. |
-| **«Υπηρεσίες ΕΡΓΑΝΗ»** | Lists the Ergani web services available to your user (useful when checking credentials). |
+| **«Έλεγχος ΕΡΓΑΝΗ»** | Διαβάζει τον εργοδότη, τα παραρτήματα και το τρέχον προσωπικό. Κάθε άτομο σημειώνεται «Νέος», «Υπάρχει ✓» ή «Διαφορετική γραφή ονόματος». Τσεκάρετε τους νέους και τους φέρνετε: έτσι προστίθενται εργαζόμενοι. |
+| **«Ενημέρωση στοιχείων ωραρίου από ΕΡΓΑΝΗ»** | Ανανεώνει το δηλωμένο ωράριο, τις εβδομαδιαίες ώρες, το διάλειμμα και την ευέλικτη προσέλευση κάθε εργαζόμενου από το ΕΡΓΑΝΗ, και τα δείχνει δίπλα στο ωράριό του για σύγκριση. |
+| **«Υπηρεσίες ΕΡΓΑΝΗ»** | Δείχνει τις υπηρεσίες του ΕΡΓΑΝΗ που είναι διαθέσιμες στον χρήστη σας (χρήσιμο για έλεγχο των στοιχείων σύνδεσης). |
 
-## «Όρια και ειδοποιήσεις» (limits and alerts)
+## «Όρια και ειδοποιήσεις»
 
-The daily and weekly limits depend on the employment contract and on whether you work
-5 or 6 days. **Confirm them with your accountant.**
+Τα όρια ημέρας και εβδομάδας εξαρτώνται από τη σύμβαση και από το αν δουλεύετε 5 ή 6
+ημέρες. **Επιβεβαιώστε τα με τον λογιστή σας.**
 
-| Setting | Default | Meaning |
+| Ρύθμιση | Προεπιλογή | Τι σημαίνει |
 |---|---|---|
-| «Ευελιξία προσέλευσης / αποχώρησης (λεπτά)» | 5 | Phone alert if someone hasn't punched in this many minutes after their start, or is still in this long after their end. It only controls notifications; it's not a tolerance in the reports. |
-| «Επείγον μετά από (λεπτά)» | 30 | Still in this long after that → the alert becomes urgent. |
-| «Προσέλευση πριν το ωράριο (λεπτά)» | 0 | How early an arrival is accepted. Ergani has no tolerance, so 0 is the safe value. |
-| «Προθεσμία δήλωσης υπερωρίας πριν τη λήξη (λεπτά)» | 60 | Overtime or a later end must be declared in Ergani at least this long before the declared end. Shown as «υπερωρία δηλώνεται έως …». |
-| «Υπενθύμιση προθεσμίας υπερωρίας (λεπτά πριν)» | 0 (off) | Phone reminder this long before that deadline, naming who's in. |
-| «Όριο ημέρας, μετά υπερωρία (ώρες)» | 9 | Daily maximum; beyond it is υπερωρία. |
-| «Συμβατική εβδομάδα, μετά υπερεργασία (ώρες)» | 40 | Contractual week; beyond it is υπερεργασία (+20%). |
-| «Νόμιμη εβδομάδα, μετά υπερωρία (ώρες)» | 45 | Legal week (45 for a 5‑day week, 48 for 6‑day); beyond it is υπερωρία. |
-| «Ελάχιστη ανάπαυση (ώρες)» | 11 | Minimum rest between two working days. |
+| «Ευελιξία προσέλευσης / αποχώρησης (λεπτά)» | 5 | Ειδοποίηση στο κινητό αν κάποιος δεν έχει χτυπήσει προσέλευση τόσα λεπτά μετά την έναρξη, ή είναι ακόμα μέσα τόσα λεπτά μετά τη λήξη. Αφορά μόνο τις ειδοποιήσεις· δεν είναι ανοχή στις αναφορές. |
+| «Επείγον μετά από (λεπτά)» | 30 | Αν είναι ακόμα μέσα τόσο μετά, η ειδοποίηση γίνεται επείγουσα. |
+| «Προσέλευση πριν το ωράριο (λεπτά)» | 0 | Πόσο νωρίτερα γίνεται δεκτή μια προσέλευση. Το ΕΡΓΑΝΗ δεν έχει ανοχή, οπότε το 0 είναι η ασφαλής τιμή. |
+| «Προθεσμία δήλωσης υπερωρίας πριν τη λήξη (λεπτά)» | 60 | Υπερωρία ή αργότερη λήξη πρέπει να δηλωθεί στο ΕΡΓΑΝΗ τουλάχιστον τόσο πριν τη λήξη του δηλωμένου ωραρίου. Φαίνεται ως «υπερωρία δηλώνεται έως …». |
+| «Υπενθύμιση προθεσμίας υπερωρίας (λεπτά πριν)» | 0 (ανενεργή) | Υπενθύμιση στο κινητό τόσο πριν την προθεσμία, με τα ονόματα όσων είναι μέσα. |
+| «Όριο ημέρας, μετά υπερωρία (ώρες)» | 9 | Ημερήσιο ανώτατο όριο· πέρα από αυτό είναι υπερωρία. |
+| «Συμβατική εβδομάδα, μετά υπερεργασία (ώρες)» | 40 | Συμβατική εβδομάδα· πέρα από αυτή είναι υπερεργασία (+20%). |
+| «Νόμιμη εβδομάδα, μετά υπερωρία (ώρες)» | 45 | Νόμιμη εβδομάδα (45 για πενθήμερο, 48 για εξαήμερο)· πέρα από αυτή είναι υπερωρία. |
+| «Ελάχιστη ανάπαυση (ώρες)» | 11 | Ελάχιστη ανάπαυση ανάμεσα σε δύο εργάσιμες ημέρες. |
 
-The shop‑screen reminders and festive decorations switches are on the
-[Today](Admin-Today) tab.
+Οι διακόπτες για τις υπενθυμίσεις στο κατάστημα και τον γιορτινό στολισμό βρίσκονται
+στην καρτέλα [Σήμερα](Admin-Today).
 
-## «Στοιχεία επιχείρησης» (business details)
+## «Στοιχεία επιχείρησης»
 
-What staff see on the shop screen, the phone QR card and the links:
+Τι βλέπει το προσωπικό στην οθόνη του καταστήματος, στην κάρτα QR του κινητού και στους
+συνδέσμους:
 
-- **«Επωνυμία»:** the business name customers know.
-- **«Σύντομο όνομα»:** used in page titles and messages.
-- **«Χρώμα»:** the main colour, with a readability check.
-- **Logo:** PNG, JPG or WebP up to 1 MB, ideally square with a transparent background.
-  It's stored in the database, so it's included in your backups. With no logo, the name
-  is shown instead.
+- **«Επωνυμία»:** το όνομα της επιχείρησης όπως το ξέρουν οι πελάτες.
+- **«Σύντομο όνομα»:** στους τίτλους των σελίδων και στα μηνύματα.
+- **«Χρώμα»:** το κύριο χρώμα, με έλεγχο αναγνωσιμότητας.
+- **Λογότυπο:** PNG, JPG ή WebP έως 1 MB, καλύτερα τετράγωνο με διάφανο φόντο.
+  Αποθηκεύεται στη βάση, οπότε περιλαμβάνεται στα αντίγραφα ασφαλείας. Χωρίς λογότυπο,
+  εμφανίζεται το όνομα.
 
-The official employer details in the accountant's report always come from Ergani, not
-from here.
+Τα επίσημα στοιχεία του εργοδότη στην αναφορά του λογιστή έρχονται πάντα από το ΕΡΓΑΝΗ,
+όχι από εδώ.
 
-## «Συσκευές» (devices)
+## «Συσκευές»
 
-The registered shop screens: name, when registered and last seen. Create a registration
-code with **«Δημιουργία κωδικού εγγραφής»** (see [Shop screen](Kiosk)), revoke a device,
-or remove it from the list.
+Οι γραμμένες οθόνες καταστήματος: όνομα, πότε γράφτηκαν και πότε φάνηκαν τελευταία.
+Δημιουργήστε κωδικό εγγραφής με το **«Δημιουργία κωδικού εγγραφής»** (δείτε
+[Οθόνη καταστήματος](Kiosk)), ανακαλέστε μια συσκευή ή αφαιρέστε την από τη λίστα.
 
-## «Κινήσεις» (movements)
+## «Κινήσεις»
 
-The last 300 punches, with their status (see
-[How punches reach Ergani](Ergani-Submissions)) and protocol number. From here you can:
+Οι τελευταίες 300 κινήσεις, με την κατάστασή τους (δείτε
+[Πώς φτάνουν τα χτυπήματα στο ΕΡΓΑΝΗ](Ergani-Submissions)) και τον αριθμό πρωτοκόλλου.
+Από εδώ μπορείτε:
 
-- see **«Τι θα στελνόταν»**: the exact payload, in `dry_run`;
-- **retry** a failed submission;
-- decide on an **uncertain** one («Υπάρχει στο ΕΡΓΑΝΗ» / «Δεν υπάρχει — νέα αποστολή»);
-- **«Διαγραφή δοκιμαστικών κινήσεων»:** remove every punch made in `dry_run` or `trial`
-  mode. Punches made in `production` mode are never touched, including onboarding‑period
-  ones.
+- να δείτε **«Τι θα στελνόταν»**: το ακριβές περιεχόμενο, στο `dry_run`·
+- να **ξαναστείλετε** μια υποβολή που απέτυχε·
+- να αποφασίσετε για μια **αβέβαιη** («Υπάρχει στο ΕΡΓΑΝΗ» / «Δεν υπάρχει — νέα
+  αποστολή»)·
+- **«Διαγραφή δοκιμαστικών κινήσεων»:** σβήνει όλα τα χτυπήματα που έγιναν σε λειτουργία
+  `dry_run` ή `trial`. Τα χτυπήματα της λειτουργίας `production` δεν αγγίζονται ποτέ,
+  ούτε όσα έγιναν στην περίοδο προσαρμογής.

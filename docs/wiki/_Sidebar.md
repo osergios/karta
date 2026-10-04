@@ -1,23 +1,45 @@
-**[Home](Home)**
+### 🇬🇷 Ελληνικά
 
-**Setup**
-- [Installation](Installation)
-- [Configuration](Configuration)
-- [Going live](Going-Live)
+**[Αρχική](Home)**
 
-**Shop screen**
-- [Shop screen (kiosk)](Kiosk)
-- [QR cards](QR-Cards)
+**Εγκατάσταση**
+- [Εγκατάσταση](Installation)
+- [Ρυθμίσεις server](Configuration)
+- [Έναρξη λειτουργίας](Going-Live)
 
-**Admin page**
-- [«Σήμερα» Today](Admin-Today)
-- [«Προσωπικό» Staff](Admin-Staff)
-- [«Ωράρια & αργίες» Schedules](Admin-Schedules-and-Holidays)
-- [«Αναφορές» Reports](Admin-Reports)
-- [«Ρυθμίσεις» Settings](Admin-Settings)
+**Οθόνη καταστήματος**
+- [Οθόνη καταστήματος](Kiosk)
+- [Κάρτες QR](QR-Cards)
 
-**How it works**
-- [Punches and Ergani](Ergani-Submissions)
-- [Alerts and reminders](Alerts-and-Reminders)
-- [Security and privacy](Security-and-Privacy)
-- [FAQ](FAQ)
+**Σελίδα διαχείρισης**
+- [Σήμερα](Admin-Today)
+- [Προσωπικό](Admin-Staff)
+- [Ωράρια & αργίες](Admin-Schedules-and-Holidays)
+- [Αναφορές](Admin-Reports)
+- [Ρυθμίσεις](Admin-Settings)
+
+**Πώς λειτουργεί**
+- [Χτυπήματα και ΕΡΓΑΝΗ](Ergani-Submissions)
+- [Ειδοποιήσεις](Alerts-and-Reminders)
+- [Ασφάλεια](Security-and-Privacy)
+- [Συχνές ερωτήσεις](FAQ)
+
+---
+
+### 🇬🇧 English
+
+[Home](Home-EN) ·
+[Installation](Installation-EN) ·
+[Configuration](Configuration-EN) ·
+[Going live](Going-Live-EN) ·
+[Shop screen](Kiosk-EN) ·
+[QR cards](QR-Cards-EN) ·
+[Today](Admin-Today-EN) ·
+[Staff](Admin-Staff-EN) ·
+[Schedules](Admin-Schedules-and-Holidays-EN) ·
+[Reports](Admin-Reports-EN) ·
+[Settings](Admin-Settings-EN) ·
+[Ergani](Ergani-Submissions-EN) ·
+[Alerts](Alerts-and-Reminders-EN) ·
+[Security](Security-and-Privacy-EN) ·
+[FAQ](FAQ-EN)

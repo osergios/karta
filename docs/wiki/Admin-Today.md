@@ -1,62 +1,72 @@
-# Admin: «Σήμερα» (Today)
+🇬🇷 **Ελληνικά** · 🇬🇧 [English](Admin-Today-EN)
 
-The first tab of the admin page (`/admin`). It shows what's happening right now and
-anything that needs your attention. It refreshes itself every 30 seconds without wiping
-anything you're typing, and pauses while the page is in the background.
+# Διαχείριση: «Σήμερα»
 
-![Admin, today](https://raw.githubusercontent.com/osergios/karta/main/docs/screenshots/admin-today.png)
+Η πρώτη καρτέλα της σελίδας διαχείρισης (`/admin`). Δείχνει τι γίνεται αυτή τη στιγμή και
+ό,τι χρειάζεται την προσοχή σας. Ανανεώνεται μόνη της κάθε 30 δευτερόλεπτα χωρίς να
+σβήνει ό,τι γράφετε, και σταματά όσο η σελίδα είναι στο παρασκήνιο.
 
-On a computer the tabs are along the top; on a phone they're an icon bar at the bottom.
-The page reopens on the last tab you used. The alert count shows in the header.
+![Διαχείριση, σήμερα](https://raw.githubusercontent.com/osergios/karta/main/docs/screenshots/admin-today.png)
 
-## Who is where
+Στον υπολογιστή οι καρτέλες είναι στο πάνω μέρος· στο κινητό είναι μια μπάρα με εικονίδια
+στο κάτω μέρος. Η σελίδα ανοίγει στην τελευταία καρτέλα που χρησιμοποιήσατε. Ο αριθμός
+των ειδοποιήσεων φαίνεται στην κεφαλίδα.
 
-| Section | Who's in it |
+## Ποιος είναι πού
+
+| Ενότητα | Ποιοι είναι εκεί |
 |---|---|
-| «Μέσα τώρα» | Punched in and not out yet. Each card shows today's schedule, **«φεύγει έως»** (when they must leave) and **«υπερωρία δηλώνεται έως»** (the last moment to declare overtime in Ergani). |
-| «Έρχονται σήμερα» | Scheduled today but not in yet. |
-| «Έφυγαν νωρίτερα» | Punched out before the end of their day. Use «Λόγος…» to record why. |
-| «Εκτός σήμερα» | Day off («ρεπό»), leave, holiday or closure. |
+| «Μέσα τώρα» | Όσοι χτύπησαν προσέλευση και όχι ακόμα αποχώρηση. Κάθε κάρτα δείχνει το σημερινό ωράριο, το **«φεύγει έως»** και το **«υπερωρία δηλώνεται έως»** (η τελευταία στιγμή για να δηλωθεί υπερωρία στο ΕΡΓΑΝΗ). |
+| «Έρχονται σήμερα» | Όσοι έχουν ωράριο σήμερα αλλά δεν έχουν έρθει ακόμα. |
+| «Έφυγαν νωρίτερα» | Όσοι χτύπησαν αποχώρηση πριν τη λήξη της ημέρας τους. Με το «Λόγος…» καταγράφετε το γιατί. |
+| «Εκτός σήμερα» | Ρεπό, άδεια, αργία ή κλειστό κατάστημα. |
 
-Each person has the same **«Ενέργειες ▾»** menu as on the [Staff](Admin-Staff) tab.
+Κάθε άτομο έχει το ίδιο μενού **«Ενέργειες ▾»** όπως στην καρτέλα
+[Προσωπικό](Admin-Staff).
 
-## Recording a departure («Αποχώρηση…»)
+## Καταχώριση αποχώρησης («Αποχώρηση…»)
 
-Use this when someone left without punching out. You choose how:
+Χρησιμοποιήστε το όταν κάποιος έφυγε χωρίς να χτυπήσει αποχώρηση. Επιλέγετε πώς:
 
-- **«Φεύγει τώρα»:** they're leaving now; sent to Ergani in real time.
-- **«Ξέχασε να χτυπήσει»:** they forgot. The shift is closed **in Karta only**, with a
-  required note and the status «Μόνο στην κάρτα». It's **never sent** to Ergani. A
-  forgotten punch is not a technical fault, so no Ergani late‑declaration code applies.
-- **«Τεχνικό πρόβλημα»:** only for a real fault (power cut, your systems down, Ergani
-  down). Sent as a late declaration with code 001 / 002 / 003.
+- **«Φεύγει τώρα»:** φεύγει τώρα· στέλνεται στο ΕΡΓΑΝΗ σε πραγματικό χρόνο.
+- **«Ξέχασε να χτυπήσει»:** το ξέχασε. Η βάρδια κλείνει **μόνο στην Karta**, με
+  υποχρεωτική σημείωση και κατάσταση «Μόνο στην κάρτα». **Δεν στέλνεται ποτέ** στο
+  ΕΡΓΑΝΗ. Ένα ξεχασμένο χτύπημα δεν είναι τεχνικό πρόβλημα, οπότε δεν ισχύει κανένας
+  κωδικός εκπρόθεσμης δήλωσης του ΕΡΓΑΝΗ.
+- **«Τεχνικό πρόβλημα»:** μόνο για πραγματική βλάβη (διακοπή ρεύματος, πρόβλημα στα
+  συστήματά σας, πρόβλημα στο ΕΡΓΑΝΗ). Στέλνεται ως εκπρόθεσμη δήλωση με κωδικό 001 /
+  002 / 003.
 
-## Forgotten punch‑outs from earlier days
+## Ξεχασμένες αποχωρήσεις προηγούμενων ημερών
 
-Every arrival without a departure in the last 62 days is listed with a «Κλείσιμο DD/MM…»
-button, even if the person has punched in again since. For an earlier day you must enter
-the actual time on that day (no "now" option), so a shift can never accidentally span
-several days.
+Κάθε προσέλευση χωρίς αποχώρηση των τελευταίων 62 ημερών εμφανίζεται με κουμπί
+«Κλείσιμο ΗΗ/ΜΜ…», ακόμα κι αν το άτομο έχει χτυπήσει ξανά προσέλευση μετά. Για
+προηγούμενη ημέρα πρέπει να γράψετε την πραγματική ώρα εκείνης της ημέρας (δεν υπάρχει
+επιλογή «τώρα»), ώστε μια βάρδια να μην απλωθεί ποτέ κατά λάθος σε πολλές ημέρες.
 
-The monthly count of forgotten punches per employee («Ξεχασμένα χτυπήματα μήνα») turns
-into a warning from 3.
+Ο μηνιαίος αριθμός ξεχασμένων χτυπημάτων κάθε εργαζόμενου («Ξεχασμένα χτυπήματα μήνα»)
+γίνεται προειδοποίηση από το 3 και πάνω.
 
-## «Ειδοποιήσεις» (alerts)
+## «Ειδοποιήσεις»
 
-Everything the live checks have flagged today: not punched in, still in after the end,
-undeclared overtime, rest or weekly limits, Ergani errors. Mark each one done, or clear
-the whole list with «Εκκαθάριση λίστας». Ergani rejections stay until you handle them.
-See [Alerts and reminders](Alerts-and-Reminders).
+Ό,τι εντόπισαν σήμερα οι αυτόματοι έλεγχοι: δεν χτύπησε προσέλευση, είναι ακόμα μέσα μετά
+τη λήξη, μη δηλωμένη υπερωρία, όρια ανάπαυσης ή εβδομάδας, σφάλματα ΕΡΓΑΝΗ. Σημειώστε
+καθεμία ως ολοκληρωμένη, ή καθαρίστε όλη τη λίστα με την «Εκκαθάριση λίστας». Οι
+απορρίψεις από το ΕΡΓΑΝΗ μένουν μέχρι να τις χειριστείτε. Δείτε
+[Ειδοποιήσεις και υπενθυμίσεις](Alerts-and-Reminders).
 
-If phone alerts aren't configured, a note says so here («συμπλήρωσε NTFY_URL / NTFY_TOPIC
-στο .env»).
+Αν οι ειδοποιήσεις στο κινητό δεν είναι ρυθμισμένες, εμφανίζεται εδώ σημείωση
+(«συμπλήρωσε NTFY_URL / NTFY_TOPIC στο .env»).
 
-## «Οθόνη καταστήματος και αποστολή» (shop screen and sending)
+## «Οθόνη καταστήματος και αποστολή»
 
-- **«Υπενθυμίσεις στο κατάστημα»:** shop‑screen reminders on or off.
-- **Festive decorations** on or off, with «Προεπισκόπηση» buttons for each holiday.
-- **«Λειτουργία εκπαίδευσης»:** training mode (see [Going live](Going-Live)).
-- **Onboarding period** («Υποχρεωτική από … → Έναρξη»), see [Going live](Going-Live).
-- **«Ανανέωση οθόνης»:** make the shop screen reload itself (e.g. after an update).
-- The state of the sending queue: anything pending, failed or waiting for your check.
-  See [How punches reach Ergani](Ergani-Submissions).
+- **«Υπενθυμίσεις στο κατάστημα»:** ενεργοποίηση ή απενεργοποίηση των υπενθυμίσεων στην
+  οθόνη του καταστήματος.
+- **Γιορτινός στολισμός** ενεργός ή όχι, με κουμπιά «Προεπισκόπηση» για κάθε γιορτή.
+- **«Λειτουργία εκπαίδευσης»:** δείτε [Έναρξη κανονικής λειτουργίας](Going-Live).
+- **Περίοδος προσαρμογής** («Υποχρεωτική από … → Έναρξη»): δείτε
+  [Έναρξη κανονικής λειτουργίας](Going-Live).
+- **«Ανανέωση οθόνης»:** η οθόνη του καταστήματος ξαναφορτώνει μόνη της (π.χ. μετά από
+  ενημέρωση).
+- Η κατάσταση της ουράς αποστολής: ό,τι περιμένει, απέτυχε ή χρειάζεται τον δικό σας
+  έλεγχο. Δείτε [Πώς φτάνουν τα χτυπήματα στο ΕΡΓΑΝΗ](Ergani-Submissions).

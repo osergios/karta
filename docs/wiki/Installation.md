@@ -1,34 +1,40 @@
-# Installation
+🇬🇷 **Ελληνικά** · 🇬🇧 [English](Installation-EN)
 
-Karta is one small web service: Python, FastAPI and a single SQLite database file.
-It runs comfortably on a small VPS, a home server or a Raspberry Pi‑class machine.
+# Εγκατάσταση
 
-## What you need
+Η Karta είναι μία μικρή διαδικτυακή υπηρεσία: Python, FastAPI και ένα μόνο αρχείο βάσης
+SQLite. Τρέχει άνετα σε μικρό VPS, σε server στο σπίτι ή σε μηχάνημα του μεγέθους ενός
+Raspberry Pi.
 
-- **A server with Docker** (or Python 3.12).
-- **A domain name with HTTPS**, e.g. `karta.yourshop.gr`. HTTPS is required: the shop
-  screen's login cookie is marked `Secure`, and browsers only allow the camera (for QR
-  scanning) on HTTPS pages.
-- **Cloudflare Access** in front of `/admin`. It's free for small teams. Karta has no
-  admin password of its own: it trusts the identity that Cloudflare Access signs and
-  checks it against `ADMIN_EMAILS`. See [Security and privacy](Security-and-Privacy).
-- **An Ergani web‑services user** for the business. For testing, also get a user for the
-  Ergani test environment (`trialv2eservices.yeka.gr`). See [Configuration](Configuration).
+## Τι χρειάζεστε
 
-## 1. Get the code and fill in `.env`
+- **Έναν server με Docker** (ή Python 3.12).
+- **Ένα όνομα domain με HTTPS**, π.χ. `karta.tokatastimamou.gr`. Το HTTPS είναι
+  υποχρεωτικό: το cookie εγγραφής της οθόνης του καταστήματος είναι `Secure`, και οι
+  browsers επιτρέπουν την κάμερα (για το σκανάρισμα QR) μόνο σε σελίδες HTTPS.
+- **Cloudflare Access** μπροστά από το `/admin`. Είναι δωρεάν για μικρές ομάδες. Η Karta
+  δεν έχει δικό της κωδικό διαχειριστή: εμπιστεύεται την ταυτότητα που υπογράφει το
+  Cloudflare Access και την ελέγχει με το `ADMIN_EMAILS`. Δείτε
+  [Ασφάλεια και προσωπικά δεδομένα](Security-and-Privacy).
+- **Έναν χρήστη web services του ΕΡΓΑΝΗ** για την επιχείρηση. Για δοκιμές, και έναν
+  χρήστη για το δοκιμαστικό περιβάλλον του ΕΡΓΑΝΗ (`trialv2eservices.yeka.gr`). Δείτε
+  [Ρυθμίσεις server](Configuration).
+
+## 1. Κατεβάστε τον κώδικα και συμπληρώστε το `.env`
 
 ```bash
 git clone https://github.com/osergios/karta.git
 cd karta
 cp .env.example .env
-nano .env        # fill it in; keep ERGANI_MODE=dry_run for now
+nano .env        # συμπληρώστε το· κρατήστε ERGANI_MODE=dry_run προς το παρόν
 ```
 
-Every setting is explained in [Configuration](Configuration). At minimum you need:
+Κάθε ρύθμιση εξηγείται στις [Ρυθμίσεις server](Configuration). Χρειάζεστε τουλάχιστον:
 `EMPLOYER_AFM`, `CF_ACCESS_TEAM_DOMAIN`, `CF_ACCESS_AUD`, `ADMIN_EMAILS`,
-`PUBLIC_ORIGIN`, and Ergani credentials (needed to import your staff).
+`PUBLIC_ORIGIN` και τα στοιχεία σύνδεσης στο ΕΡΓΑΝΗ (χρειάζονται για να φέρετε το
+προσωπικό).
 
-## 2. Run it
+## 2. Εκκίνηση
 
 ```bash
 docker build -t karta .
@@ -36,73 +42,81 @@ docker run -d --name karta --restart unless-stopped \
   --env-file .env -p 127.0.0.1:8000:8000 -v karta-data:/data karta
 ```
 
-- The database is `/data/workcard.db` inside the container (change it with `DB_PATH`).
-- The container runs as an unprivileged user (UID 10001). If you mount a host folder
-  instead of a named volume, make sure that user can write to it.
-- Check it's up with `curl http://127.0.0.1:8000/healthz`.
+- Η βάση δεδομένων είναι το `/data/workcard.db` μέσα στο container (αλλάζει με το
+  `DB_PATH`).
+- Το container τρέχει ως χρήστης χωρίς δικαιώματα διαχειριστή (UID 10001). Αν
+  χρησιμοποιήσετε φάκελο του server αντί για named volume, βεβαιωθείτε ότι ο χρήστης
+  αυτός μπορεί να γράψει εκεί.
+- Ελέγξτε ότι λειτουργεί με `curl http://127.0.0.1:8000/healthz`.
 
-Without Docker:
+Χωρίς Docker:
 
 ```bash
 pip install -r requirements.txt
 PYTHONPATH=vendor uvicorn app.main:app --host 127.0.0.1 --port 8000 --no-server-header
 ```
 
-## 3. Put it behind HTTPS
+## 3. Βάλτε την πίσω από HTTPS
 
-Any reverse proxy works (Caddy, nginx, Traefik), and so does **Cloudflare Tunnel**
-(`cloudflared`), which needs no open ports. Point your domain at `http://127.0.0.1:8000`.
+Δουλεύει οποιοσδήποτε reverse proxy (Caddy, nginx, Traefik), αλλά και το **Cloudflare
+Tunnel** (`cloudflared`), που δεν χρειάζεται ανοιχτές θύρες. Κατευθύνετε το domain σας
+στο `http://127.0.0.1:8000`.
 
-If your proxy sets the client address, pass it as the `X-Real-IP` header. Karta records
-the IP of each punch.
+Αν ο proxy σας δίνει τη διεύθυνση του χρήστη, περάστε τη στην κεφαλίδα `X-Real-IP`. Η
+Karta καταγράφει την IP κάθε χτυπήματος.
 
-## 4. Protect `/admin` with Cloudflare Access
+## 4. Προστατέψτε το `/admin` με Cloudflare Access
 
-1. In the Cloudflare Zero Trust dashboard, create a **self‑hosted application** for
-   `karta.yourshop.gr/admin` (path `admin`, covering `/admin` and everything under it).
-2. Add a policy that allows only your email address(es).
-3. Copy the application's **Audience (AUD) tag** into `CF_ACCESS_AUD`, and your team
-   domain (e.g. `yourteam.cloudflareaccess.com`) into `CF_ACCESS_TEAM_DOMAIN`.
-4. Put the same email address(es) in `ADMIN_EMAILS`.
+1. Στο Cloudflare Zero Trust, δημιουργήστε μια **self‑hosted application** για το
+   `karta.tokatastimamou.gr/admin` (διαδρομή `admin`, ώστε να καλύπτει το `/admin` και ό,τι
+   είναι κάτω από αυτό).
+2. Προσθέστε μια πολιτική (policy) που επιτρέπει μόνο τα δικά σας email.
+3. Αντιγράψτε το **Audience (AUD) tag** της εφαρμογής στο `CF_ACCESS_AUD`, και το team
+   domain σας (π.χ. `yourteam.cloudflareaccess.com`) στο `CF_ACCESS_TEAM_DOMAIN`.
+4. Βάλτε τα ίδια email στο `ADMIN_EMAILS`.
 
-Leave the rest of the site (the shop screen, `/enroll`, `/c/…`, `/api/…`) **outside**
-Cloudflare Access. Those pages have their own protection; see
-[Security and privacy](Security-and-Privacy).
+Αφήστε το υπόλοιπο site (οθόνη καταστήματος, `/enroll`, `/c/…`, `/api/…`) **έξω** από το
+Cloudflare Access. Αυτές οι σελίδες έχουν δική τους προστασία· δείτε
+[Ασφάλεια και προσωπικά δεδομένα](Security-and-Privacy).
 
-## 5. First login and setup
+## 5. Πρώτη σύνδεση και αρχικές ρυθμίσεις
 
-1. Open `https://karta.yourshop.gr/admin` and log in through Cloudflare Access.
-2. **«Ρυθμίσεις» → «ΕΡΓΑΝΗ» → «Έλεγχος ΕΡΓΑΝΗ»**: reads your employer details,
-   branches and current staff from Ergani, and lets you import the employees. This is the
-   only way to add staff. Each new employee gets a 6‑digit PIN, shown once. Write it down
-   or give it to them.
-3. **«Ρυθμίσεις» → «Στοιχεία επιχείρησης»**: shop name, short name, colour and logo.
-4. **«Ωράρια & αργίες»**: check each person's schedule (see
-   [Schedules and holidays](Admin-Schedules-and-Holidays)).
-5. **«Ρυθμίσεις» → «Συσκευές» → «Δημιουργία κωδικού εγγραφής»**: register the shop
-   laptop or tablet (see [Shop screen](Kiosk)).
-6. When everything looks right, follow [Going live](Going-Live).
+1. Ανοίξτε το `https://karta.tokatastimamou.gr/admin` και συνδεθείτε μέσω Cloudflare
+   Access.
+2. **«Ρυθμίσεις» → «ΕΡΓΑΝΗ» → «Έλεγχος ΕΡΓΑΝΗ»**: διαβάζει από το ΕΡΓΑΝΗ τα στοιχεία
+   του εργοδότη, τα παραρτήματα και το τρέχον προσωπικό, και σας αφήνει να φέρετε τους
+   εργαζόμενους. Μόνο έτσι προστίθεται προσωπικό. Κάθε νέος εργαζόμενος παίρνει PIN 6
+   ψηφίων, που εμφανίζεται μία φορά: σημειώστε το ή δώστε το στον εργαζόμενο.
+3. **«Ρυθμίσεις» → «Στοιχεία επιχείρησης»**: όνομα, σύντομο όνομα, χρώμα και λογότυπο.
+4. **«Ωράρια & αργίες»**: ελέγξτε το ωράριο κάθε εργαζόμενου (δείτε
+   [Ωράρια και αργίες](Admin-Schedules-and-Holidays)).
+5. **«Ρυθμίσεις» → «Συσκευές» → «Δημιουργία κωδικού εγγραφής»**: γράψτε το laptop ή
+   το tablet του καταστήματος (δείτε [Οθόνη καταστήματος](Kiosk)).
+6. Όταν όλα είναι σωστά, ακολουθήστε την
+   [Έναρξη κανονικής λειτουργίας](Going-Live).
 
-## Backups
+## Αντίγραφα ασφαλείας
 
-Everything (employees, PIN hashes, punches, schedules, settings, logo) is in the one
-SQLite file. Back up the `/data` volume regularly and keep the copies encrypted: they
-contain staff data. Also keep a safe copy of your `.env`, especially `PIN_KEY`.
+Τα πάντα (εργαζόμενοι, PIN σε κρυπτογραφική σύνοψη, χτυπήματα, ωράρια, ρυθμίσεις,
+λογότυπο) βρίσκονται στο ένα αρχείο SQLite. Κρατάτε τακτικά αντίγραφα του volume `/data`
+και φυλάξτε τα κρυπτογραφημένα, γιατί περιέχουν στοιχεία του προσωπικού. Φυλάξτε επίσης
+αντίγραφο του `.env`, ιδίως του `PIN_KEY`.
 
-To copy the database while the app is running, use SQLite's backup command rather than a
-plain `cp`:
+Για να αντιγράψετε τη βάση ενώ η εφαρμογή τρέχει, χρησιμοποιήστε την εντολή backup της
+SQLite και όχι απλό `cp`:
 
 ```bash
 docker exec karta python -c "import sqlite3; s=sqlite3.connect('/data/workcard.db'); d=sqlite3.connect('/data/backup.db'); s.backup(d)"
 ```
 
-## Updating
+## Ενημέρωση σε νέα έκδοση
 
 ```bash
 git pull
 docker build -t karta .
-docker rm -f karta && docker run -d --name karta ... (same command as above)
+docker rm -f karta && docker run -d --name karta ... (η ίδια εντολή όπως παραπάνω)
 ```
 
-Database changes are applied automatically at startup. After an update, use
-**«Σήμερα» → «Οθόνη καταστήματος και αποστολή» → «Ανανέωση οθόνης»** to make the shop screen reload itself.
+Οι αλλαγές στη βάση εφαρμόζονται αυτόματα στην εκκίνηση. Μετά την ενημέρωση, πατήστε
+**«Σήμερα» → «Οθόνη καταστήματος και αποστολή» → «Ανανέωση οθόνης»** για να ξαναφορτώσει
+μόνη της η οθόνη του καταστήματος.

@@ -1,52 +1,58 @@
-# Alerts and reminders
+🇬🇷 **Ελληνικά** · 🇬🇧 [English](Alerts-and-Reminders-EN)
 
-Karta checks who is working every 15 seconds and tells the right people:
+# Ειδοποιήσεις και υπενθυμίσεις
 
-| Where | Who sees it | What |
+Η Karta ελέγχει ποιος δουλεύει κάθε 15 δευτερόλεπτα και ενημερώνει όποιον πρέπει:
+
+| Πού | Ποιος το βλέπει | Τι |
 |---|---|---|
-| **Shop screen** | Staff | Neutral reminders only: "time to punch in", "time to punch out". Each has a doorbell sound and a Windows notification. |
-| **Admin page** | You | Every alert, with full detail («Σήμερα» → «Ειδοποιήσεις»). |
-| **Your phone** (ntfy) | You | The same alerts as push notifications. Set `NTFY_URL` / `NTFY_TOPIC`; see [Configuration](Configuration). |
+| **Οθόνη καταστήματος** | Το προσωπικό | Μόνο ουδέτερες υπενθυμίσεις: «ώρα για προσέλευση», «ώρα για αποχώρηση». Η καθεμία έχει ήχο κουδουνιού και ειδοποίηση των Windows. |
+| **Σελίδα διαχείρισης** | Εσείς | Όλες οι ειδοποιήσεις, με πλήρεις λεπτομέρειες («Σήμερα» → «Ειδοποιήσεις»). |
+| **Το κινητό σας** (ntfy) | Εσείς | Οι ίδιες ειδοποιήσεις ως push. Ορίστε τα `NTFY_URL` / `NTFY_TOPIC`· δείτε [Ρυθμίσεις server](Configuration). |
 
-Each alert is raised **once** per person, per day and per kind, so you won't get spammed.
-Phone alerts are sent in the background and never slow down a punch.
+Κάθε ειδοποίηση βγαίνει **μία φορά** ανά άτομο, ανά ημέρα και ανά είδος, ώστε να μη
+γεμίζετε μηνύματα. Οι ειδοποιήσεις στο κινητό στέλνονται στο παρασκήνιο και δεν
+καθυστερούν ποτέ ένα χτύπημα.
 
-## Shop‑screen reminders
+## Υπενθυμίσεις στην οθόνη του καταστήματος
 
-See [Shop screen → Reminders](Kiosk#reminders-on-the-shop-screen). They repeat every 30
-seconds until the person punches. Turn them off with «Υπενθυμίσεις στο κατάστημα» on the
-[Today](Admin-Today) tab.
+Δείτε [Οθόνη καταστήματος → Υπενθυμίσεις](Kiosk#υπενθυμίσεις-στην-οθόνη-καταστήματος).
+Επαναλαμβάνονται κάθε 30 δευτερόλεπτα μέχρι να χτυπήσει το άτομο. Απενεργοποιούνται με
+τις «Υπενθυμίσεις στο κατάστημα» στην καρτέλα [Σήμερα](Admin-Today).
 
-## Phone and admin alerts
+## Ειδοποιήσεις στο κινητό και στη σελίδα διαχείρισης
 
-| Alert | When |
+| Ειδοποίηση | Πότε |
 |---|---|
-| Didn't punch in | «Ευελιξία» minutes (default 5) after the start of a scheduled part, if not in. |
-| Still in after the end | «Ευελιξία» minutes after the end (or after the end + break «εκτός ωραρίου»). It becomes **urgent** after «Επείγον μετά από» minutes (default 30). It says «μη δηλωμένη υπερωρία — να χτυπήσει αποχώρηση ΤΩΡΑ, με την πραγματική ώρα» when no overtime was declared. |
-| Overtime deadline (optional) | «Υπενθύμιση προθεσμίας υπερωρίας» minutes before the deadline to declare overtime, naming who's in. Off by default. |
-| Daily / weekly limits, rest | Close to or past the daily limit, past the contractual or legal week, or less than the minimum rest between days. |
-| Left early | Punched out before the end of the day (an info note on the admin page, not a phone alert). Record why with «Λόγος…». |
-| Work outside the schedule | Punching in on a day without declared hours. |
-| Early arrival refused | Someone tried to punch in before their start (once a day per person). |
-| Closed day | Someone tried to punch in on a holiday or closure. |
-| Punch during leave | Someone on leave punched. |
-| "Leaving, didn't punch in" | Someone chose «Φεύγω — ενημέρωσε τη διαχείριση» on the shop screen. |
-| Sending problems | A punch was rejected, the Ergani login failed, or a submission is uncertain. See [How punches reach Ergani](Ergani-Submissions). |
-| Onboarding period | On its last day and on the first mandatory day. |
+| Δεν χτύπησε προσέλευση | Τόσα λεπτά όσα η «Ευελιξία» (προεπιλογή 5) μετά την έναρξη ενός τμήματος του ωραρίου, αν δεν είναι μέσα. |
+| Ακόμα μέσα μετά τη λήξη | Τόσα λεπτά όσα η «Ευελιξία» μετά τη λήξη (ή μετά τη λήξη + διάλειμμα «εκτός ωραρίου»). Γίνεται **επείγουσα** μετά από τα λεπτά της ρύθμισης «Επείγον μετά από» (προεπιλογή 30). Αν δεν δηλώθηκε υπερωρία, γράφει «μη δηλωμένη υπερωρία — να χτυπήσει αποχώρηση ΤΩΡΑ, με την πραγματική ώρα». |
+| Προθεσμία υπερωρίας (προαιρετικά) | Τόσα λεπτά όσα η «Υπενθύμιση προθεσμίας υπερωρίας» πριν την προθεσμία δήλωσης υπερωρίας, με τα ονόματα όσων είναι μέσα. Ανενεργή από προεπιλογή. |
+| Όρια ημέρας / εβδομάδας, ανάπαυση | Κοντά ή πέρα από το ημερήσιο όριο, πέρα από τη συμβατική ή τη νόμιμη εβδομάδα, ή λιγότερη από την ελάχιστη ανάπαυση ανάμεσα σε δύο ημέρες. |
+| Έφυγε νωρίτερα | Χτύπησε αποχώρηση πριν τη λήξη της ημέρας (σημείωση στη σελίδα διαχείρισης, όχι ειδοποίηση στο κινητό). Καταγράψτε τον λόγο με το «Λόγος…». |
+| Εργασία εκτός ωραρίου | Προσέλευση σε ημέρα χωρίς δηλωμένες ώρες. |
+| Απορρίφθηκε νωρίτερη προσέλευση | Κάποιος προσπάθησε να χτυπήσει προσέλευση πριν την έναρξη (μία φορά τη μέρα ανά άτομο). |
+| Κλειστή ημέρα | Κάποιος προσπάθησε να χτυπήσει προσέλευση σε αργία ή ημέρα κλεισίματος. |
+| Χτύπημα σε άδεια | Κάποιος που είναι σε άδεια χτύπησε κάρτα. |
+| «Φεύγει χωρίς προσέλευση» | Κάποιος επέλεξε «Φεύγω — ενημέρωσε τη διαχείριση» στην οθόνη του καταστήματος. |
+| Προβλήματα αποστολής | Ένα χτύπημα απορρίφθηκε, η σύνδεση στο ΕΡΓΑΝΗ απέτυχε, ή μια υποβολή είναι αβέβαιη. Δείτε [Πώς φτάνουν τα χτυπήματα στο ΕΡΓΑΝΗ](Ergani-Submissions). |
+| Περίοδος προσαρμογής | Την τελευταία της ημέρα και την πρώτη υποχρεωτική ημέρα. |
 
-## Muting
+## Σίγαση
 
-- **«Θα αργήσει σήμερα (σίγαση)»** mutes one person's punch‑in reminder and "didn't punch
-  in" alert for today.
-- Leave, holidays and closures mute everything for that person or day.
-- Punch‑out notices are never muted.
+- Το **«Θα αργήσει σήμερα (σίγαση)»** σιγεί για σήμερα την υπενθύμιση προσέλευσης και την
+  ειδοποίηση «δεν χτύπησε» ενός ατόμου.
+- Οι άδειες, οι αργίες και τα κλεισίματα σιγούν τα πάντα για εκείνο το άτομο ή την
+  ημέρα.
+- Οι ειδοποιήσεις αποχώρησης δεν σιγούν ποτέ.
 
-## Setting up ntfy
+## Ρύθμιση του ntfy
 
-1. Install the **ntfy** app on your phone (Android / iOS).
-2. Subscribe to a topic with a long, random name, e.g. `karta-7f3k9q2x`. On the public
-   server anyone who knows the name can read it.
-3. In `.env`: `NTFY_URL=https://ntfy.sh`, `NTFY_TOPIC=karta-7f3k9q2x`. Restart Karta.
+1. Εγκαταστήστε την εφαρμογή **ntfy** στο κινητό σας (Android / iOS).
+2. Εγγραφείτε σε ένα θέμα (topic) με μακρύ, τυχαίο όνομα, π.χ. `karta-7f3k9q2x`. Στον
+   δημόσιο server, όποιος ξέρει το όνομα μπορεί να διαβάσει τα μηνύματα.
+3. Στο `.env`: `NTFY_URL=https://ntfy.sh`, `NTFY_TOPIC=karta-7f3k9q2x`. Επανεκκινήστε
+   την Karta.
 
-You can also run your own ntfy server and use `NTFY_TOKEN` for access control.
-Priorities: info = normal, warning = high, urgent = max.
+Μπορείτε επίσης να τρέξετε δικό σας server ntfy και να χρησιμοποιήσετε το `NTFY_TOKEN`
+για έλεγχο πρόσβασης. Προτεραιότητες: ενημέρωση = κανονική, προσοχή = υψηλή, επείγον =
+μέγιστη.

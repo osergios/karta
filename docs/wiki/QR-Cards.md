@@ -1,53 +1,57 @@
-# QR cards and the phone card
+🇬🇷 **Ελληνικά** · 🇬🇧 [English](QR-Cards-EN)
 
-Every employee can have a **personal QR card**: an image they keep on their phone (or
-printed) and show to the shop screen's camera to punch without typing a PIN.
+# Κάρτες QR και ο σύνδεσμος για το κινητό
 
-## Issuing a card
+Κάθε εργαζόμενος μπορεί να έχει **προσωπική κάρτα QR**: μια εικόνα που κρατά στο κινητό
+του (ή τυπωμένη) και τη δείχνει στην κάμερα της οθόνης του καταστήματος για να χτυπήσει
+κάρτα χωρίς PIN.
 
-On the admin page, «Προσωπικό» → the employee's «Ενέργειες ▾» → **«Κάρτα QR»**.
-Karta creates a new random code and shows the card image. You can then:
+## Έκδοση κάρτας
 
-- **print it**, or save the image and send it yourself; or
-- create a **«Σύνδεσμος για το κινητό»**: a personal link you send by Viber, WhatsApp
-  or SMS. The employee opens it, taps **«Αποθήκευση εικόνας»** and keeps the card in
-  their phone's photos. The page uses your business name («η προσωπική σου κάρτα
-  εργασίας για το …»).
+Στη σελίδα διαχείρισης: «Προσωπικό» → «Ενέργειες ▾» του εργαζόμενου → **«Κάρτα QR»**. Η
+Karta δημιουργεί νέο τυχαίο κωδικό και δείχνει την εικόνα της κάρτας. Μετά μπορείτε:
 
-Rules for the link:
+- να την **εκτυπώσετε**, ή να αποθηκεύσετε την εικόνα και να τη στείλετε εσείς· ή
+- να δημιουργήσετε **«Σύνδεσμος για το κινητό»**: έναν προσωπικό σύνδεσμο που στέλνετε
+  με Viber, WhatsApp ή SMS. Ο εργαζόμενος τον ανοίγει, πατά **«Αποθήκευση εικόνας»** και
+  κρατά την κάρτα στις φωτογραφίες του κινητού του. Η σελίδα γράφει το όνομα της
+  επιχείρησής σας («η προσωπική σου κάρτα εργασίας για το …»).
 
-- It's valid for **24 hours** and can be opened **10 times** at most.
-- It stops working at once if you cancel it or issue a new card.
-- It needs `PIN_KEY` in `.env` (see [Configuration](Configuration)). Without it, a card
-  can only be shown once, when it's created.
+Κανόνες για τον σύνδεσμο:
 
-## Replacing or cancelling a card
+- Ισχύει **24 ώρες** και ανοίγει το πολύ **10 φορές**.
+- Σταματά αμέσως αν τον ακυρώσετε ή αν εκδώσετε νέα κάρτα.
+- Χρειάζεται το `PIN_KEY` στο `.env` (δείτε [Ρυθμίσεις server](Configuration)). Χωρίς
+  αυτό, μια κάρτα εμφανίζεται μόνο μία φορά, τη στιγμή που δημιουργείται.
 
-- Issuing a new card makes the old one stop working immediately (lost phone, card shared
-  with someone else…).
-- «Ενέργειες ▾» → cancel the card or the link to stop it with no replacement.
+## Αντικατάσταση ή ακύρωση κάρτας
 
-## The card on the phone (`/c/…`)
+- Με την έκδοση νέας κάρτας, η παλιά σταματά αμέσως να λειτουργεί (χαμένο κινητό, κάρτα
+  που δόθηκε σε άλλον…).
+- Από το «Ενέργειες ▾» μπορείτε να ακυρώσετε την κάρτα ή τον σύνδεσμο χωρίς να δώσετε
+  νέα.
 
-The link opens a page that greets the employee by name and shows their card image, with
-short instructions:
+## Η κάρτα στο κινητό (`/c/…`)
 
-1. Tap «Αποθήκευση εικόνας» to save the card to the phone's photos.
-2. At the shop, tap «Κάρτα QR» on the shop screen and show the image to the camera, with
-   the phone's brightness turned up.
-3. Changed phone or lost the image? Ask for a new card.
+Ο σύνδεσμος ανοίγει μια σελίδα που χαιρετά τον εργαζόμενο με το όνομά του και δείχνει την
+εικόνα της κάρτας του, με σύντομες οδηγίες:
 
-The card is just a saved image, so it works without mobile data. The page never shows
-the PIN or any other personal data. After the link expires, the page only says the link
-is no longer valid.
+1. Πατήστε «Αποθήκευση εικόνας» για να μπει η κάρτα στις φωτογραφίες του κινητού.
+2. Στο κατάστημα, πατήστε «Κάρτα QR» στην οθόνη και δείξτε την εικόνα στην κάμερα, με τη
+   φωτεινότητα του κινητού στο μέγιστο.
+3. Αλλάξατε κινητό ή χάθηκε η εικόνα; Ζητήστε νέα κάρτα.
 
-## Card or Ergani QR?
+Η κάρτα είναι απλώς μια αποθηκευμένη εικόνα, οπότε λειτουργεί και χωρίς δεδομένα κινητής.
+Η σελίδα δεν δείχνει ποτέ το PIN ή άλλα προσωπικά στοιχεία. Μετά τη λήξη του συνδέσμου,
+η σελίδα λέει μόνο ότι ο σύνδεσμος δεν ισχύει πια.
 
-| | Shop QR card | Ergani / myErgani QR |
+## Κάρτα καταστήματος ή QR ΕΡΓΑΝΗ;
+
+| | Κάρτα QR καταστήματος | QR ΕΡΓΑΝΗ / myErgani |
 |---|---|---|
-| Who issues it | You, from Karta | Ergani |
-| Contains a secret | Yes (random code, stored hashed) | No: a copy works like the original |
-| Can be cancelled | Yes, instantly | No |
-| Works at the shop screen | Yes | Yes (matched on ΑΦΜ + surname) |
+| Ποιος την εκδίδει | Εσείς, από την Karta | Το ΕΡΓΑΝΗ |
+| Περιέχει μυστικό | Ναι (τυχαίος κωδικός, αποθηκευμένος ως σύνοψη) | Όχι: ένα αντίγραφο λειτουργεί όπως το πρωτότυπο |
+| Ακυρώνεται | Ναι, αμέσως | Όχι |
+| Λειτουργεί στην οθόνη καταστήματος | Ναι | Ναι (ταίριασμα με ΑΦΜ + επώνυμο) |
 
-Both work side by side. The shop card is the safer choice.
+Λειτουργούν και τα δύο μαζί. Η κάρτα του καταστήματος είναι η ασφαλέστερη επιλογή.

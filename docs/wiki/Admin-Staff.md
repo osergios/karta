@@ -1,61 +1,68 @@
-# Admin: «Προσωπικό» (Staff)
+🇬🇷 **Ελληνικά** · 🇬🇧 [English](Admin-Staff-EN)
 
-One card per employee, showing their status («Σε βάρδια», «Εκτός», «Σε άδεια»,
-«Κλειστά», «Ανενεργός»), their official name and ΑΦΜ, and today's schedule.
+# Διαχείριση: «Προσωπικό»
 
-![Admin, staff](https://raw.githubusercontent.com/osergios/karta/main/docs/screenshots/admin-staff.png)
+Μία κάρτα για κάθε εργαζόμενο, με την κατάστασή του («Σε βάρδια», «Εκτός», «Σε άδεια»,
+«Κλειστά», «Ανενεργός»), το επίσημο ονοματεπώνυμο και το ΑΦΜ του, και το σημερινό του
+ωράριο.
 
-## Adding employees
+![Διαχείριση, προσωπικό](https://raw.githubusercontent.com/osergios/karta/main/docs/screenshots/admin-staff.png)
 
-Employees come **only from Ergani**: «Ρυθμίσεις» → «ΕΡΓΑΝΗ» → «Έλεγχος ΕΡΓΑΝΗ» (see
-[Settings](Admin-Settings)). This guarantees that ΑΦΜ and full name are exactly as in
-Ergani, which the declarations need. You choose a short **display name** for the shop
-screen (e.g. "Μαρία"). Reports for the accountant always use the official name.
+## Προσθήκη εργαζομένων
 
-Each new employee gets an automatic 6‑digit PIN, shown once.
+Οι εργαζόμενοι έρχονται **μόνο από το ΕΡΓΑΝΗ**: «Ρυθμίσεις» → «ΕΡΓΑΝΗ» → «Έλεγχος
+ΕΡΓΑΝΗ» (δείτε [Ρυθμίσεις](Admin-Settings)). Έτσι το ΑΦΜ και το ονοματεπώνυμο είναι
+ακριβώς όπως στο ΕΡΓΑΝΗ, όπως χρειάζονται οι δηλώσεις. Διαλέγετε ένα σύντομο **όνομα
+εμφάνισης** για την οθόνη του καταστήματος (π.χ. «Μαρία»). Οι αναφορές για τον λογιστή
+χρησιμοποιούν πάντα το επίσημο ονοματεπώνυμο.
 
-## The «Ενέργειες ▾» menu
+Κάθε νέος εργαζόμενος παίρνει αυτόματα PIN 6 ψηφίων, που εμφανίζεται μία φορά.
 
-Frequent actions are at the top, rare ones at the bottom. On a phone the menu opens as a
-bottom sheet.
+## Το μενού «Ενέργειες ▾»
 
-### Day to day
+Οι συχνές ενέργειες είναι στην κορυφή, οι σπάνιες στο τέλος. Στο κινητό, το μενού ανοίγει
+από κάτω προς τα πάνω.
 
-| Action | What it does |
+### Καθημερινά
+
+| Ενέργεια | Τι κάνει |
 |---|---|
-| **«Αποχώρηση…»** | Record a departure: now, forgotten (Karta only), or a technical problem. See [Today](Admin-Today). |
-| **«Άδεια…»** | Leave from–to (inclusive), with a type: «Κανονική άδεια», «Άδεια ασθενείας» or «Άδεια ειδικού σκοπού», plus an optional note. On leave: no reminders, no "didn't punch in" alerts, and the report shows leave with 0 scheduled hours. A punch during leave alerts you. Nothing is sent to Ergani (the accountant declares leave there). |
-| **«Υπερωρία / αλλαγή ημέρας…»** | For one day: overtime (a later end), different hours, or no work. Enter it **after** declaring it in Ergani. Reminders, alerts, the early/closed checks and the report then follow the new hours. This is also how someone works on a holiday or a closed day. |
-| **«Θα αργήσει σήμερα (σίγαση)»** | For today only: mutes their punch‑in reminder and the "didn't punch in" phone alert. «Άρση σίγασης προσέλευσης» undoes it. Punch‑out reminders are never muted. |
-| **«Νωρίτερη προσέλευση σήμερα»** | Lets today's arrival before the declared start through. Use it only after declaring the earlier start in Ergani. |
-| **«Έφυγε νωρίτερα…»** | Why someone left before the end of the day: sickness, personal, or other (+ note), for any of the last 62 days. For sickness, it can also add sick leave from the next day in one step. |
-| **«Ξεχασμένη βάρδια…»** | Enter a whole shift that was never punched, **in Karta only** (for the report and pay; never sent to Ergani). |
+| **«Αποχώρηση…»** | Καταχώριση αποχώρησης: τώρα, ξεχασμένη (μόνο στην Karta) ή τεχνικό πρόβλημα. Δείτε [Σήμερα](Admin-Today). |
+| **«Άδεια…»** | Άδεια από–έως (μαζί και οι δύο ημέρες), με είδος: «Κανονική άδεια», «Άδεια ασθενείας» ή «Άδεια ειδικού σκοπού», και προαιρετική σημείωση. Σε άδεια: καμία υπενθύμιση, καμία ειδοποίηση «δεν χτύπησε», και η αναφορά γράφει άδεια με 0 ώρες ωραρίου. Χτύπημα μέσα σε άδεια σας ειδοποιεί. Δεν στέλνεται τίποτα στο ΕΡΓΑΝΗ (τις άδειες τις δηλώνει εκεί ο λογιστής). |
+| **«Υπερωρία / αλλαγή ημέρας…»** | Για μία ημέρα: υπερωρία (αργότερη λήξη), άλλες ώρες, ή καθόλου εργασία. Καταχωρίστε την **αφού** τη δηλώσετε στο ΕΡΓΑΝΗ. Οι υπενθυμίσεις, οι ειδοποιήσεις, οι έλεγχοι για νωρίς ή κλειστά και η αναφορά ακολουθούν τότε τις νέες ώρες. Έτσι καταχωρίζεται και η εργασία σε αργία ή σε ημέρα που το κατάστημα είναι κλειστό. |
+| **«Θα αργήσει σήμερα (σίγαση)»** | Μόνο για σήμερα: σιγεί την υπενθύμιση προσέλευσης και την ειδοποίηση «δεν χτύπησε προσέλευση» στο κινητό. Το «Άρση σίγασης προσέλευσης» την αναιρεί. Οι υπενθυμίσεις αποχώρησης δεν σιγούν ποτέ. |
+| **«Νωρίτερη προσέλευση σήμερα»** | Επιτρέπει σήμερα προσέλευση πριν την έναρξη του δηλωμένου ωραρίου. Χρησιμοποιήστε το μόνο αφού δηλώσετε τη νωρίτερη έναρξη στο ΕΡΓΑΝΗ. |
+| **«Έφυγε νωρίτερα…»** | Γιατί κάποιος έφυγε πριν τη λήξη της ημέρας: ασθένεια, προσωπικός λόγος ή άλλο (+ σημείωση), για οποιαδήποτε από τις τελευταίες 62 ημέρες. Για ασθένεια, μπορεί να προσθέσει και άδεια ασθενείας από την επόμενη ημέρα με μία κίνηση. |
+| **«Ξεχασμένη βάρδια…»** | Καταχώριση μιας ολόκληρης βάρδιας που δεν χτυπήθηκε, **μόνο στην Karta** (για την αναφορά και τη μισθοδοσία· δεν στέλνεται ποτέ στο ΕΡΓΑΝΗ). |
 
-### Setup and cards
+### Ρυθμίσεις και κάρτες
 
-| Action | What it does |
+| Ενέργεια | Τι κάνει |
 |---|---|
-| **«Ευέλικτη προσέλευση…»** | Flexible arrival window in minutes (0–120), as shown in the employee's «Ψηφιακή Οργάνωση Χρόνου Εργασίας» in Ergani. See below. |
-| **«Κάρτα QR»** | Issue, show or cancel their QR card. See [QR cards](QR-Cards). |
-| **«Σύνδεσμος για το κινητό»** | A 24‑hour link that delivers the QR card to their phone. |
-| **«Νέο PIN»** | Generate a new random PIN. You can also set one yourself («Ορισμός PIN»): exactly 6 digits, and easy ones like `123456` or `111111` are refused. |
-| **PIN view** | Show the current PIN. Only works with `PIN_KEY` set in `.env`. |
-| **«Μετονομασία»** | Change the display name on the shop screen. |
-| **«Απενεργοποίηση»** | Hide them from the shop screen (e.g. left the job) while keeping their history. |
-| **«Διαγραφή»** | Remove the employee completely. Only allowed when they have **no real (production) punches**, e.g. test entries or someone imported by mistake. Real punches are legal working‑time records and must be kept; use «Απενεργοποίηση» instead. |
+| **«Ευέλικτη προσέλευση…»** | Περιθώριο ευέλικτης προσέλευσης σε λεπτά (0–120), όπως φαίνεται στην «Ψηφιακή Οργάνωση Χρόνου Εργασίας» του εργαζόμενου στο ΕΡΓΑΝΗ. Δείτε παρακάτω. |
+| **«Κάρτα QR»** | Έκδοση, προβολή ή ακύρωση της κάρτας QR. Δείτε [Κάρτες QR](QR-Cards). |
+| **«Σύνδεσμος για το κινητό»** | Σύνδεσμος 24 ωρών που φέρνει την κάρτα QR στο κινητό του εργαζόμενου. |
+| **«Νέο PIN»** | Δημιουργεί νέο τυχαίο PIN. Μπορείτε επίσης να ορίσετε δικό σας («Ορισμός PIN»): ακριβώς 6 ψηφία· εύκολα PIN όπως `123456` ή `111111` δεν γίνονται δεκτά. |
+| **Προβολή PIN** | Δείχνει το τρέχον PIN. Λειτουργεί μόνο με ορισμένο `PIN_KEY` στο `.env`. |
+| **«Μετονομασία»** | Αλλάζει το όνομα εμφάνισης στην οθόνη του καταστήματος. |
+| **«Απενεργοποίηση»** | Το άτομο δεν εμφανίζεται πια στην οθόνη του καταστήματος (π.χ. έφυγε από τη δουλειά), αλλά το ιστορικό του κρατιέται. |
+| **«Διαγραφή»** | Σβήνει τον εργαζόμενο εντελώς. Επιτρέπεται μόνο όταν **δεν έχει πραγματικά χτυπήματα (production)**, π.χ. για δοκιμαστικές καταχωρίσεις ή κάποιον που προστέθηκε κατά λάθος. Τα πραγματικά χτυπήματα είναι νόμιμο αρχείο χρόνου εργασίας και πρέπει να διατηρούνται· χρησιμοποιήστε την «Απενεργοποίηση». |
 
-## Flexible arrival («Ευέλικτη προσέλευση»)
+## Ευέλικτη προσέλευση
 
-Greek law lets an employee start up to a declared number of minutes after their scheduled
-start (ν. 5239/2025, ΠΔ 80/2022 άρθρο 580 παρ. 2Α). With a window set:
+Ο νόμος επιτρέπει στον εργαζόμενο να ξεκινήσει έως έναν δηλωμένο αριθμό λεπτών μετά την
+έναρξη του ωραρίου του (ν. 5239/2025, ΠΔ 80/2022 άρθρο 580 παρ. 2Α). Με ορισμένο
+περιθώριο:
 
-- Arriving inside the window shifts the whole day by the same amount: punch‑out
-  reminders, alerts, the overtime deadline and «φεύγει έως» follow the actual arrival.
-- Arriving later than the window shifts the day by the full window only. The rest counts
-  as lateness.
-- Punch‑in reminders and the "didn't punch in" alert still count from the declared start.
-- Arriving **before** the declared start is still refused.
-- In the report, such a day counts as on schedule, with a note like «Ευέλικτη προσέλευση:
-  11:05 (+0:35 από τις 10:30) → λήξη 17:25».
+- Η προσέλευση μέσα στο περιθώριο μετατοπίζει όλη την ημέρα κατά το ίδιο διάστημα: οι
+  υπενθυμίσεις αποχώρησης, οι ειδοποιήσεις, η προθεσμία υπερωρίας και το «φεύγει έως»
+  ακολουθούν την πραγματική προσέλευση.
+- Προσέλευση μετά το περιθώριο μετατοπίζει την ημέρα μόνο κατά όλο το περιθώριο· το
+  υπόλοιπο μετρά ως καθυστέρηση.
+- Οι υπενθυμίσεις προσέλευσης και η ειδοποίηση «δεν χτύπησε» μετρούν ακόμα από την
+  έναρξη του δηλωμένου ωραρίου.
+- Η προσέλευση **πριν** την έναρξη του δηλωμένου ωραρίου εξακολουθεί να απορρίπτεται.
+- Στην αναφορά, μια τέτοια ημέρα μετρά ως «όπως το ωράριο», με σημείωση όπως «Ευέλικτη
+  προσέλευση: 11:05 (+0:35 από τις 10:30) → λήξη 17:25».
 
-With the window at 0 (the default), nothing changes.
+Με περιθώριο 0 (η προεπιλογή), δεν αλλάζει τίποτα.

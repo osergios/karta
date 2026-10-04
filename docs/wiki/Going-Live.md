@@ -1,71 +1,82 @@
-# Going live
+🇬🇷 **Ελληνικά** · 🇬🇧 [English](Going-Live-EN)
 
-Karta has three **modes** (`ERGANI_MODE` in `.env`) and two **practice features** on the
-admin page. Use them in this order, so you never send a wrong declaration to Ergani.
+# Έναρξη κανονικής λειτουργίας
 
-## The three modes
+Η Karta έχει τρεις **λειτουργίες** (`ERGANI_MODE` στο `.env`) και δύο **εργαλεία
+εξάσκησης** στη σελίδα διαχείρισης. Χρησιμοποιήστε τα με αυτή τη σειρά, ώστε να μη
+σταλεί ποτέ λάθος δήλωση στο ΕΡΓΑΝΗ.
 
-| Mode | What happens to punches | Use it for |
+## Οι τρεις λειτουργίες
+
+| Λειτουργία | Τι γίνεται με τα χτυπήματα | Πότε τη χρησιμοποιείτε |
 |---|---|---|
-| `dry_run` | **Nothing is sent.** Karta stores the exact payload it *would* send, so you can inspect it («Τι θα στελνόταν»). | First setup; checking schedules, PINs and the shop screen. |
-| `trial` | Sent to the **Ergani test environment** (`trialv2eservices.yeka.gr`). Submissions there are stamped «ΑΚΥΡΟ» and have no legal effect. | Checking that sending really works with your credentials. |
-| `production` | Sent to the **real Ergani**. | Normal use. |
+| `dry_run` | **Δεν στέλνεται τίποτα.** Η Karta κρατά ακριβώς ό,τι *θα* έστελνε, για να το ελέγξετε («Τι θα στελνόταν»). | Αρχικό στήσιμο· έλεγχος ωραρίων, PIN και οθόνης καταστήματος. |
+| `trial` | Στέλνονται στο **δοκιμαστικό περιβάλλον του ΕΡΓΑΝΗ** (`trialv2eservices.yeka.gr`). Εκεί οι υποβολές σημαίνονται «ΑΚΥΡΟ» και δεν έχουν νομική ισχύ. | Έλεγχος ότι η αποστολή δουλεύει με τα στοιχεία σας. |
+| `production` | Στέλνονται στο **πραγματικό ΕΡΓΑΝΗ**. | Κανονική χρήση. |
 
-The header of the admin page always shows the current mode, and the shop screen shows a
-small «Δοκιμαστική λειτουργία» label when not in production.
+Η κεφαλίδα της σελίδας διαχείρισης δείχνει πάντα την τρέχουσα λειτουργία, και η οθόνη
+του καταστήματος δείχνει μια μικρή ένδειξη «Δοκιμαστική λειτουργία» όταν δεν είστε σε
+production.
 
-**Each mode is its own world.** Punches made in one mode never count in another:
-who's in or out, alerts, rest checks and reports only look at the current mode. A test
-arrival in `dry_run` can never turn your first real punch into a departure. Reports only
-count from the first real punch of the current mode, so test days before it don't show
-as absences. A report made outside production is titled «Σύνοψη (ΔΟΚΙΜΗ)».
+**Κάθε λειτουργία είναι ξεχωριστός κόσμος.** Τα χτυπήματα μιας λειτουργίας δεν μετρούν
+ποτέ σε άλλη: το ποιος είναι μέσα ή έξω, οι ειδοποιήσεις, οι έλεγχοι ανάπαυσης και οι
+αναφορές λαμβάνουν υπόψη μόνο την τρέχουσα λειτουργία. Μια δοκιμαστική προσέλευση στο
+`dry_run` δεν μπορεί ποτέ να κάνει το πρώτο πραγματικό σας χτύπημα αποχώρηση. Οι αναφορές
+μετρούν από το πρώτο πραγματικό χτύπημα της τρέχουσας λειτουργίας, οπότε οι δοκιμαστικές
+ημέρες πριν από αυτό δεν εμφανίζονται ως απουσίες. Μια αναφορά εκτός production έχει
+τίτλο «Σύνοψη (ΔΟΚΙΜΗ)».
 
-When you've finished testing, «Ρυθμίσεις» → «Κινήσεις» → **«Διαγραφή δοκιμαστικών
-κινήσεων»** removes the test punches.
+Όταν τελειώσετε τις δοκιμές, το «Ρυθμίσεις» → «Κινήσεις» → **«Διαγραφή δοκιμαστικών
+κινήσεων»** σβήνει τα δοκιμαστικά χτυπήματα.
 
-## Recommended path
+## Προτεινόμενη σειρά
 
-1. **`dry_run`.** Import staff, set schedules, register the shop screen, and let everyone
-   try punching. Check the stored payloads on the admin page.
-2. **`trial`.** Set `ERGANI_TRIAL_*` in `.env`, switch the mode and restart. Make a few
-   punches and confirm they appear in the Ergani test environment.
-3. **`production`.** Switch the mode and restart. From now on every punch is a legal
-   declaration.
+1. **`dry_run`.** Φέρτε το προσωπικό, ορίστε ωράρια, γράψτε την οθόνη του καταστήματος,
+   και αφήστε όλους να δοκιμάσουν να χτυπήσουν κάρτα. Ελέγξτε τι θα στελνόταν στη σελίδα
+   διαχείρισης.
+2. **`trial`.** Συμπληρώστε τα `ERGANI_TRIAL_*` στο `.env`, αλλάξτε τη λειτουργία και
+   επανεκκινήστε. Κάντε μερικά χτυπήματα και επιβεβαιώστε ότι εμφανίζονται στο
+   δοκιμαστικό ΕΡΓΑΝΗ.
+3. **`production`.** Αλλάξτε τη λειτουργία και επανεκκινήστε. Από εδώ και πέρα κάθε
+   χτύπημα είναι νόμιμη δήλωση.
 
-## Training mode («Λειτουργία εκπαίδευσης»)
+## Λειτουργία εκπαίδευσης
 
-For showing staff how the shop screen works. Turn it on from «Σήμερα» → «Οθόνη
-καταστήματος και αποστολή».
+Για να δείξετε στο προσωπικό πώς δουλεύει η οθόνη του καταστήματος. Ενεργοποιείται από
+το «Σήμερα» → «Οθόνη καταστήματος και αποστολή».
 
-- The shop screen behaves exactly as usual (arrival → departure, PIN and QR), but
-  **nothing is stored, sent or counted**. Practice state lives in memory only.
-- A red «ΕΚΠΑΙΔΕΥΣΗ» banner and a red frame make it obvious, and the confirm and result
-  screens carry a warning.
-- It switches itself off after 60 minutes, or with «Τέλος εκπαίδευσης».
-- While it's on, real punches can't be made. When you turn it on, Karta warns you who is
-  really at work at that moment.
+- Η οθόνη του καταστήματος λειτουργεί ακριβώς όπως πάντα (προσέλευση → αποχώρηση, PIN
+  και QR), αλλά **δεν αποθηκεύεται, δεν στέλνεται και δεν μετρά τίποτα**. Η κατάσταση της
+  εξάσκησης υπάρχει μόνο στη μνήμη.
+- Ένα κόκκινο πανό «ΕΚΠΑΙΔΕΥΣΗ» και κόκκινο πλαίσιο το κάνουν φανερό, και οι οθόνες
+  επιβεβαίωσης και αποτελέσματος έχουν προειδοποίηση.
+- Απενεργοποιείται μόνη της μετά από 60 λεπτά, ή με το «Τέλος εκπαίδευσης».
+- Όσο είναι ενεργή, δεν γίνονται πραγματικά χτυπήματα. Όταν την ενεργοποιείτε, η Karta
+  σας προειδοποιεί ποιοι είναι εκείνη τη στιγμή πραγματικά στη δουλειά.
 
-## Onboarding period («Περίοδος προσαρμογής»)
+## Περίοδος προσαρμογής
 
-For a business that has time before the digital card becomes mandatory for it. Start it
-from «Σήμερα» → «Οθόνη καταστήματος και αποστολή» → «Υποχρεωτική από [date]» → «Έναρξη».
+Για επιχείρηση που έχει χρόνο μέχρι να γίνει υποχρεωτική για αυτήν η ψηφιακή κάρτα.
+Ξεκινά από το «Σήμερα» → «Οθόνη καταστήματος και αποστολή» → «Υποχρεωτική από
+[ημερομηνία]» → «Έναρξη».
 
-Until that date:
+Μέχρι εκείνη την ημερομηνία:
 
-- Staff use the card **exactly as in real life**. Punches are recorded with the status
-  «Προσαρμογή (δεν στάλθηκε)», and reminders, phone alerts, corrections and reports all
-  work.
-- **Nothing is sent to Ergani.**
-- The shop screen looks exactly as normal (no banner, no "test" wording), so nobody
-  takes it less seriously. After a punch, only a faint «✓ καταγράφηκε» line appears for a
-  few seconds.
-- A «Πώς τα πάνε» table shows, per employee: punches (and how many by QR), days done
-  correctly, corrections you had to make, and days without punches.
+- Το προσωπικό χρησιμοποιεί την κάρτα **ακριβώς όπως στην πραγματικότητα**. Τα χτυπήματα
+  καταγράφονται με κατάσταση «Προσαρμογή (δεν στάλθηκε)», και οι υπενθυμίσεις, οι
+  ειδοποιήσεις στο κινητό, οι διορθώσεις και οι αναφορές λειτουργούν κανονικά.
+- **Δεν στέλνεται τίποτα στο ΕΡΓΑΝΗ.**
+- Η οθόνη του καταστήματος φαίνεται ακριβώς όπως πάντα (χωρίς πανό, χωρίς τη λέξη
+  «δοκιμή»), ώστε να μην την πάρει κανείς λιγότερο σοβαρά. Μετά το χτύπημα εμφανίζεται
+  μόνο μια αχνή γραμμή «✓ καταγράφηκε» για λίγα δευτερόλεπτα.
+- Ένας πίνακας «Πώς τα πάνε» δείχνει για κάθε εργαζόμενο: χτυπήματα (και πόσα με QR),
+  σωστές ημέρες, διορθώσεις που χρειάστηκε να κάνετε, και ημέρες χωρίς χτυπήματα.
 
-On the mandatory date, sending starts by itself. You can end it earlier with «Τέλος
-τώρα», or move the date with «Αλλαγή». A departure always follows its arrival: a shift
-that started during the period is closed in Karta only, so Ergani never receives a
-departure without its arrival.
+Την ημερομηνία της υποχρεωτικής έναρξης, η αποστολή ξεκινά μόνη της. Μπορείτε να τη
+λήξετε νωρίτερα με το «Τέλος τώρα», ή να αλλάξετε την ημερομηνία με το «Αλλαγή». Η
+αποχώρηση ακολουθεί πάντα την προσέλευσή της: μια βάρδια που ξεκίνησε μέσα στην περίοδο
+κλείνει μόνο στην Karta, ώστε το ΕΡΓΑΝΗ να μην πάρει ποτέ αποχώρηση χωρίς την προσέλευσή
+της.
 
-You'll get a notice on the last day of the period and on the first mandatory day. That
-notice is urgent if `ERGANI_MODE` is still not `production`.
+Θα πάρετε ειδοποίηση την τελευταία ημέρα της περιόδου και την πρώτη υποχρεωτική ημέρα. Η
+ειδοποίηση είναι επείγουσα αν το `ERGANI_MODE` δεν είναι ακόμα `production`.

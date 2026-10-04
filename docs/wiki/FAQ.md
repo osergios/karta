@@ -1,81 +1,87 @@
-# FAQ and troubleshooting
+🇬🇷 **Ελληνικά** · 🇬🇧 [English](FAQ-EN)
 
-### How do I add an employee?
+# Συχνές ερωτήσεις
 
-Only from Ergani: «Ρυθμίσεις» → «ΕΡΓΑΝΗ» → «Έλεγχος ΕΡΓΑΝΗ», then import. The person
-must already be declared in Ergani. This keeps ΑΦΜ and names exactly as Ergani has them.
+### Πώς προσθέτω εργαζόμενο;
 
-### «Έλεγχος ΕΡΓΑΝΗ» fails even in `dry_run`
+Μόνο από το ΕΡΓΑΝΗ: «Ρυθμίσεις» → «ΕΡΓΑΝΗ» → «Έλεγχος ΕΡΓΑΝΗ», και μετά εισαγωγή. Το
+άτομο πρέπει να είναι ήδη δηλωμένο στο ΕΡΓΑΝΗ. Έτσι το ΑΦΜ και το ονοματεπώνυμο είναι
+ακριβώς όπως τα έχει το ΕΡΓΑΝΗ.
 
-The read services always use the **production** Ergani (read‑only). Fill in
-`ERGANI_USERNAME`, `ERGANI_PASSWORD` and the right `ERGANI_USER_TYPE` (`01` API user,
-`02` branch user), then restart.
+### Ο «Έλεγχος ΕΡΓΑΝΗ» αποτυγχάνει ακόμα και σε `dry_run`
 
-### The admin page says "Access token missing" or 403
+Οι υπηρεσίες ανάγνωσης χρησιμοποιούν πάντα το **πραγματικό** ΕΡΓΑΝΗ (μόνο για ανάγνωση).
+Συμπληρώστε `ERGANI_USERNAME`, `ERGANI_PASSWORD` και το σωστό `ERGANI_USER_TYPE` (`01`
+χρήστης API, `02` χρήστης παραρτήματος), και επανεκκινήστε.
 
-- Open the admin page through your domain, so Cloudflare Access sits in front of it. A
-  direct `http://server:8000/admin` has no Access token.
-- Check `CF_ACCESS_TEAM_DOMAIN` (no `https://`), `CF_ACCESS_AUD`, and that your email is
-  in `ADMIN_EMAILS`.
+### Η σελίδα διαχείρισης γράφει «Access token missing» ή 403
 
-### The shop screen says the device isn't registered
+- Ανοίξτε τη σελίδα διαχείρισης από το domain σας, ώστε να μπαίνει μπροστά το
+  Cloudflare Access. Ένα απευθείας `http://server:8000/admin` δεν έχει token του Access.
+- Ελέγξτε το `CF_ACCESS_TEAM_DOMAIN` (χωρίς `https://`), το `CF_ACCESS_AUD`, και ότι το
+  email σας υπάρχει στο `ADMIN_EMAILS`.
 
-Create a new code in «Ρυθμίσεις» → «Συσκευές» and enter it at `/enroll` on that device.
-This happens after clearing the browser's cookies, using a different browser, or about
-400 days after registration.
+### Η οθόνη του καταστήματος λέει ότι η συσκευή δεν είναι γραμμένη
 
-### The shop screen has no sound
+Δημιουργήστε νέο κωδικό στο «Ρυθμίσεις» → «Συσκευές» και γράψτε τον στο `/enroll` σε
+εκείνη τη συσκευή. Συμβαίνει αν σβηστούν τα cookies του browser, αν αλλάξει browser, ή
+περίπου 400 ημέρες μετά την εγγραφή.
 
-Browsers block sound until someone taps the page. Tap the «Πάτα εδώ για να ενεργοποιηθεί
-ο ήχος» button once after the laptop starts.
+### Η οθόνη του καταστήματος δεν βγάζει ήχο
 
-### The QR camera doesn't start
+Οι browsers μπλοκάρουν τον ήχο μέχρι να πατήσει κάποιος τη σελίδα. Πατήστε μία φορά το
+κουμπί «Πάτα εδώ για να ενεργοποιηθεί ο ήχος» αφού ανοίξει το laptop.
 
-The camera only works over **HTTPS**, and the browser must be allowed to use it. Check
-the camera permission in the browser's site settings.
+### Η κάμερα για το QR δεν ανοίγει
 
-### Someone forgot to punch out
+Η κάμερα λειτουργεί μόνο μέσω **HTTPS**, και ο browser πρέπει να έχει άδεια να τη
+χρησιμοποιήσει. Ελέγξτε την άδεια κάμερας στις ρυθμίσεις του site στον browser.
 
-Use «Αποχώρηση…» → «Ξέχασε να χτυπήσει» (Karta only, with a note). For an earlier day,
-use the «Κλείσιμο DD/MM…» button on the [Today](Admin-Today) tab. **Don't** use
-«Τεχνικό πρόβλημα» for a forgotten punch: that declares a technical fault to Ergani.
+### Κάποιος ξέχασε να χτυπήσει αποχώρηση
 
-### Someone forgot a whole shift
+Πατήστε «Αποχώρηση…» → «Ξέχασε να χτυπήσει» (μόνο στην Karta, με σημείωση). Για
+προηγούμενη ημέρα, χρησιμοποιήστε το κουμπί «Κλείσιμο ΗΗ/ΜΜ…» στην καρτέλα
+[Σήμερα](Admin-Today). **Μη** χρησιμοποιήσετε το «Τεχνικό πρόβλημα» για ξεχασμένο
+χτύπημα: αυτό δηλώνει τεχνική βλάβη στο ΕΡΓΑΝΗ.
 
-«Ενέργειες ▾» → «Ξεχασμένη βάρδια…». It's recorded in Karta only, for the report and pay.
+### Κάποιος ξέχασε ολόκληρη βάρδια
 
-### Someone needs to stay late
+«Ενέργειες ▾» → «Ξεχασμένη βάρδια…». Καταγράφεται μόνο στην Karta, για την αναφορά και
+τη μισθοδοσία.
 
-Declare the overtime in Ergani **before** the deadline («υπερωρία δηλώνεται έως …»),
-then add it in Karta with «Υπερωρία / αλλαγή ημέρας…». Reminders and alerts then follow
-the new end time.
+### Κάποιος πρέπει να μείνει αργότερα
 
-### Someone needs to start earlier than declared
+Δηλώστε την υπερωρία στο ΕΡΓΑΝΗ **πριν** την προθεσμία («υπερωρία δηλώνεται έως …»), και
+μετά καταχωρίστε την στην Karta με το «Υπερωρία / αλλαγή ημέρας…». Οι υπενθυμίσεις και οι
+ειδοποιήσεις ακολουθούν τότε τη νέα ώρα λήξης.
 
-Declare it in Ergani first, then use «Νωρίτερη προσέλευση σήμερα». Otherwise the shop
-screen refuses the early arrival.
+### Κάποιος πρέπει να ξεκινήσει νωρίτερα από το δηλωμένο
 
-### A punch shows «Προς έλεγχο στο ΕΡΓΑΝΗ»
+Δηλώστε το πρώτα στο ΕΡΓΑΝΗ, και μετά πατήστε «Νωρίτερη προσέλευση σήμερα». Αλλιώς η
+οθόνη του καταστήματος απορρίπτει τη νωρίτερη προσέλευση.
 
-Karta isn't sure whether Ergani received it. Check in Ergani, then choose «Υπάρχει στο
-ΕΡΓΑΝΗ» or «Δεν υπάρχει — νέα αποστολή». See
-[How punches reach Ergani](Ergani-Submissions).
+### Ένα χτύπημα δείχνει «Προς έλεγχο στο ΕΡΓΑΝΗ»
 
-### Punches are stuck «Σε αναμονή»
+Η Karta δεν είναι σίγουρη αν το ΕΡΓΑΝΗ το πήρε. Ελέγξτε στο ΕΡΓΑΝΗ και επιλέξτε «Υπάρχει
+στο ΕΡΓΑΝΗ» ή «Δεν υπάρχει — νέα αποστολή». Δείτε
+[Πώς φτάνουν τα χτυπήματα στο ΕΡΓΑΝΗ](Ergani-Submissions).
 
-Karta keeps retrying. Look at the error in «Κινήσεις» and at the alerts. Common causes:
-a wrong Ergani password, Ergani being down, or no internet on the server.
+### Τα χτυπήματα μένουν «Σε αναμονή»
 
-### Can I see an employee's PIN?
+Η Karta συνεχίζει να προσπαθεί. Δείτε το σφάλμα στις «Κινήσεις» και τις ειδοποιήσεις.
+Συνηθισμένες αιτίες: λάθος κωδικός ΕΡΓΑΝΗ, το ΕΡΓΑΝΗ δεν λειτουργεί, ή ο server δεν έχει
+internet.
 
-Only if `PIN_KEY` was set in `.env` when the PIN was created. Otherwise give them a new
-one with «Νέο PIN».
+### Μπορώ να δω το PIN ενός εργαζόμενου;
 
-### I changed the schedule but last month's report changed too
+Μόνο αν υπήρχε `PIN_KEY` στο `.env` όταν δημιουργήθηκε το PIN. Αλλιώς δώστε του νέο με
+το «Νέο PIN».
 
-It shouldn't: each schedule save applies **from** its «ισχύουν από» date. Check that you
-didn't save it with a date in the past.
+### Άλλαξα το ωράριο και άλλαξε και η αναφορά του προηγούμενου μήνα
 
-### How do I update the shop screen after upgrading Karta?
+Δεν θα έπρεπε: κάθε αποθήκευση ωραρίου ισχύει **από** την ημερομηνία «ισχύουν από».
+Ελέγξτε μήπως το αποθηκεύσατε με περασμένη ημερομηνία.
+
+### Πώς ενημερώνω την οθόνη του καταστήματος μετά από αναβάθμιση της Karta;
 
 «Σήμερα» → «Οθόνη καταστήματος και αποστολή» → «Ανανέωση οθόνης».

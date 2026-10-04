@@ -1,99 +1,106 @@
-# Shop screen (kiosk)
+🇬🇷 **Ελληνικά** · 🇬🇧 [English](Kiosk-EN)
 
-The shop screen is the page at the root of your Karta address (`https://karta.yourshop.gr/`).
-It runs in a browser on a laptop, tablet or touch screen in the shop. Staff use it to
-punch in and out.
+# Οθόνη καταστήματος
 
-![Kiosk start screen](https://raw.githubusercontent.com/osergios/karta/main/docs/screenshots/kiosk.png)
+Η οθόνη καταστήματος είναι η αρχική σελίδα της διεύθυνσης της Karta
+(`https://karta.tokatastimamou.gr/`). Τρέχει σε browser, σε laptop, tablet ή οθόνη αφής
+μέσα στο κατάστημα, και εκεί οι εργαζόμενοι χτυπούν κάρτα.
 
-## Registering the device
+![Αρχική οθόνη καταστήματος](https://raw.githubusercontent.com/osergios/karta/main/docs/screenshots/kiosk.png)
 
-Only registered devices can record punches, so a stranger who finds the address can't
-punch for anyone.
+## Εγγραφή της συσκευής
 
-1. On the admin page: «Ρυθμίσεις» → «Συσκευές» → **«Δημιουργία κωδικού εγγραφής»**. Give
-   the device a name (e.g. "Ταμείο"). You get an 8‑character code such as `ABCD-EF23`,
-   valid for **10 minutes** and usable once.
-2. On the shop device, open `https://karta.yourshop.gr/enroll` and type the code.
-3. The device now holds a secure cookie that keeps it registered for about 400 days.
-   (400 days is the most browsers allow; re‑register it when it expires.)
+Χτυπήματα καταγράφονται μόνο από γραμμένες συσκευές, ώστε κάποιος ξένος που θα βρει τη
+διεύθυνση να μην μπορεί να χτυπήσει για άλλον.
 
-From «Συσκευές» you can see each device's last activity, revoke it, or remove it from the
-list.
+1. Στη σελίδα διαχείρισης: «Ρυθμίσεις» → «Συσκευές» → **«Δημιουργία κωδικού
+   εγγραφής»**. Δώστε ένα όνομα στη συσκευή (π.χ. «Ταμείο»). Παίρνετε κωδικό 8
+   χαρακτήρων, π.χ. `ABCD-EF23`, που ισχύει **10 λεπτά** και χρησιμοποιείται μία φορά.
+2. Στη συσκευή του καταστήματος, ανοίξτε το `https://karta.tokatastimamou.gr/enroll`
+   και γράψτε τον κωδικό.
+3. Η συσκευή κρατά πλέον ένα ασφαλές cookie που τη διατηρεί γραμμένη για περίπου 400
+   ημέρες (τόσο επιτρέπουν το πολύ οι browsers). Γράψτε την ξανά όταν λήξει.
 
-**Tip:** install the page as an app (Chrome/Edge: ⋮ → «Εγκατάσταση εφαρμογής») and put
-it in Windows startup. It then opens full screen when the laptop boots. If the browser
-blocks sound after boot, a «Πάτα εδώ για να ενεργοποιηθεί ο ήχος» button appears: tap it
-once. Allow notifications too («Ενεργοποίηση ειδοποιήσεων»), so reminders also appear as
-Windows notifications.
+Από τις «Συσκευές» βλέπετε την τελευταία δραστηριότητα κάθε συσκευής, μπορείτε να την
+ανακαλέσετε ή να την αφαιρέσετε από τη λίστα.
 
-## Punching in and out
+**Συμβουλή:** εγκαταστήστε τη σελίδα ως εφαρμογή (Chrome/Edge: ⋮ → «Εγκατάσταση
+εφαρμογής») και βάλτε την στην εκκίνηση των Windows. Έτσι ανοίγει σε πλήρη οθόνη μόλις
+ανοίξει το laptop. Αν ο browser μπλοκάρει τον ήχο μετά την εκκίνηση, εμφανίζεται το
+κουμπί «Πάτα εδώ για να ενεργοποιηθεί ο ήχος»: πατήστε το μία φορά. Επιτρέψτε επίσης τις
+ειδοποιήσεις («Ενεργοποίηση ειδοποιήσεων»), ώστε οι υπενθυμίσεις να βγαίνουν και ως
+ειδοποιήσεις των Windows.
 
-The start screen offers two ways:
+## Χτύπημα κάρτας
 
-- **«Κάρτα QR»:** the employee shows a QR code to the camera, either the shop's own QR
-  card (see [QR cards](QR-Cards)) or **their personal QR from Ergani / myErgani**. No PIN
-  needed.
-- **«Με PIN»:** the employee taps their name, then types their 6‑digit PIN.
+Η αρχική οθόνη προσφέρει δύο τρόπους:
 
-![Choosing a name](https://raw.githubusercontent.com/osergios/karta/main/docs/screenshots/kiosk-pin.png)
+- **«Κάρτα QR»:** ο εργαζόμενος δείχνει έναν κωδικό QR στην κάμερα. Μπορεί να είναι η
+  κάρτα QR του καταστήματος (δείτε [Κάρτες QR](QR-Cards)) ή **το προσωπικό του QR από το
+  ΕΡΓΑΝΗ / myErgani**. Δεν χρειάζεται PIN.
+- **«Με PIN»:** ο εργαζόμενος πατά το όνομά του και γράφει το εξαψήφιο PIN του.
 
-Karta decides by itself whether the punch is an **arrival** («Προσέλευση») or a
-**departure** («Αποχώρηση»), based on whether the person is currently in. After a
-successful punch, a result screen confirms it. The «Επόμενο χτύπημα» button (or Enter /
-Esc / space) goes straight back to the start for the next person; otherwise the screen
-returns there by itself after a few seconds.
+![Επιλογή ονόματος](https://raw.githubusercontent.com/osergios/karta/main/docs/screenshots/kiosk-pin.png)
 
-### Ergani's personal QR
+Η Karta αποφασίζει μόνη της αν το χτύπημα είναι **«Προσέλευση»** ή **«Αποχώρηση»**,
+ανάλογα με το αν το άτομο είναι αυτή τη στιγμή μέσα. Μετά από επιτυχημένο χτύπημα, μια
+οθόνη αποτελέσματος το επιβεβαιώνει. Το κουμπί «Επόμενο χτύπημα» (ή Enter / Esc / κενό)
+γυρίζει αμέσως στην αρχή για τον επόμενο· αλλιώς η οθόνη επιστρέφει μόνη της μετά από
+λίγα δευτερόλεπτα.
 
-The camera also accepts the employee QR that Ergani and myErgani show
-(`erg|nm:…;ln:…;afm:…;id:…`). Karta matches it on ΑΦΜ plus surname, ignoring accents. Set
-`ERGANI_EMPLOYER_ID` in `.env` to refuse QR codes issued by another employer. Punches
-made this way show «QR ΕΡΓΑΝΗ» in the movements list.
+### Το προσωπικό QR του ΕΡΓΑΝΗ
 
-Ergani's QR contains no secret, so a photocopy works like the original. The shop's own
-QR cards don't have that weakness.
+Η κάμερα δέχεται και το QR εργαζομένου που δείχνουν το ΕΡΓΑΝΗ και το myErgani
+(`erg|nm:…;ln:…;afm:…;id:…`). Η Karta το ταιριάζει με ΑΦΜ και επώνυμο, αγνοώντας τους
+τόνους. Ορίστε το `ERGANI_EMPLOYER_ID` στο `.env` για να μη γίνονται δεκτά QR άλλου
+εργοδότη. Τα χτυπήματα που γίνονται έτσι φαίνονται ως «QR ΕΡΓΑΝΗ» στη λίστα κινήσεων.
 
-## Built‑in safeguards
+Το QR του ΕΡΓΑΝΗ δεν περιέχει κανένα μυστικό, οπότε μια φωτοτυπία του λειτουργεί όπως το
+πρωτότυπο. Οι κάρτες QR του καταστήματος δεν έχουν αυτή την αδυναμία.
 
-| Situation | What the screen does |
+## Ενσωματωμένες προστασίες
+
+| Περίπτωση | Τι κάνει η οθόνη |
 |---|---|
-| Wrong PIN 5 times | That person is locked out for 5 minutes. |
-| Many invalid QR cards in a row | QR is paused for a few minutes («χρησιμοποιήστε PIN»). |
-| Two punches by the same person within 60 seconds | The second is ignored (`DEBOUNCE_SECONDS`). |
-| Arrival **before** the declared start | Refused: «Είναι νωρίς: το ωράριό σου ξεκινά στις 10:30». You get a phone alert (once a day per person). Ergani allows no early arrival unless you declared it, so if you have, use «Νωρίτερη προσέλευση σήμερα» on the admin page. The allowed margin is «Προσέλευση πριν το ωράριο» in [Settings](Admin-Settings) (default 0). |
-| Someone tries to punch **in** when their shift is ending or over | The screen asks first: «Φεύγω — ενημέρωσε τη διαχείριση» (records nothing, you get a phone alert) or «Έρχομαι τώρα» (a normal arrival). |
-| Holiday or shop closure | No QR or PIN. The screen shows a greeting for the day («Καλά Χριστούγεννα!», «Σήμερα είμαστε κλειστά · Ανακαίνιση»…) and when the shop reopens. Someone with declared hours that day still gets the normal screen. |
+| Λάθος PIN 5 φορές | Το άτομο κλειδώνεται για 5 λεπτά. |
+| Πολλές άκυρες κάρτες QR στη σειρά | Το QR σταματά για λίγα λεπτά («χρησιμοποιήστε PIN»). |
+| Δύο χτυπήματα του ίδιου ατόμου μέσα σε 60 δευτερόλεπτα | Το δεύτερο αγνοείται (`DEBOUNCE_SECONDS`). |
+| Προσέλευση **πριν** την έναρξη του δηλωμένου ωραρίου | Απορρίπτεται: «Είναι νωρίς: το ωράριό σου ξεκινά στις 10:30». Παίρνετε ειδοποίηση στο κινητό (μία φορά τη μέρα ανά άτομο). Το ΕΡΓΑΝΗ δεν δέχεται νωρίτερη προσέλευση αν δεν τη δηλώσατε· αν τη δηλώσατε, πατήστε «Νωρίτερη προσέλευση σήμερα» στη σελίδα διαχείρισης. Το επιτρεπτό περιθώριο είναι η ρύθμιση «Προσέλευση πριν το ωράριο» στις [Ρυθμίσεις](Admin-Settings) (προεπιλογή 0). |
+| Κάποιος πάει να χτυπήσει **προσέλευση** ενώ η βάρδιά του τελειώνει ή έχει τελειώσει | Η οθόνη ρωτά πρώτα: «Φεύγω — ενημέρωσε τη διαχείριση» (δεν καταγράφεται τίποτα, παίρνετε ειδοποίηση στο κινητό) ή «Έρχομαι τώρα» (κανονική προσέλευση). |
+| Αργία ή κλειστό κατάστημα | Δεν εμφανίζονται QR και PIN. Η οθόνη δείχνει ευχή για την ημέρα («Καλά Χριστούγεννα!», «Σήμερα είμαστε κλειστά · Ανακαίνιση»…) και πότε ξανανοίγει το κατάστημα. Όποιος έχει δηλωμένες ώρες εκείνη τη μέρα βλέπει την κανονική οθόνη. |
 
-## Reminders on the shop screen
+## Υπενθυμίσεις στην οθόνη καταστήματος
 
-When «Υπενθυμίσεις στο κατάστημα» is on (default), the side panel shows a coloured card
-per person, with a doorbell sound and a Windows notification:
+Όταν είναι ενεργές οι «Υπενθυμίσεις στο κατάστημα» (προεπιλογή), το πλαϊνό τμήμα δείχνει
+μια χρωματιστή κάρτα για κάθε άτομο, με ήχο κουδουνιού και ειδοποίηση των Windows:
 
-- **Not punched in** from the exact start of their schedule: a reminder every 30
-  seconds until they punch. With a split shift, each part works separately.
-- **Before the end:** a countdown card «Σε λίγο αποχώρηση — σε 2′ / σε 1′», with a ding‑dong
-  at 2′ and at 1′.
-- **At the end:** «ώρα για αποχώρηση», repeating every 30 seconds until they punch out.
+- **Δεν χτύπησε προσέλευση:** από την ακριβή ώρα έναρξης του ωραρίου του, υπενθύμιση κάθε
+  30 δευτερόλεπτα μέχρι να χτυπήσει. Σε σπαστό ωράριο, κάθε τμήμα λειτουργεί χωριστά.
+- **Πριν τη λήξη:** κάρτα αντίστροφης μέτρησης «Σε λίγο αποχώρηση — σε 2′ / σε 1′», με
+  κουδούνι στα 2′ και στο 1′.
+- **Στη λήξη:** «ώρα για αποχώρηση», κάθε 30 δευτερόλεπτα μέχρι να χτυπήσει αποχώρηση.
 
-Tapping a reminder card opens that person's PIN pad. Someone on leave, muted for today
-(«Θα αργήσει σήμερα»), or covered by a holiday gets no reminders. See
-[Alerts and reminders](Alerts-and-Reminders) for what reaches *your* phone.
+Αν πατήσετε μια κάρτα υπενθύμισης, ανοίγει το πληκτρολόγιο PIN εκείνου του ατόμου. Όποιος
+είναι σε άδεια, σε σίγαση για σήμερα («Θα αργήσει σήμερα») ή σε αργία δεν παίρνει
+υπενθυμίσεις. Για το τι φτάνει στο *δικό σας* κινητό, δείτε
+[Ειδοποιήσεις και υπενθυμίσεις](Alerts-and-Reminders).
 
-## Look and feel
+## Εμφάνιση
 
-- Shows your business name or logo, colour, and a large clock with the date
-  (see «Στοιχεία επιχείρησης» in [Settings](Admin-Settings)).
-- **Festive decorations** (on by default; switch them off on the admin page). They follow
-  the calendar: Christmas, Easter, 25 March and 28 October flags, Clean Monday kites, and
-  May Day flowers. «Προεπισκόπηση» buttons on the admin page preview each one.
-- Respects the Windows setting "reduce animations": all motion stops.
-- Scales from 1024×600 up to 4K, and fits a phone if needed.
-- Works briefly offline: if the internet drops, the page still loads and tells staff to
-  use the Ergani app instead.
+- Δείχνει το όνομα ή το λογότυπο της επιχείρησης, το χρώμα της, και ένα μεγάλο ρολόι με
+  την ημερομηνία (δείτε «Στοιχεία επιχείρησης» στις [Ρυθμίσεις](Admin-Settings)).
+- **Γιορτινός στολισμός** (ενεργός από προεπιλογή· απενεργοποιείται στη σελίδα
+  διαχείρισης). Ακολουθεί το ημερολόγιο: Χριστούγεννα, Πάσχα, σημαίες για την 25η Μαρτίου
+  και την 28η Οκτωβρίου, χαρταετοί την Καθαρά Δευτέρα, λουλούδια την Πρωτομαγιά. Τα
+  κουμπιά «Προεπισκόπηση» στη σελίδα διαχείρισης δείχνουν τον καθένα.
+- Σέβεται τη ρύθμιση των Windows για μείωση των κινήσεων: όλα τα κινούμενα σταματούν.
+- Προσαρμόζεται από 1024×600 έως 4K, και χωράει σε κινητό αν χρειαστεί.
+- Αντέχει για λίγο χωρίς internet: αν κοπεί η σύνδεση, η σελίδα φορτώνει και λέει στους
+  εργαζόμενους να χρησιμοποιήσουν την εφαρμογή του ΕΡΓΑΝΗ.
 
-## Updating the screen remotely
+## Ανανέωση της οθόνης από μακριά
 
-After you update Karta, use «Σήμερα» → «Οθόνη καταστήματος και αποστολή» →
-**«Ανανέωση οθόνης»**. The shop screen reloads itself within ~30 seconds (it waits if
-someone is mid‑punch), and the admin page shows «✓ η οθόνη ανανεώθηκε».
+Μετά από ενημέρωση της Karta, πατήστε «Σήμερα» → «Οθόνη καταστήματος και αποστολή» →
+**«Ανανέωση οθόνης»**. Η οθόνη του καταστήματος ξαναφορτώνει μόνη της μέσα σε ~30
+δευτερόλεπτα (περιμένει αν κάποιος είναι στη μέση ενός χτυπήματος), και η σελίδα
+διαχείρισης δείχνει «✓ η οθόνη ανανεώθηκε».

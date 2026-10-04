@@ -1,80 +1,88 @@
-# Admin: «Αναφορές» (Reports)
+🇬🇷 **Ελληνικά** · 🇬🇧 [English](Admin-Reports-EN)
 
-Excel reports for the accountant, ready to print (landscape, fit to width).
+# Διαχείριση: «Αναφορές»
 
-- **«Μηνιαία αναφορά»:** pick a month.
-- **«Ετήσια αναφορά»:** pick a year. It has the same sheets for the whole year, plus a
-  per‑month sheet.
+Αναφορές Excel για τον λογιστή, έτοιμες για εκτύπωση (οριζόντια, προσαρμοσμένες στο
+πλάτος της σελίδας).
 
-Reports use the **official names and ΑΦΜ as in Ergani**, never the shop‑screen display
-names. The employer line comes from the data saved at «Έλεγχος ΕΡΓΑΝΗ». A report made
-outside `production` mode is marked «ΔΟΚΙΜΑΣΤΙΚΑ ΔΕΔΟΜΕΝΑ».
+- **«Μηνιαία αναφορά»:** διαλέξτε μήνα.
+- **«Ετήσια αναφορά»:** διαλέξτε έτος. Έχει τα ίδια φύλλα για όλο το έτος, και επιπλέον
+  ένα φύλλο ανά μήνα.
 
-## Sheets
+Οι αναφορές χρησιμοποιούν **τα επίσημα ονοματεπώνυμα και ΑΦΜ όπως στο ΕΡΓΑΝΗ**, ποτέ τα
+ονόματα εμφάνισης της οθόνης. Η γραμμή του εργοδότη έρχεται από τα στοιχεία που
+αποθηκεύτηκαν στον «Έλεγχο ΕΡΓΑΝΗ». Μια αναφορά εκτός λειτουργίας `production`
+σημαίνεται «ΔΟΚΙΜΑΣΤΙΚΑ ΔΕΔΟΜΕΝΑ».
 
-### «Σύνοψη» (summary)
+## Φύλλα
 
-One row per employee with:
+### «Σύνοψη»
+
+Μία γραμμή ανά εργαζόμενο, με:
 
 «Ημέρες εργασίας», «Ώρες ωραρίου», «Ώρες εργασίας», «Δηλωμένες επιπλέον ώρες
-(υπερωρία)», «Επιπλέον ώρες χωρίς δήλωση» (highlighted), «Λιγότερες ώρες», leave days by
-type (normal / sick / special purpose, working days only), «Αργίες / κλειστό» and
-«Ξεχασμένα χτυπήματα».
+(υπερωρία)», «Επιπλέον ώρες χωρίς δήλωση» (τονισμένες), «Λιγότερες ώρες», ημέρες άδειας
+ανά είδος (κανονική / ασθενείας / ειδικού σκοπού, μόνο εργάσιμες ημέρες), «Αργίες /
+κλειστό» και «Ξεχασμένα χτυπήματα».
 
-Below that is each employee's leave for the period: from–to, working days and type. Then
-come the holidays and closures that fell on working days, and who they affected.
+Από κάτω υπάρχουν οι άδειες κάθε εργαζόμενου για την περίοδο: από–έως, εργάσιμες ημέρες
+και είδος. Μετά ακολουθούν οι αργίες και τα κλεισίματα που έπεσαν σε εργάσιμες ημέρες,
+και ποιους αφορούσαν.
 
-### «Απολογιστικές δηλώσεις» (retrospective declarations)
+### «Απολογιστικές δηλώσεις»
 
-Every day where the punches **don't match the declared schedule to the minute**. The
-ministry allows no tolerance. For each day it shows:
+Κάθε ημέρα όπου τα χτυπήματα **δεν ταιριάζουν στο λεπτό με το δηλωμένο ωράριο**. Το
+υπουργείο δεν δίνει καμία ανοχή. Για κάθε ημέρα δείχνει:
 
-- the hours to declare afterwards in Ergani;
-- any time beyond them (υπερεργασία / υπερωρία → Ε8);
-- what happened;
-- the **deadline** (end of the following month).
+- τις ώρες που πρέπει να δηλωθούν απολογιστικά στο ΕΡΓΑΝΗ·
+- τον χρόνο πέρα από αυτές (υπερεργασία / υπερωρία → Ε8)·
+- τι συνέβη·
+- την **προθεσμία** (τέλος του επόμενου μήνα).
 
-It follows the ministry's own example: declared 09:00–17:00, punched 08:13–16:19 →
-declare 08:13–16:13.
+Ακολουθεί το παράδειγμα του ίδιου του υπουργείου: δηλωμένο 09:00–17:00, χτυπήματα
+08:13–16:19 → δήλωση 08:13–16:13.
 
-These days are **not** listed:
+Δεν εμφανίζονται εδώ:
 
-- a flexible‑arrival day inside its window;
-- a punch‑out inside a break «εκτός ωραρίου»;
-- a punch‑out up to 10′ after the limit, which counts as *preparation time* (changing
-  clothes etc.) under εγκύκλιος 26606/13‑10‑2025 §3; from the 11th minute it's all extra
-  work;
-- onboarding‑period days.
+- ημέρα ευέλικτης προσέλευσης μέσα στο περιθώριό της·
+- αποχώρηση μέσα σε διάλειμμα «εκτός ωραρίου»·
+- αποχώρηση έως 10′ μετά το όριο, που μετρά ως *χρόνος προετοιμασίας* (αλλαγή ρούχων
+  κ.λπ.) σύμφωνα με την εγκύκλιο 26606/13‑10‑2025 §3· από το 11ο λεπτό μετρά όλο ως
+  επιπλέον εργασία·
+- ημέρες της περιόδου προσαρμογής.
 
-### «Αναλυτικά» (detail)
+### «Αναλυτικά»
 
-**One sheet for all employees** (filterable), with a row per arrival–departure pair:
+**Ένα φύλλο για όλους τους εργαζόμενους** (με φίλτρα), με μία γραμμή για κάθε ζεύγος
+προσέλευσης–αποχώρησης:
 
-- the exact punch times;
-- the **Ergani protocol numbers** («μόνο στην κάρτα» or «σε αναμονή» when not in Ergani);
-- the declared schedule for that day and the hours worked;
-- «Παρατηρήσεις» (remarks): forgotten punch‑out, not yet in Ergani, absence, early
-  departure and its reason, late declaration (with the Ergani code and text), flexible
-  arrival, and so on.
+- οι ακριβείς ώρες των χτυπημάτων·
+- οι **αριθμοί πρωτοκόλλου του ΕΡΓΑΝΗ** («μόνο στην κάρτα» ή «σε αναμονή» όταν δεν είναι
+  στο ΕΡΓΑΝΗ)·
+- το δηλωμένο ωράριο εκείνης της ημέρας και οι ώρες εργασίας·
+- «Παρατηρήσεις»: ξεχασμένη αποχώρηση, όχι ακόμα στο ΕΡΓΑΝΗ, απουσία, νωρίτερη αποχώρηση
+  και ο λόγος της, εκπρόθεσμη δήλωση (με τον κωδικό και το κείμενο του ΕΡΓΑΝΗ), ευέλικτη
+  προσέλευση, και άλλα.
 
-There's a subtotal per employee.
+Υπάρχει μερικό σύνολο για κάθε εργαζόμενο.
 
-### «Ανά μήνα» (yearly report only)
+### «Ανά μήνα» (μόνο στην ετήσια αναφορά)
 
-Each employee month by month, with a yearly total. Months with 3 or more forgotten
-punches are highlighted.
+Κάθε εργαζόμενος μήνα προς μήνα, με σύνολο έτους. Οι μήνες με 3 ή περισσότερα ξεχασμένα
+χτυπήματα είναι τονισμένοι.
 
-## How hours are counted
+## Πώς μετρώνται οι ώρες
 
-- **Exact to the minute** (seconds ignored, as in Ergani). Any difference shows, e.g.
+- **Στο λεπτό** (τα δευτερόλεπτα αγνοούνται, όπως στο ΕΡΓΑΝΗ). Κάθε διαφορά φαίνεται, π.χ.
   «Λιγότερες ώρες −0:01».
-- A day is «όπως το ωράριο» (on schedule) only when every punch is inside the declared
-  hours, allowing for the flexible‑arrival shift, the break «εκτός ωραρίου» window and the
-  10′ preparation time.
-- **Declared overtime** («Υπερωρία / αλλαγή ημέρας…») is counted separately from
-  **extra hours without declaration**.
-- Work on a day without declared hours counts as extra.
-- Reports count from **go‑live** (the first real punch in the current mode), so test days
-  before it don't appear as absences.
-- Past days always use the schedule that was valid on that day (see
-  [Schedules](Admin-Schedules-and-Holidays)).
+- Μια ημέρα είναι «όπως το ωράριο» μόνο όταν κάθε χτύπημα είναι μέσα στις δηλωμένες
+  ώρες, λαμβάνοντας υπόψη τη μετατόπιση της ευέλικτης προσέλευσης, το διάλειμμα «εκτός
+  ωραρίου» και τα 10′ προετοιμασίας.
+- Η **δηλωμένη υπερωρία** («Υπερωρία / αλλαγή ημέρας…») μετρά χωριστά από τις
+  **επιπλέον ώρες χωρίς δήλωση**.
+- Εργασία σε ημέρα χωρίς δηλωμένες ώρες μετρά ως επιπλέον.
+- Οι αναφορές μετρούν από την **έναρξη κανονικής λειτουργίας** (το πρώτο πραγματικό
+  χτύπημα της τρέχουσας λειτουργίας), οπότε οι δοκιμαστικές ημέρες πριν από αυτό δεν
+  εμφανίζονται ως απουσίες.
+- Οι περασμένες ημέρες χρησιμοποιούν πάντα το ωράριο που ίσχυε εκείνη την ημέρα (δείτε
+  [Ωράρια](Admin-Schedules-and-Holidays)).

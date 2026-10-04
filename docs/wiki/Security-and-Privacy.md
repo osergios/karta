@@ -1,66 +1,75 @@
-# Security and privacy
+🇬🇷 **Ελληνικά** · 🇬🇧 [English](Security-and-Privacy-EN)
 
-Karta handles legal working‑time records and staff personal data (names, ΑΦΜ, work
-hours). Here's how it's protected, and what you're responsible for.
+# Ασφάλεια και προσωπικά δεδομένα
 
-## Who can do what
+Η Karta διαχειρίζεται νόμιμα αρχεία χρόνου εργασίας και προσωπικά δεδομένα του
+προσωπικού (ονόματα, ΑΦΜ, ώρες εργασίας). Δείτε πώς προστατεύονται, και τι είναι δική σας
+ευθύνη.
 
-| Area | Protected by |
+## Ποιος μπορεί να κάνει τι
+
+| Τμήμα | Προστατεύεται με |
 |---|---|
-| **Admin page** (`/admin`, `/admin/api/…`) | **Cloudflare Access**. Karta checks the signed token on every request (RS256 signature, audience, issuer, expiry) and that the email is in `ADMIN_EMAILS`. If anything is missing or wrong, access is refused. |
-| **Shop screen punches** | Only **registered devices** can punch. Registration needs a one‑time code from the admin (valid 10 minutes), and the device then keeps an `HttpOnly`, `Secure`, `SameSite=Strict` cookie. You can revoke any device. |
-| **Each punch** | The employee's **PIN** (6 digits, too‑easy PINs refused, locked for 5 minutes after 5 wrong tries) or their **QR card**. |
-| **Phone‑card links** | A random token, valid for 24 hours and at most 10 opens, cancelled as soon as a new card is issued. |
+| **Σελίδα διαχείρισης** (`/admin`, `/admin/api/…`) | **Cloudflare Access**. Σε κάθε αίτημα η Karta ελέγχει το υπογεγραμμένο token (υπογραφή RS256, audience, issuer, λήξη) και ότι το email υπάρχει στο `ADMIN_EMAILS`. Αν κάτι λείπει ή είναι λάθος, η πρόσβαση απορρίπτεται. |
+| **Χτυπήματα στην οθόνη του καταστήματος** | Χτυπούν κάρτα μόνο **γραμμένες συσκευές**. Η εγγραφή χρειάζεται κωδικό μίας χρήσης από τον διαχειριστή (ισχύει 10 λεπτά), και μετά η συσκευή κρατά ένα cookie `HttpOnly`, `Secure`, `SameSite=Strict`. Μπορείτε να ανακαλέσετε οποιαδήποτε συσκευή. |
+| **Κάθε χτύπημα** | Το **PIN** του εργαζόμενου (6 ψηφία, τα πολύ εύκολα δεν γίνονται δεκτά, κλείδωμα 5 λεπτών μετά από 5 λάθη) ή η **κάρτα QR** του. |
+| **Σύνδεσμοι κάρτας για το κινητό** | Τυχαίο token, ισχύει 24 ώρες και ανοίγει το πολύ 10 φορές· ακυρώνεται μόλις εκδοθεί νέα κάρτα. |
 
-Requests that change data must come from your own `PUBLIC_ORIGIN`. Requests from other
-sites are refused.
+Τα αιτήματα που αλλάζουν δεδομένα πρέπει να έρχονται από το δικό σας `PUBLIC_ORIGIN`.
+Αιτήματα από άλλα sites απορρίπτονται.
 
-## How secrets are stored
+## Πώς αποθηκεύονται τα μυστικά
 
-- **PINs:** hashed with **Argon2**, so they can't be read back. If `PIN_KEY` is set, a
-  copy is also encrypted with **AES‑GCM** so the admin can view it; the key lives only in
-  `.env`, never in the database.
-- **QR card codes, device tokens, registration codes and link tokens:** stored as
-  SHA‑256 hashes only. QR codes are also encrypted with `PIN_KEY`, so a card can be shown
-  again.
-- **Ergani password:** only in `.env`.
+- **PIN:** κρυπτογραφική σύνοψη (hash) με **Argon2**, οπότε δεν μπορούν να διαβαστούν
+  πίσω. Αν έχει οριστεί `PIN_KEY`, κρατιέται και ένα αντίγραφο κρυπτογραφημένο με
+  **AES‑GCM** ώστε να μπορεί να το δει ο διαχειριστής· το κλειδί βρίσκεται μόνο στο
+  `.env`, ποτέ στη βάση.
+- **Κωδικοί καρτών QR, tokens συσκευών, κωδικοί εγγραφής και tokens συνδέσμων:**
+  αποθηκεύονται μόνο ως σύνοψη SHA‑256. Οι κωδικοί QR κρυπτογραφούνται επιπλέον με το
+  `PIN_KEY`, ώστε η κάρτα να μπορεί να εμφανιστεί ξανά.
+- **Κωδικός ΕΡΓΑΝΗ:** μόνο στο `.env`.
 
-## Data minimisation
+## Ελαχιστοποίηση δεδομένων
 
-- From Ergani's employee data (which includes ID documents, pay and family details),
-  Karta keeps **only** ΑΦΜ, full name and the declared schedule. The rest is discarded at
-  once and never logged.
-- The audit log never stores a full ΑΦΜ (only the last 3 digits).
-- The shop screen and phone card show only the display name.
+- Από τα στοιχεία εργαζομένων του ΕΡΓΑΝΗ (που περιλαμβάνουν έγγραφα ταυτότητας, αμοιβές
+  και οικογενειακά στοιχεία), η Karta κρατά **μόνο** ΑΦΜ, ονοματεπώνυμο και δηλωμένο
+  ωράριο. Τα υπόλοιπα απορρίπτονται αμέσως και δεν καταγράφονται ποτέ.
+- Το αρχείο ενεργειών (audit log) δεν αποθηκεύει ποτέ ολόκληρο ΑΦΜ (μόνο τα 3 τελευταία
+  ψηφία).
+- Η οθόνη του καταστήματος και η κάρτα στο κινητό δείχνουν μόνο το όνομα εμφάνισης.
 
-## Web hardening
+## Θωράκιση της εφαρμογής
 
-- A strict **Content‑Security‑Policy**: no inline scripts or styles, and no third‑party
-  content. Pages can't be embedded in other sites.
-- Only Karta's own pages may use the camera. Microphone, location, payment and USB are
-  disabled.
-- `Cache-Control: no-store` on every response.
-- Hidden from search engines: `/robots.txt` disallows everything, and every response
-  carries `X-Robots-Tag: noindex, nofollow, …`.
-- The Docker image runs as an **unprivileged user**, without server or access‑log
-  banners.
+- Αυστηρό **Content‑Security‑Policy**: χωρίς inline scripts ή styles και χωρίς
+  περιεχόμενο τρίτων. Οι σελίδες δεν μπορούν να ενσωματωθούν σε άλλα sites.
+- Μόνο οι σελίδες της ίδιας της Karta μπορούν να χρησιμοποιήσουν την κάμερα. Μικρόφωνο,
+  τοποθεσία, πληρωμές και USB είναι απενεργοποιημένα.
+- `Cache-Control: no-store` σε κάθε απάντηση.
+- Κρυμμένη από τις μηχανές αναζήτησης: το `/robots.txt` απαγορεύει τα πάντα, και κάθε
+  απάντηση έχει `X-Robots-Tag: noindex, nofollow, …`.
+- Το image του Docker τρέχει ως **χρήστης χωρίς δικαιώματα διαχειριστή**, χωρίς banner
+  server και χωρίς access log.
 
-## Audit trail
+## Αρχείο ενεργειών
 
-Admin actions (new PIN, QR issued, schedule changes, leave, departures entered by hand,
-device registration, deletions…) are written to an audit table with who did it and when.
+Οι ενέργειες του διαχειριστή (νέο PIN, έκδοση QR, αλλαγές ωραρίου, άδειες, αποχωρήσεις
+που καταχωρίστηκαν με το χέρι, εγγραφή συσκευών, διαγραφές…) γράφονται σε πίνακα ελέγχου
+με το ποιος τις έκανε και πότε.
 
-## Your responsibilities
+## Οι δικές σας ευθύνες
 
-- Serve Karta **only over HTTPS**, and keep `/admin` behind Cloudflare Access.
-- Keep `.env` private and backed up (especially `PIN_KEY`); never commit it.
-- Back up the database regularly and keep the backups encrypted.
-- Real punches are **legal working‑time records**. Karta refuses to delete an employee
-  who has real punches; deactivate them instead.
-- You're responsible for the declarations made to Ergani from your installation. Test
-  with `dry_run` and `trial` first (see [Going live](Going-Live)).
+- Λειτουργήστε την Karta **μόνο μέσω HTTPS**, και κρατήστε το `/admin` πίσω από το
+  Cloudflare Access.
+- Κρατήστε το `.env` ιδιωτικό και με αντίγραφο (ιδίως το `PIN_KEY`)· μην το ανεβάσετε
+  ποτέ στο GitHub.
+- Κρατάτε τακτικά αντίγραφα της βάσης, κρυπτογραφημένα.
+- Τα πραγματικά χτυπήματα είναι **νόμιμα αρχεία χρόνου εργασίας**. Η Karta δεν σβήνει
+  εργαζόμενο που έχει πραγματικά χτυπήματα· απενεργοποιήστε τον.
+- Είστε υπεύθυνοι για τις δηλώσεις που γίνονται στο ΕΡΓΑΝΗ από την εγκατάστασή σας.
+  Δοκιμάστε πρώτα με `dry_run` και `trial` (δείτε
+  [Έναρξη κανονικής λειτουργίας](Going-Live)).
 
-## Reporting a security problem
+## Αναφορά προβλήματος ασφαλείας
 
-Please don't open a public issue. Contact the maintainer privately through GitHub (see
-the repository's security policy, if one is published) with the details.
+Μην ανοίξετε δημόσιο issue. Επικοινωνήστε ιδιωτικά με τον συντηρητή του έργου μέσω GitHub
+(δείτε την πολιτική ασφαλείας του αποθετηρίου, αν έχει δημοσιευτεί), με τις λεπτομέρειες.

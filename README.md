@@ -1,34 +1,130 @@
-# Karta: digital work card for Ergani
+# Karta: ψηφιακή κάρτα εργασίας για το ΕΡΓΑΝΗ
+
+🇬🇷 **Ελληνικά** · 🇬🇧 [English](#english)
+
+Η **Karta** είναι ψηφιακή κάρτα εργασίας για μικρές επιχειρήσεις, που την εγκαθιστάτε στον
+δικό σας server. Οι εργαζόμενοι χτυπούν κάρτα στην οθόνη του καταστήματος με PIN ή με
+κωδικό QR. Η Karta στέλνει κάθε προσέλευση και αποχώρηση στο **ΕΡΓΑΝΗ ΙΙ** του Υπουργείου
+Εργασίας, και δίνει στον ιδιοκτήτη μια σελίδα διαχείρισης με ωράρια, ειδοποιήσεις και
+μηνιαίες αναφορές.
+
+📖 **Πλήρης οδηγός χρήσης στο [wiki](https://github.com/osergios/karta/wiki)**:
+εγκατάσταση, κάθε καρτέλα της διαχείρισης, η οθόνη του καταστήματος, πώς φτάνουν τα
+χτυπήματα στο ΕΡΓΑΝΗ, ειδοποιήσεις και συχνές ερωτήσεις.
+
+## Στιγμιότυπα
+
+*Δοκιμαστική επιχείρηση με φανταστικούς εργαζόμενους, σε λειτουργία `dry_run`.*
+
+| Οθόνη καταστήματος | Επιλογή ονόματος και μετά PIN |
+|---|---|
+| ![Αρχική οθόνη καταστήματος](docs/screenshots/kiosk.png) | ![Επιλογή εργαζόμενου](docs/screenshots/kiosk-pin.png) |
+
+| Διαχείριση: σήμερα | Διαχείριση: προσωπικό |
+|---|---|
+| ![Διαχείριση, σήμερα](docs/screenshots/admin-today.png) | ![Διαχείριση, προσωπικό](docs/screenshots/admin-staff.png) |
+
+![Διαχείριση, εβδομαδιαία ωράρια](docs/screenshots/admin-schedules.png)
+
+## Δυνατότητες
+
+- **Οθόνη καταστήματος** (`/`): πληκτρολόγιο PIN και σκανάρισμα QR με την κάμερα.
+  Δέχεται τις κάρτες QR του καταστήματος και το προσωπικό QR του εργαζόμενου από το
+  ΕΡΓΑΝΗ / myErgani.
+- **Κάρτα στο κινητό** (`/c/…`): κάθε εργαζόμενος αποθηκεύει την κάρτα QR του στο κινητό
+  του από έναν προσωπικό σύνδεσμο.
+- **Αποστολή στο ΕΡΓΑΝΗ:** ουρά με επαναλήψεις και αιτιολογίες εκπρόθεσμης δήλωσης. Μια
+  υποβολή που μπορεί να έχει ήδη φτάσει στο ΕΡΓΑΝΗ δεν ξαναστέλνεται ποτέ αυτόματα·
+  μπαίνει σε κατάσταση «Προς έλεγχο» για να αποφασίσει ο διαχειριστής.
+- **Τρεις λειτουργίες:** `dry_run` (δεν στέλνεται τίποτα), `trial` (δοκιμαστικό
+  περιβάλλον ΕΡΓΑΝΗ) και `production`.
+- **Σελίδα διαχείρισης** (`/admin`, προστατευμένη με Cloudflare Access): εργαζόμενοι,
+  PIN, ωράρια, άδειες, αργίες και κλεισίματα, ξεχασμένες αποχωρήσεις, λειτουργία
+  εκπαίδευσης, και όνομα, χρώμα και λογότυπο της επιχείρησης.
+- **Αυτόματοι έλεγχοι:** χτυπήματα που λείπουν, παραμονή μετά τη λήξη, όρια ημέρας και
+  εβδομάδας, ανάπαυση. Οι ειδοποιήσεις πάνε στη σελίδα διαχείρισης, στην οθόνη του
+  καταστήματος και προαιρετικά στο κινητό σας (μέσω [ntfy](https://ntfy.sh)).
+- **Μηνιαίες και ετήσιες αναφορές** σε Excel για τον λογιστή, με τις απολογιστικές
+  δηλώσεις που πρέπει να γίνουν.
+
+Το αναλυτικό ιστορικό αλλαγών είναι στο [`CHANGES.md`](CHANGES.md).
+
+## Τι χρειάζεστε
+
+- Docker, ή Python 3.12
+- Χρήστη web services του ΕΡΓΑΝΗ για την επιχείρησή σας (ή δοκιμαστικό χρήστη από το
+  `trialv2eservices.yeka.gr`)
+- Μια εφαρμογή [Cloudflare Access](https://www.cloudflare.com/zero-trust/products/access/)
+  μπροστά από το `/admin`
+
+## Γρήγορη εκκίνηση
+
+```bash
+cp .env.example .env        # συμπληρώστε το· κρατήστε ERGANI_MODE=dry_run στην αρχή
+docker build -t karta .
+docker run -d --name karta --env-file .env -p 8000:8000 -v karta-data:/data karta
+```
+
+Η βάση SQLite βρίσκεται στο `/data/workcard.db` (αλλάζει με το `DB_PATH`), οπότε
+**κρατάτε αντίγραφα αυτού του volume**. Περιέχει στοιχεία των εργαζομένων σας.
+
+Χωρίς Docker:
+
+```bash
+pip install -r requirements.txt
+PYTHONPATH=vendor uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+Όλες οι ρυθμίσεις εξηγούνται στο [`.env.example`](.env.example) και στο
+[wiki](https://github.com/osergios/karta/wiki/Configuration). **Μην ανεβάσετε ποτέ το
+πραγματικό σας `.env`.**
+
+## Έναρξη κανονικής λειτουργίας
+
+1. Τρέξτε σε `dry_run` και ελέγξτε στη σελίδα διαχείρισης τι θα στελνόταν.
+2. Αλλάξτε σε `trial` και ελέγξτε τις κινήσεις στο δοκιμαστικό περιβάλλον του ΕΡΓΑΝΗ.
+3. Αλλάξτε σε `production`.
+
+Είστε υπεύθυνοι για τις δηλώσεις που γίνονται στο ΕΡΓΑΝΗ από την εγκατάστασή σας. Το
+λογισμικό παρέχεται «ως έχει», χωρίς καμία εγγύηση (δείτε την άδεια χρήσης).
+
+## Κώδικας τρίτων
+
+Η Karta περιλαμβάνει το [Ergani Python SDK](https://github.com/withlogicco/ergani-python-sdk)
+(MIT, της LOGIC), το [jsQR](https://github.com/cozmo/jsQR) (Apache-2.0), ένα εικονίδιο
+από τα [Tabler Icons](https://github.com/tabler/tabler-icons) (MIT) και τη γραμματοσειρά
+[Inter](https://github.com/rsms/inter) (SIL OFL 1.1). Λεπτομέρειες και οι τοπικές αλλαγές
+στο [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+
+## Άδεια χρήσης
+
+[MIT](LICENSE) για τον κώδικα της Karta. Τα ενσωματωμένα τμήματα τρίτων διατηρούν τις
+δικές τους άδειες.
+
+---
+
+<a id="english"></a>
+
+# 🇬🇧 English
 
 **Karta** is a self-hosted *ψηφιακή κάρτα εργασίας* (digital work card) for small
 Greek businesses. Employees clock in and out on a shop kiosk with a PIN or a QR
 code. Karta sends each arrival and departure to the Ministry of Labour's
 **Ergani II** system and gives the owner an admin page with schedules, alerts and
-monthly reports.
+monthly reports. The app's screens are in Greek.
 
-> Η Karta είναι μια ψηφιακή κάρτα εργασίας για μικρές επιχειρήσεις: χτύπημα κάρτας
-> με PIN ή QR στο κατάστημα, αυτόματη αποστολή στο ΕΡΓΑΝΗ ΙΙ, ειδοποιήσεις και
-> μηνιαίες αναφορές.
+📖 **Full documentation is in the [wiki](https://github.com/osergios/karta/wiki/Home-EN)**:
+installation, every admin tab, the shop screen, how punches reach Ergani, alerts, and an
+FAQ. The wiki pages live in [`docs/wiki/`](docs/wiki/) and are published automatically.
 
-## Screenshots
-
-*Demo shop with made-up employees, running in `dry_run` mode.*
-
-| Kiosk | Kiosk: pick your name, then enter your PIN |
-|---|---|
-| ![Kiosk start screen](docs/screenshots/kiosk.png) | ![Kiosk employee picker](docs/screenshots/kiosk-pin.png) |
-
-| Admin: today | Admin: staff |
-|---|---|
-| ![Admin page, today's overview](docs/screenshots/admin-today.png) | ![Admin page, staff list](docs/screenshots/admin-staff.png) |
-
-![Admin page, weekly schedules](docs/screenshots/admin-schedules.png)
+See the screenshots above.
 
 ## Features
 
 - **Kiosk** (`/`): PIN pad and camera QR scanner. It accepts the shop's own QR
   cards and the employee's personal Ergani or myErgani QR.
-- **Phone card** (`/c/…`): each employee can install their own QR card on their phone.
+- **Phone card** (`/c/…`): each employee saves their QR card to their phone from a
+  personal link.
 - **Ergani submission:** a queue with retries and late-declaration reasons. A
   submission that may already have reached Ergani is never retried automatically;
   it goes to a "needs checking" state for the admin to decide.
@@ -40,11 +136,8 @@ monthly reports.
 - **Live checks:** missed punches, shift over-runs, daily/weekly limits and rest
   periods. Alerts go to the admin page, the shop screen and optionally your phone
   (via [ntfy](https://ntfy.sh)).
-- **Monthly report** exported as an Excel file.
-
-📖 **Full documentation is in the [wiki](https://github.com/osergios/karta/wiki)**:
-installation, every admin tab, the shop screen, how punches reach Ergani, alerts, and an
-FAQ. The wiki pages live in [`docs/wiki/`](docs/wiki/) and are published automatically.
+- **Monthly and yearly Excel reports** for the accountant, including the
+  retrospective declarations to file.
 
 See [`CHANGES.md`](CHANGES.md) for the detailed history.
 
@@ -74,7 +167,8 @@ pip install -r requirements.txt
 PYTHONPATH=vendor uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
-All settings are documented in [`.env.example`](.env.example). **Never commit
+All settings are documented in [`.env.example`](.env.example) and in the
+[wiki](https://github.com/osergios/karta/wiki/Configuration-EN). **Never commit
 your real `.env`.**
 
 ## Going live

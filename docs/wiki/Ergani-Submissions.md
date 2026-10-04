@@ -1,70 +1,77 @@
-# How punches reach Ergani
+🇬🇷 **Ελληνικά** · 🇬🇧 [English](Ergani-Submissions-EN)
 
-Every punch is first **saved in Karta's database**, then sent to Ergani by a background
-queue. The shop screen never waits for Ergani: if Ergani is slow or down, the punch is
-safe and is sent as soon as possible.
+# Πώς φτάνουν τα χτυπήματα στο ΕΡΓΑΝΗ
 
-## Movement statuses
+Κάθε χτύπημα πρώτα **αποθηκεύεται στη βάση της Karta** και μετά στέλνεται στο ΕΡΓΑΝΗ από
+μια ουρά που τρέχει στο παρασκήνιο. Η οθόνη του καταστήματος δεν περιμένει ποτέ το
+ΕΡΓΑΝΗ: αν το ΕΡΓΑΝΗ αργεί ή δεν λειτουργεί, το χτύπημα είναι ασφαλές και στέλνεται μόλις
+γίνει δυνατό.
 
-You'll see these in «Ρυθμίσεις» → «Κινήσεις» and in the reports.
+## Καταστάσεις κινήσεων
 
-| Status | Meaning |
+Τις βλέπετε στο «Ρυθμίσεις» → «Κινήσεις» και στις αναφορές.
+
+| Κατάσταση | Τι σημαίνει |
 |---|---|
-| «Υποβλήθηκε» | Accepted by Ergani; the protocol number is stored. |
-| «Σε αναμονή» | Waiting to be sent, or waiting to retry after an error. |
-| «Απέτυχε» | Still not accepted after 30 attempts. Check the error and retry by hand. |
-| «Προς έλεγχο στο ΕΡΓΑΝΗ» | **Uncertain**: the request may have reached Ergani, but no clear answer came back. See below. |
-| «Δοκιμή (δεν στάλθηκε)» | Made in `dry_run`; never sent. |
-| «Μόνο στην κάρτα (δεν στάλθηκε)» | Entered by the admin in Karta only (forgotten punch / forgotten shift). Never sent. |
-| «Προσαρμογή (δεν στάλθηκε)» | Made during the onboarding period. Never sent. |
+| «Υποβλήθηκε» | Το ΕΡΓΑΝΗ το δέχτηκε· ο αριθμός πρωτοκόλλου έχει αποθηκευτεί. |
+| «Σε αναμονή» | Περιμένει να σταλεί, ή να ξαναδοκιμαστεί μετά από σφάλμα. |
+| «Απέτυχε» | Δεν έγινε δεκτό μετά από 30 προσπάθειες. Ελέγξτε το σφάλμα και ξαναστείλτε το χειροκίνητα. |
+| «Προς έλεγχο στο ΕΡΓΑΝΗ» | **Αβέβαιο**: το αίτημα μπορεί να έφτασε στο ΕΡΓΑΝΗ, αλλά δεν ήρθε καθαρή απάντηση. Δείτε παρακάτω. |
+| «Δοκιμή (δεν στάλθηκε)» | Έγινε σε `dry_run`· δεν στάλθηκε ποτέ. |
+| «Μόνο στην κάρτα (δεν στάλθηκε)» | Καταχωρίστηκε από τον διαχειριστή μόνο στην Karta (ξεχασμένο χτύπημα / ξεχασμένη βάρδια). Δεν στέλνεται ποτέ. |
+| «Προσαρμογή (δεν στάλθηκε)» | Έγινε στην περίοδο προσαρμογής. Δεν στέλνεται ποτέ. |
 
-## Retries
+## Επαναλήψεις
 
-If sending fails, Karta tries again with a growing pause: 1 minute, then 2, then 3, up to
-15 minutes between attempts. It stops after 30 attempts («Απέτυχε»). Errors raise an
-alert:
+Αν η αποστολή αποτύχει, η Karta ξαναδοκιμάζει με όλο και μεγαλύτερη παύση: 1 λεπτό, μετά
+2, μετά 3, έως 15 λεπτά ανάμεσα στις προσπάθειες. Σταματά μετά από 30 προσπάθειες
+(«Απέτυχε»). Τα σφάλματα βγάζουν ειδοποίηση:
 
-- **Login rejected:** usually a wrong or expired Ergani password in `.env`.
-- **Ergani rejected the punch:** the alert shows Ergani's own message. Ergani rejections
-  stay on the admin page until you mark them done.
-- **Ergani down** (HTTP 5xx) or **no connection:** retried automatically.
+- **Απορρίφθηκε η σύνδεση:** συνήθως λάθος ή ληγμένος κωδικός ΕΡΓΑΝΗ στο `.env`.
+- **Το ΕΡΓΑΝΗ απέρριψε το χτύπημα:** η ειδοποίηση δείχνει το μήνυμα του ίδιου του
+  ΕΡΓΑΝΗ. Οι απορρίψεις από το ΕΡΓΑΝΗ μένουν στη σελίδα διαχείρισης μέχρι να τις
+  σημειώσετε ως ολοκληρωμένες.
+- **Το ΕΡΓΑΝΗ δεν λειτουργεί** (HTTP 5xx) ή **δεν υπάρχει σύνδεση:** ξαναδοκιμάζεται
+  αυτόματα.
 
-## Late declarations
+## Εκπρόθεσμες δηλώσεις
 
-If a punch reaches Ergani more than `LATE_THRESHOLD_SECONDS` (default 120) after it
-happened, it's sent as a **late declaration** with a justification code:
+Αν ένα χτύπημα φτάσει στο ΕΡΓΑΝΗ περισσότερο από `LATE_THRESHOLD_SECONDS` (προεπιλογή
+120) μετά τη στιγμή που έγινε, στέλνεται ως **εκπρόθεσμη δήλωση** με κωδικό αιτιολογίας:
 
-| Code | Reason | When Karta uses it |
+| Κωδικός | Αιτία | Πότε τον χρησιμοποιεί η Karta |
 |---|---|---|
-| 001 | Power outage («Διακοπή ρεύματος») | Only when you choose it with «Τεχνικό πρόβλημα». |
-| 002 | Employer's systems unavailable | Automatically when the Ergani login failed, or by your choice with «Τεχνικό πρόβλημα». |
-| 003 | Ergani's systems unavailable | Automatically when Ergani was down, rejected the request, or couldn't be reached. |
+| 001 | Διακοπή ρεύματος | Μόνο όταν τον επιλέξετε εσείς με το «Τεχνικό πρόβλημα». |
+| 002 | Μη διαθεσιμότητα συστημάτων του εργοδότη | Αυτόματα όταν απέτυχε η σύνδεση στο ΕΡΓΑΝΗ, ή όταν τον επιλέξετε με το «Τεχνικό πρόβλημα». |
+| 003 | Μη διαθεσιμότητα συστημάτων του ΕΡΓΑΝΗ | Αυτόματα όταν το ΕΡΓΑΝΗ δεν λειτουργούσε, απέρριψε το αίτημα, ή δεν ήταν προσβάσιμο. |
 
-The code is chosen from the **first** failure and kept for the later retries. If you
-know the real cause was different (e.g. a power cut in the shop), record the punch with
-«Τεχνικό πρόβλημα» and pick the right code.
+Ο κωδικός επιλέγεται από την **πρώτη** αποτυχία και κρατιέται για τις επόμενες
+προσπάθειες. Αν ξέρετε ότι η πραγματική αιτία ήταν άλλη (π.χ. διακοπή ρεύματος στο
+κατάστημα), καταχωρίστε το χτύπημα με το «Τεχνικό πρόβλημα» και διαλέξτε τον σωστό
+κωδικό.
 
-**A forgotten punch is never declared late.** It isn't a technical fault, so no code
-applies. Close it with «Ξέχασε να χτυπήσει» instead (Karta only, never sent).
+**Ένα ξεχασμένο χτύπημα δεν δηλώνεται ποτέ ως εκπρόθεσμο.** Δεν είναι τεχνικό πρόβλημα,
+οπότε δεν ισχύει κανένας κωδικός. Κλείστε το με το «Ξέχασε να χτυπήσει» (μόνο στην Karta,
+δεν στέλνεται ποτέ).
 
-## Uncertain submissions («Προς έλεγχο»)
+## Αβέβαιες υποβολές («Προς έλεγχο»)
 
-Sometimes the request may have reached Ergani but the answer was lost: the reply timed
-out, the connection dropped mid‑answer, a gateway gave HTTP 504, or the reply couldn't be
-read. Sending again could **declare the same punch twice**, so Karta does **not** retry
-these. Instead:
+Μερικές φορές το αίτημα μπορεί να έφτασε στο ΕΡΓΑΝΗ αλλά η απάντηση χάθηκε: η απάντηση
+άργησε, η σύνδεση κόπηκε στη μέση, ένας ενδιάμεσος server έδωσε HTTP 504, ή η απάντηση
+δεν μπορούσε να διαβαστεί. Αν σταλεί ξανά, το ίδιο χτύπημα μπορεί να **δηλωθεί δύο
+φορές**, οπότε η Karta **δεν** το ξαναστέλνει. Αντί γι' αυτό:
 
-1. It raises an urgent alert.
-2. You check in Ergani whether the punch is there.
-3. In «Κινήσεις», you choose:
-   - **«Υπάρχει στο ΕΡΓΑΝΗ»:** it's there. Optionally type the protocol number.
-   - **«Δεν υπάρχει — νέα αποστολή»:** it's not there; send it again.
+1. Βγάζει επείγουσα ειδοποίηση.
+2. Ελέγχετε εσείς στο ΕΡΓΑΝΗ αν το χτύπημα υπάρχει.
+3. Στις «Κινήσεις» επιλέγετε:
+   - **«Υπάρχει στο ΕΡΓΑΝΗ»:** υπάρχει. Προαιρετικά γράψτε τον αριθμό πρωτοκόλλου.
+   - **«Δεν υπάρχει — νέα αποστολή»:** δεν υπάρχει· στέλνεται ξανά.
 
-Failures that certainly happened **before** anything was sent (DNS failure, connection
-refused, login rejected) are always retried automatically.
+Οι αποτυχίες που σίγουρα έγιναν **πριν** σταλεί οτιδήποτε (σφάλμα DNS, άρνηση σύνδεσης,
+απόρριψη της σύνδεσης χρήστη) ξαναδοκιμάζονται πάντα αυτόματα.
 
-## The modes are separate worlds
+## Οι λειτουργίες είναι ξεχωριστοί κόσμοι
 
-Each punch remembers the mode it was made in (`dry_run`, `trial`, `production`). The
-in/out state, alerts and reports only consider the current mode. See
-[Going live](Going-Live).
+Κάθε χτύπημα θυμάται σε ποια λειτουργία έγινε (`dry_run`, `trial`, `production`). Το
+ποιος είναι μέσα ή έξω, οι ειδοποιήσεις και οι αναφορές λαμβάνουν υπόψη μόνο την τρέχουσα
+λειτουργία. Δείτε [Έναρξη κανονικής λειτουργίας](Going-Live).
