@@ -63,10 +63,19 @@ it in the ntfy app («+»), then press «Αποθήκευση» (save) and «Δ�
 
 ## «Αντίγραφα ασφαλείας» (backups)
 
-- The result of the last nightly backup: on the machine, on USB, in the cloud.
+- The result of the last nightly backup: on the machine and on USB (from `backup.sh`),
+  and in the cloud.
+- **Cloud:** connect to Google Drive, Dropbox or Backblaze B2 («Σύνδεση και πρώτο
+  ανέβασμα», connect and first upload, with an encryption password shown once),
+  **«Ανέβασμα τώρα»** (upload now), **«Αποσύνδεση cloud»** (disconnect cloud), and
+  **«Έχω ήδη αντίγραφα στο cloud»** (I already have backups in the cloud) for a new
+  machine.
 - **«Λήψη αντιγράφου τώρα»** (download a backup now): the whole database in one file.
 - **«Αρχείο χτυπημάτων (Excel)»** (punch archive): every punch of a year, with its Ergani
   protocol number, for your records and for inspections.
+- **«Επαναφορά»** (restore) «Από αρχείο…» (from a file) or «Από το cloud…» (from the
+  cloud): first it shows what the backup contains, and then «Επαναφορά τώρα» (restore now)
+  puts it in place of the current database (which is kept as a copy).
 
 See [Backups and restore](Backups-EN).
 
@@ -76,7 +85,19 @@ What staff see on the shop screen, the phone QR card and the links:
 
 - **«Επωνυμία»:** the business name customers know.
 - **«Σύντομο όνομα»:** used in page titles and messages.
-- **«Χρώμα»:** the main colour, with a readability check.
+- **«Χρώματα» (colours):**
+  - **«Έτοιμο θέμα»** (ready theme): Karta (turquoise), «Θάλασσα» (sea, blue), «Μπορντό»
+    (burgundy), «Ελιά» (olive, green), «Τερακότα» (terracotta), «Γραφίτης» (graphite),
+    «Νύχτα» (night, dark). It fills in the colours, which you can then change one by one.
+  - **Main colour** (buttons, titles, QR card), **Background**, **Side panel**, **Text**,
+    **«Προσέλευση» button** (clock in) and **«Αποχώρηση» button** (clock out). Text on the
+    buttons automatically turns black or white, whichever reads better, and the page
+    warns you if something isn't readable.
+  - **Dark theme**, separately for the shop screen and for the admin page.
+  - A small **preview** of the screen changes as you choose; the admin page takes the
+    colours when you save, the shop screen the next time it opens or with «Ανανέωση
+    οθόνης» (refresh screen). «Αρχικά χρώματα» (original colours) goes back to Karta's
+    theme.
 - **Logo:** PNG, JPG or WebP up to 1 MB, ideally square with a transparent background.
   It's stored in the database, so it's included in your backups. With no logo, the name
   is shown instead.

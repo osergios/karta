@@ -29,7 +29,9 @@ sites are refused.
   encrypted with **AES‑GCM** and `PIN_KEY` (as is the ntfy token). It is never sent back
   to the page.
 - **Cloud backups:** encrypted on your machine before upload (rclone crypt); the cloud
-  provider can't read them.
+  provider can't read them. The encryption password and the cloud access are kept on the
+  machine (`/data/rclone.conf`, for Karta only); on Google Drive Karta can only see the
+  files it creates itself.
 
 ## Data minimisation
 
