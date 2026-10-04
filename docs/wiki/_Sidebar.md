@@ -3,6 +3,7 @@
 **[Αρχική](Home)**
 
 **Εγκατάσταση**
+- [Εύκολη εγκατάσταση](Easy-Installation)
 - [Εγκατάσταση](Installation)
 - [Ρυθμίσεις server](Configuration)
 - [Έναρξη λειτουργίας](Going-Live)
@@ -29,6 +30,7 @@
 ### 🇬🇧 English
 
 [Home](Home-EN) ·
+[Easy installation](Easy-Installation-EN) ·
 [Installation](Installation-EN) ·
 [Configuration](Configuration-EN) ·
 [Going live](Going-Live-EN) ·

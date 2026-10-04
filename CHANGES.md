@@ -277,3 +277,7 @@
     declared length in «Απολογιστικές δηλώσεις» is not shown as «Επιπλέον» (as in the ministry's own example).
     **No «Προς ενέργεια» sheet any more**: what has to be declared is in «Απολογιστικές δηλώσεις»; other remarks
     (forgotten punch-out, Ergani pending, absence…) stay in «Αναλυτικά» → «Παρατηρήσεις», and «Σύνοψη» counts them.
+56. **Docker: a new volume works out of the box (1.0.1).** The image creates `/data` owned by the app user, so
+    a brand-new named volume mounted there is writable. Before, a fresh `-v karta-data:/data` made the start-up
+    fail with «unable to open database file». Existing installations are not affected. The Tests workflow now
+    starts the built image with a fresh volume on every change.

@@ -59,6 +59,8 @@
 
 ## Γρήγορη εκκίνηση
 
+👉 **Δεν είστε προγραμματιστής;** Ακολουθήστε την [εύκολη εγκατάσταση, βήμα προς βήμα](https://github.com/osergios/karta/wiki/Easy-Installation) σε Raspberry Pi, παλιό PC ή δωρεάν cloud.
+
 ```bash
 curl -fsSLO https://raw.githubusercontent.com/osergios/karta/main/.env.example
 cp .env.example .env        # συμπληρώστε το· κρατήστε ERGANI_MODE=dry_run στην αρχή
@@ -166,6 +168,8 @@ See [`CHANGES.md`](CHANGES.md) for the detailed history.
   application in front of `/admin`
 
 ## Quick start
+
+👉 **Not a programmer?** Follow the [easy step‑by‑step installation](https://github.com/osergios/karta/wiki/Easy-Installation-EN) on a Raspberry Pi, an old PC or a free cloud machine.
 
 ```bash
 curl -fsSLO https://raw.githubusercontent.com/osergios/karta/main/.env.example

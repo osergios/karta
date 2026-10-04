@@ -36,3 +36,16 @@ jobs:
 
       - name: Check the Docker image builds
         run: docker build -t karta-test .
+
+      - name: Check the image starts with a fresh volume
+        run: |
+          docker run -d --name karta-test -p 127.0.0.1:8000:8000 -v karta-test-data:/data \
+            -e ERGANI_MODE=dry_run -e EMPLOYER_AFM=123456789 -e CF_ACCESS_TEAM_DOMAIN=test.cloudflareaccess.com \
+            -e CF_ACCESS_AUD=test -e ADMIN_EMAILS=admin@example.com -e PUBLIC_ORIGIN=http://127.0.0.1:8000 \
+            karta-test
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8000/healthz; then echo; exit 0; fi
+            sleep 1
+          done
+          docker logs karta-test
+          exit 1

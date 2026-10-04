@@ -14,7 +14,8 @@ pages quote every button or label exactly as it appears on screen, e.g. «Απο
 
 | If you want to… | Read |
 |---|---|
-| Install Karta on a server | [Installation](Installation-EN) |
+| Install Karta without being a programmer (Raspberry Pi, old PC or free cloud) | [Easy installation, step by step](Easy-Installation-EN) |
+| Install Karta on a server (short version) | [Installation](Installation-EN) |
 | Look up a setting in `.env` | [Configuration](Configuration-EN) |
 | Move from testing to real Ergani submissions | [Going live](Going-Live-EN) |
 | Set up the shop laptop or tablet | [Shop screen (kiosk)](Kiosk-EN) |

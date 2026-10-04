@@ -1,0 +1,28 @@
+# Karta + Cloudflare Tunnel: the simplest way to run Karta on a Raspberry Pi, an old PC or a small
+# server. The tunnel gives you HTTPS on your own domain without opening any port on your router.
+#
+#   1. Put this file and your .env in the same folder (see docs/wiki/Easy-Installation.md).
+#   2. In .env set TUNNEL_TOKEN (from Cloudflare Zero Trust → Networks → Tunnels).
+#   3. docker compose up -d
+#
+# In the tunnel's "Public hostname" settings, point your hostname to:  http://karta:8000
+services:
+  karta:
+    image: ghcr.io/osergios/karta:latest
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - karta-data:/data
+    # No "ports": Karta is reached only through the tunnel, never directly from the internet.
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:?Set TUNNEL_TOKEN in .env}
+    depends_on:
+      - karta
+
+volumes:
+  karta-data:

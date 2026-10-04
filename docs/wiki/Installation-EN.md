@@ -2,6 +2,8 @@
 
 # Installation
 
+> First time? See [Easy installation, step by step](Easy-Installation-EN), with a Raspberry Pi, an old PC or a free cloud machine.
+
 Karta is one small web service: Python, FastAPI and a single SQLite database file.
 It runs comfortably on a small VPS, a home server or a Raspberry Pi‑class machine.
 
