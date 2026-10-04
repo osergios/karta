@@ -1,0 +1,97 @@
+name: "🐞 Αναφορά σφάλματος / Bug report"
+description: "Κάτι δεν λειτουργεί όπως πρέπει · Something doesn't work as it should"
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ευχαριστούμε για την αναφορά! · Thanks for the report!
+
+        ⚠️ **Μη γράφετε πραγματικά προσωπικά δεδομένα**: ονόματα εργαζομένων, ΑΦΜ, κωδικούς ΕΡΓΑΝΗ, PIN, το `.env` ή στιγμιότυπα με πραγματικά στοιχεία. Χρησιμοποιήστε φανταστικά στοιχεία.
+        **Don't include real personal data**: employee names, ΑΦΜ, Ergani credentials, PINs, your `.env`, or screenshots with real details. Use made-up data.
+
+        🔒 Για **πρόβλημα ασφαλείας**, μην ανοίξετε issue: χρησιμοποιήστε την [ιδιωτική αναφορά](https://github.com/osergios/karta/security/advisories/new). · For a **security problem**, don't open an issue: use [private reporting](https://github.com/osergios/karta/security/advisories/new).
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: "Πού εμφανίζεται; · Where does it happen?"
+      options:
+        - "Οθόνη καταστήματος · Shop screen (kiosk)"
+        - "Κάρτα QR / σύνδεσμος κινητού · QR card / phone link"
+        - "Διαχείριση: Σήμερα · Admin: Today"
+        - "Διαχείριση: Προσωπικό · Admin: Staff"
+        - "Διαχείριση: Ωράρια & αργίες · Admin: Schedules & holidays"
+        - "Διαχείριση: Αναφορές · Admin: Reports"
+        - "Διαχείριση: Ρυθμίσεις · Admin: Settings"
+        - "Αποστολή στο ΕΡΓΑΝΗ · Ergani submission"
+        - "Ειδοποιήσεις · Alerts / ntfy"
+        - "Εγκατάσταση / Docker · Installation / Docker"
+        - "Οδηγός χρήσης (wiki) · Documentation (wiki)"
+        - "Άλλο · Other"
+    validations:
+      required: true
+
+  - type: textarea
+    id: what
+    attributes:
+      label: "Τι συνέβη; · What happened?"
+      description: "Τι κάνατε, τι περιμένατε και τι έγινε τελικά. · What you did, what you expected, and what happened instead."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: "Βήματα για να αναπαραχθεί · Steps to reproduce"
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: false
+
+  - type: dropdown
+    id: mode
+    attributes:
+      label: "Λειτουργία (ERGANI_MODE) · Mode"
+      options:
+        - "dry_run"
+        - "trial"
+        - "production"
+        - "Δεν ξέρω · Don't know"
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: "Έκδοση (commit ή ημερομηνία) · Version (commit or date)"
+      description: "Π.χ. το αποτέλεσμα του `git log -1 --format=%h`. · E.g. the output of `git log -1 --format=%h`."
+    validations:
+      required: false
+
+  - type: input
+    id: browser
+    attributes:
+      label: "Browser και συσκευή · Browser and device"
+      placeholder: "π.χ. Chrome 140, Windows 11 laptop / e.g. Safari, iPhone"
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: "Μηνύματα σφάλματος ή logs · Error messages or logs"
+      description: "Αφαιρέστε πρώτα κάθε προσωπικό στοιχείο. · Remove any personal data first."
+      render: text
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: "Επιβεβαίωση · Confirmation"
+      options:
+        - label: "Η αναφορά δεν περιέχει πραγματικά προσωπικά δεδομένα ή κωδικούς. · This report contains no real personal data or credentials."
+          required: true

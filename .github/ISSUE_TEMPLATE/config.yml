@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: "🔒 Πρόβλημα ασφαλείας · Security problem"
+    url: https://github.com/osergios/karta/security/advisories/new
+    about: "Ιδιωτική αναφορά, μόνο ο συντηρητής τη βλέπει. · Private report, only the maintainer can see it."
+  - name: "📖 Οδηγός χρήσης · User guide (wiki)"
+    url: https://github.com/osergios/karta/wiki
+    about: "Εγκατάσταση, ρυθμίσεις, συχνές ερωτήσεις. · Installation, settings, FAQ."

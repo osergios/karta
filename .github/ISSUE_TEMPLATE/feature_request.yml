@@ -1,0 +1,40 @@
+name: "💡 Πρόταση · Feature request"
+description: "Ιδέα για νέα δυνατότητα ή βελτίωση · An idea for a new feature or an improvement"
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ευχαριστούμε για την ιδέα! Δείτε πρώτα αν υπάρχει ήδη στον [οδηγό χρήσης](https://github.com/osergios/karta/wiki) ή σε άλλο issue.
+        Thanks for the idea! First check whether it's already in the [user guide](https://github.com/osergios/karta/wiki) or another issue.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: "Ποιο πρόβλημα λύνει; · What problem does it solve?"
+      description: "Περιγράψτε την κατάσταση στην επιχείρηση. · Describe the situation in the business."
+      placeholder: "π.χ. Όταν ένας εργαζόμενος δουλεύει σε δύο καταστήματα… · e.g. When an employee works in two shops…"
+    validations:
+      required: true
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: "Τι προτείνετε; · What do you suggest?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: legal
+    attributes:
+      label: "Νομικό πλαίσιο (αν υπάρχει) · Legal basis (if any)"
+      description: "Αν αφορά δηλώσεις στο ΕΡΓΑΝΗ, ωράρια ή αναφορές: νόμος, εγκύκλιος ή οδηγία του υπουργείου. · If it concerns Ergani declarations, schedules or reports: the law, circular or ministry guidance."
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: "Πώς το κάνετε σήμερα; · How do you handle it today?"
+    validations:
+      required: false
