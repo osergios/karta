@@ -33,8 +33,9 @@ Cloudflare. See [Settings](Admin-Settings-EN).
 ### How long do I keep punches? What if the machine breaks?
 
 At least 5 years. Karta never deletes a real punch, and it keeps a backup every night.
-Make sure you also keep a backup off the machine (`./setup.sh usb` or
-`./setup.sh cloud`), and restore with `./setup.sh restore`. See
+Make sure you also keep a backup off the machine: encrypted in the cloud
+(«Ρυθμίσεις» → «Αντίγραφα ασφαλείας») or on a USB stick (`./setup.sh usb`). Restoring is
+done from the same page («Επαναφορά»). See
 [Backups and restore](Backups-EN).
 
 ### The admin page says "Access token missing" or 403

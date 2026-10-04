@@ -208,8 +208,8 @@ The assistant asks only what's needed for Karta to open safely:
    and protection, showing ✓ for each.
 
 It then writes the settings file (`.env`), **starts Karta**, sets up an **automatic backup
-every night**, and offers a backup off the machine too (USB or cloud; see
-[step 8](#step-8-backups-important)).
+every night**, and offers a backup to a USB stick (the cloud backup is set up in the admin
+page; see [step 8](#step-8-backups-important)).
 
 The **ΑΦΜ (tax number), Ergani user, phone notifications and mode** are set afterwards, on
 the admin page ([step 7](#step-7-follow-the-πρώτα-βήματα-first-steps)). Karta always
@@ -267,20 +267,17 @@ Punches must be **kept for at least 5 years**. The assistant has already set up 
 But if the Raspberry Pi's card or the disk fails, they're lost along with it. So also keep
 a backup **off the machine**, one or both of these:
 
-```bash
-cd ~/karta
-./setup.sh usb      # to a USB stick on the machine
-./setup.sh cloud    # encrypted, to Google Drive, Dropbox or Backblaze B2
-```
+- **Encrypted in the cloud** (Google Drive, Dropbox or Backblaze B2): from the admin page,
+  **«Ρυθμίσεις» → «Αντίγραφα ασφαλείας»** (Settings → Backups). The page shows you the
+  steps, and at the end an **encryption password**: write it down somewhere safe, because
+  without it the backups can't be opened. On a **VPS / cloud server** (e.g. Oracle Cloud)
+  it's the only way, because there's no USB.
+- **To a USB stick** on the machine: `cd ~/karta && ./setup.sh usb` (once, from the
+  terminal).
 
-On a **VPS / cloud server** (e.g. Oracle Cloud) there's no USB: use `cloud`. With `cloud`
-you're given an **encryption password**: write it down somewhere safe, because without it
-the backups can't be opened.
-
-Each night's result shows in «Ρυθμίσεις» → «Αντίγραφα ασφαλείας», which also has the
-**backup download** and each year's **«Αρχείο χτυπημάτων»** (punch archive) in Excel.
-All the details, and how to **restore** (`./setup.sh restore`):
-[Backups and restore](Backups-EN).
+The same page shows each night's result, and has the **backup download**, each year's
+**«Αρχείο χτυπημάτων»** (punch archive) in Excel and **restore** (from a file or from the
+cloud). All the details: [Backups and restore](Backups-EN).
 
 ---
 
