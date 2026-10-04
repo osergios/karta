@@ -204,8 +204,12 @@ The assistant asks only what's needed for Karta to open safely:
 
 1. **Address and admins:** e.g. `karta.yourshop.gr`, and the email addresses allowed into
    the admin page (any email you read; Cloudflare sends a login code there).
-2. **Cloudflare:** paste the key from step 4, and the assistant creates the tunnel, address
-   and protection, showing ✓ for each.
+2. **Cloudflare:** first, **where Karta runs**: "1" at the shop or at home (Raspberry Pi,
+   an old PC/laptop, a server on the local network) or "2" on a VPS / cloud server. With
+   "1" the tunnel connects over **HTTP/2**, which works reliably behind a home or shop
+   router (with QUIC/HTTP/3 many routers make pages slow); with "2" over QUIC (HTTP/3).
+   Then paste the key from step 4, and the assistant creates the tunnel, address and
+   protection, showing ✓ for each.
 
 It then writes the settings file (`.env`), **starts Karta**, sets up an **automatic backup
 every night**, and offers a backup to a USB stick (the cloud backup is set up in the admin

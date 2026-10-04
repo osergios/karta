@@ -253,7 +253,7 @@ def test_yes_no_answers(monkeypatch, answers, expected):
 def test_setup_asks_only_the_address_and_cloudflare(tmp_path, monkeypatch):
     path = tmp_path / ".env"
     path.write_text("ERGANI_USERNAME=kept\nERGANI_PASSWORD=kept-pass\n")
-    replies = iter(["karta.example.gr", "Me@Example.com", "ν"])
+    replies = iter(["karta.example.gr", "Me@Example.com", "", "ν"])     # "": the machine is at the shop/home
     monkeypatch.setattr("builtins.input", lambda prompt="": next(replies))
     monkeypatch.setattr(wizard, "ask_secret", lambda q, keep="": "cf-token")
     monkeypatch.setattr(wizard, "cloudflare_auto", lambda token, host, emails, confirm=None: {
@@ -263,3 +263,10 @@ def test_setup_asks_only_the_address_and_cloudflare(tmp_path, monkeypatch):
     assert env["PUBLIC_ORIGIN"] == "https://karta.example.gr" and env["ADMIN_EMAILS"] == "me@example.com"
     assert env["ERGANI_MODE"] == "dry_run" and env["TUNNEL_TOKEN"] == "tun" and wizard.valid_pin_key(env["PIN_KEY"])
     assert env["ERGANI_USERNAME"] == "kept"            # what was there before stays
+    assert env["TUNNEL_PROTOCOL"] == "http2"
+
+
+def test_tunnel_protocol_follows_where_karta_runs(monkeypatch):
+    for answer, expected in (("1", "http2"), ("2", "auto")):
+        monkeypatch.setattr("builtins.input", lambda prompt="": answer)
+        assert wizard.tunnel_protocol() == expected

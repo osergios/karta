@@ -18,7 +18,8 @@ services:
   cloudflared:
     image: cloudflare/cloudflared:latest
     restart: unless-stopped
-    command: tunnel --no-autoupdate run
+    # http2 for a machine at the shop or at home (home routers handle QUIC/UDP badly), auto on a VPS
+    command: tunnel --no-autoupdate --protocol ${TUNNEL_PROTOCOL:-http2} run
     environment:
       TUNNEL_TOKEN: ${TUNNEL_TOKEN:?Set TUNNEL_TOKEN in .env}
     depends_on:

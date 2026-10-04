@@ -341,3 +341,7 @@
     schedule table and the columns added over time) are gone: the schema now creates every column directly. The
     unused `schedules` table is no longer written or read (an existing one is simply left alone). Texts no longer
     assume a particular shop or a Windows laptop. Databases made by the public versions 1.0.0–1.1.0 work unchanged.
+67. **Tunnel protocol by where Karta runs (1.2.0).** The setup assistant asks whether Karta runs at the shop/home
+    (Raspberry Pi, old PC, local server) or on a VPS, and writes `TUNNEL_PROTOCOL=http2` or `auto` (QUIC/HTTP/3 with
+    HTTP/2 fallback); `docker-compose.yml` passes it to cloudflared (default `http2`). Behind home and shop routers
+    QUIC over UDP can make pages slow. `setup.sh` updates an unchanged first-version `docker-compose.yml`.

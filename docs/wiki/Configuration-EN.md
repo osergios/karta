@@ -70,3 +70,10 @@ on the admin page.
 Without `PIN_KEY`, PINs are stored only as one‑way hashes and can never be shown again;
 you can only set a new one. If you lose the key, PINs keep working, but they can't be
 shown until you give each person a new PIN («Νέο PIN»).
+
+## Cloudflare Tunnel
+
+| Variable | Meaning |
+|---|---|
+| `TUNNEL_TOKEN` | The tunnel's token (the setup assistant writes it). |
+| `TUNNEL_PROTOCOL` | How the tunnel connects: `http2` for a machine at the shop or at home (reliable behind a home router), `auto` on a VPS (QUIC/HTTP/3, falling back to HTTP/2). Default `http2`. Only with `docker-compose.yml`. |

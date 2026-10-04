@@ -246,6 +246,10 @@ case "${1:-}" in
 esac
 
 [ -f docker-compose.yml ] || { say "Κατέβασμα docker-compose.yml…"; curl -fsSLO "$RAW/docker-compose.yml"; }
+# the first version's file (unchanged by hand) gets the tunnel protocol setting
+if grep -q "command: tunnel --no-autoupdate run$" docker-compose.yml && ! grep -q TUNNEL_PROTOCOL docker-compose.yml; then
+  cp docker-compose.yml docker-compose.yml.bak && curl -fsSLO "$RAW/docker-compose.yml" && say "  ✓ Ενημερώθηκε το docker-compose.yml"
+fi
 say "Κατέβασμα της τελευταίας έκδοσης της Karta…"
 docker pull -q "$IMAGE" >/dev/null 2>&1 || say "  (δεν έγινε λήψη· χρησιμοποιείται η έκδοση που υπάρχει ήδη στο μηχάνημα)"
 
