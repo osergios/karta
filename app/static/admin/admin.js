@@ -35,12 +35,20 @@
   const editing = box => !!box && ((box.contains(document.activeElement) && document.activeElement.matches(TYPING))
     || !!box.querySelector("[data-dirty], details[open]:not(.help)"));
 
+  // errors that come from Cloudflare (not from Karta), in words the admin can act on
+  function httpError(status) {
+    if (status === 524) return "Η Karta άργησε να απαντήσει και το Cloudflare σταμάτησε την αναμονή (σφάλμα 524). Δοκίμασε ξανά σε λίγο.";
+    if (status === 502 || status === 503 || status === 530)
+      return `Το Cloudflare δεν βρίσκει την Karta (σφάλμα ${status}): ο server ή το tunnel δεν τρέχει, ή δεν έχει internet.`;
+    if (status === 522 || status === 523) return `Το Cloudflare δεν φτάνει στην Karta (σφάλμα ${status}). Δοκίμασε ξανά σε λίγο.`;
+    return `Σφάλμα ${status}`;
+  }
   async function api(path, body) {
     const opt = body === undefined ? {} : { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
     const res = await fetch(path, { credentials: "same-origin", ...opt });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      const msg = Array.isArray(data.detail) ? "Μη έγκυρα στοιχεία" : (data.detail || `Σφάλμα ${res.status}`);
+      const msg = Array.isArray(data.detail) ? "Μη έγκυρα στοιχεία" : (data.detail || httpError(res.status));
       throw new Error(msg);
     }
     return data;

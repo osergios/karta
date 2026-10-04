@@ -78,3 +78,23 @@ def test_yearly_report(kiosk, admin, clock, employee):
 
 def test_report_rejects_a_bad_month(client, admin):
     assert client.get("/admin/api/report.xlsx?month=2026-13").status_code == 400
+
+
+def test_slow_ergani_gives_a_clear_answer_before_cloudflare_gives_up(client, admin, monkeypatch):
+    import threading
+
+    from app import erganiread
+    release = threading.Event()
+
+    class SlowClient:
+        def get_employer_details(self):
+            release.wait(5)
+
+    monkeypatch.setattr(erganiread, "READ_DEADLINE", 0.2)
+    monkeypatch.setattr(erganiread, "_client", lambda: SlowClient())
+    try:
+        r = client.get("/admin/api/ergani/review")
+    finally:
+        release.set()
+    assert r.status_code == 424
+    assert "δεν απάντησε" in r.json()["detail"]
