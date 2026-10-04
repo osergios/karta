@@ -1191,6 +1191,52 @@
     t.hidden = !n; t.textContent = String(n);
   }
 
+
+  // ---------- «Πρώτα βήματα»: checklist of a new installation (hidden once dismissed) ----------
+  function goTo(tab, target) {
+    showTab(tab);
+    const node = document.getElementById(target);
+    if (!node) return;
+    setTimeout(() => {
+      node.scrollIntoView({ behavior: "smooth", block: "center" });
+      node.classList.remove("flash"); void node.offsetWidth; node.classList.add("flash");
+    }, 60);
+  }
+  function renderFirstSteps(d) {
+    const sec = document.getElementById("firstStepsSec"), box = document.getElementById("firstSteps");
+    const steps = d.first_steps;
+    sec.hidden = !steps;
+    if (!steps) return;
+    const done = steps.filter(s => s.done).length;
+    const fill = el("i");
+    fill.style.width = `${Math.round(100 * done / steps.length)}%`;      // CSSOM: allowed by the CSP (no inline style attribute)
+    const mark = (step, on) => act(async () => { await api("/admin/api/first-steps", { step, done: on }); });
+    const items = steps.map((s, i) => el("li", { class: s.done ? "done" : "" },
+      el("span", { class: "mark", "aria-hidden": "true" }, s.done ? "✓" : String(i + 1)),
+      el("span", { class: "step-title" }, s.title, el("span", { class: "visually-hidden" }, s.done ? " (έγινε)" : "")),
+      el("span", { class: "step-text" }, s.text),
+      el("span", { class: "step-actions" },
+        s.tab ? el("button", { class: "link", onclick: () => goTo(s.tab, s.target) }, s.done ? "Άνοιγμα" : "Πάμε") : null,
+        s.href ? el("a", { class: "link", href: s.href, target: "_blank", rel: "noopener" }, "Οδηγίες") : null,
+        s.test ? el("button", { class: "link", onclick: act(async () => {
+          await api("/admin/api/ntfy/test", {}); toast("Στάλθηκε δοκιμαστική ειδοποίηση στο κινητό");
+        }) }, "Δοκιμαστική ειδοποίηση") : null,
+        s.key === "notify" && !s.test ? el("a", { class: "link", href: "https://github.com/osergios/karta/wiki/Alerts-and-Reminders",
+          target: "_blank", rel: "noopener" }, "Οδηγίες") : null,
+        s.manual && !s.done ? el("button", { class: "link", onclick: mark(s.key, true) }, s.key === "holidays" ? "Δεν χρειάζεται" : "Έγινε / Παράλειψη") : null,
+        s.manual && s.done && !(s.key === "notify" && s.test) ? el("button", { class: "link", onclick: mark(s.key, false) }, "Αναίρεση") : null)));
+    box.replaceChildren(
+      el("div", { class: "steps-head" },
+        el("span", { class: "small" }, done === steps.length ? "Όλα έτοιμα! Η Karta είναι στημένη." : `${done} από ${steps.length} έτοιμα`),
+        el("span", { class: "steps-bar", role: "progressbar", "aria-valuemin": "0", "aria-valuemax": String(steps.length),
+          "aria-valuenow": String(done) }, fill)),
+      el("ol", { class: "steps" }, ...items),
+      el("button", { class: "link", onclick: act(async () => {
+        if (done < steps.length && !confirm("Απόκρυψη των «Πρώτων βημάτων»; Όσα δεν έγιναν δεν θα εμφανίζονται πια εδώ.")) return;
+        await api("/admin/api/first-steps", { hide: true });
+      }) }, "Απόκρυψη"));
+  }
+
   async function load() {
     let d;
     try { d = await api("/admin/api/overview"); } catch (e) { toast(e.message, true); return; }
@@ -1233,6 +1279,7 @@
 
     renderPeople(d);
     renderToday(d);
+    renderFirstSteps(d);
 
     document.getElementById("devs").replaceChildren(
       head("Συσκευή", "Εγγράφηκε", "Τελευταία χρήση", "Κατάσταση", ""),

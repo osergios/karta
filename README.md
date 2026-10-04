@@ -63,7 +63,16 @@
 
 ## Γρήγορη εκκίνηση
 
-👉 **Δεν είστε προγραμματιστής;** Ακολουθήστε την [εύκολη εγκατάσταση, βήμα προς βήμα](https://github.com/osergios/karta/wiki/Easy-Installation) σε Raspberry Pi, παλιό PC ή δωρεάν cloud.
+👉 **Δεν είστε προγραμματιστής;** Ακολουθήστε την [εύκολη εγκατάσταση, βήμα προς βήμα](https://github.com/osergios/karta/wiki/Easy-Installation) σε Raspberry Pi, παλιό PC ή δωρεάν cloud. Ο οδηγός ρύθμισης κάνει τα περισσότερα:
+
+```bash
+mkdir ~/karta && cd ~/karta
+curl -fsSLO https://raw.githubusercontent.com/osergios/karta/main/setup.sh && chmod +x setup.sh
+./setup.sh          # ερωτήσεις στα ελληνικά → .env, Cloudflare, εκκίνηση, αντίγραφα ασφαλείας
+./setup.sh check    # έλεγχος ότι όλα δουλεύουν
+```
+
+Ή με το χέρι:
 
 ```bash
 curl -fsSLO https://raw.githubusercontent.com/osergios/karta/main/.env.example
@@ -175,7 +184,16 @@ See [`CHANGES.md`](CHANGES.md) for the detailed history.
 
 ## Quick start
 
-👉 **Not a programmer?** Follow the [easy step‑by‑step installation](https://github.com/osergios/karta/wiki/Easy-Installation-EN) on a Raspberry Pi, an old PC or a free cloud machine.
+👉 **Not a programmer?** Follow the [easy step‑by‑step installation](https://github.com/osergios/karta/wiki/Easy-Installation-EN) on a Raspberry Pi, an old PC or a free cloud machine. The setup assistant does most of it:
+
+```bash
+mkdir ~/karta && cd ~/karta
+curl -fsSLO https://raw.githubusercontent.com/osergios/karta/main/setup.sh && chmod +x setup.sh
+./setup.sh          # questions (in Greek) → .env, Cloudflare, start, backups
+./setup.sh check    # checks that everything works
+```
+
+Or by hand:
 
 ```bash
 curl -fsSLO https://raw.githubusercontent.com/osergios/karta/main/.env.example

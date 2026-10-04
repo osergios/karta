@@ -6,7 +6,7 @@ This guide is for people who are **not** programmers. At the end, Karta runs on 
 machine with a secure connection (HTTPS) on your own name, e.g.
 `https://karta.yourshop.gr`, **without** touching your router's settings.
 
-Plan on about **1–2 hours** the first time. If you get stuck, see the [FAQ](FAQ-EN) or ask
+Plan on about **an hour** the first time; the **setup assistant** (`setup.sh`) does most of it. If you get stuck, see the [FAQ](FAQ-EN) or ask
 in [Discussions](https://github.com/osergios/karta/discussions/categories/q-a).
 
 > If you're more experienced, the short version is [Installation](Installation-EN).
@@ -100,12 +100,12 @@ Choose **one** of the three options.
    - download the **SSH key** it offers (you need it to connect).
 3. Click **Create**. Note the machine's **Public IP**.
 
-You don't need to open any port in Oracle's firewall: the tunnel from step 4 connects
+You don't need to open any port in Oracle's firewall: the Cloudflare tunnel connects
 outwards.
 
 ---
 
-## Step 3: Connect to the machine and install Docker
+## Step 3: Connect to the machine and start the setup assistant
 
 On your computer, open a terminal (Windows: **PowerShell**; Mac: **Terminal**) and connect:
 
@@ -115,137 +115,111 @@ ssh USERNAME@192.168.1.50         # or with the machine's IP address
 ssh -i key.key ubuntu@PUBLIC_IP   # Oracle Cloud
 ```
 
-Then copy and run these commands one by one:
-
-```bash
-sudo apt update && sudo apt -y upgrade
-curl -fsSL https://get.docker.com | sudo sh
-sudo usermod -aG docker $USER
-exit
-```
-
-Connect again with `ssh` (so the last command takes effect) and check:
-
-```bash
-docker run --rm hello-world
-```
-
-If you see "Hello from Docker!", all is well.
-
----
-
-## Step 4: Create the Cloudflare Tunnel
-
-The tunnel is a secure "line" from your machine to Cloudflare. It makes Karta reachable at
-`https://karta.yourshop.gr` with no open ports on your router.
-
-1. In Cloudflare, open **Zero Trust** (left menu). The first time: choose a **team name**
-   (e.g. `yourshop`) and the **Free** plan (up to 50 users). It may ask for a card, but the
-   Free plan doesn't charge.
-2. Go to **Networks → Tunnels → Create a tunnel → Cloudflared**. Give it a name (e.g.
-   `karta`) and click **Save**.
-3. The next page shows a command with a long **token** (after `--token`). **Copy only the
-   token** and keep it; you don't need to run the command.
-4. Click **Next**. Under **Public hostname**:
-   - Subdomain: `karta` · Domain: your domain;
-   - Service: **Type** `HTTP`, **URL** `karta:8000`.
-5. Click **Save tunnel**.
-
-> Cloudflare renames its menus from time to time. If you can't find something, search for
-> "Tunnels" inside Zero Trust.
-
----
-
-## Step 5: Protect the admin page (Cloudflare Access)
-
-1. In Zero Trust: **Access → Applications → Add an application → Self‑hosted**.
-2. Name: `Karta admin`. Under **Public hostname / Application domain**: subdomain `karta`,
-   your domain, and in **Path** type `admin`.
-3. Add a **policy**: Action **Allow**, rule **Emails** → your email address (and anyone else
-   who should have access).
-4. Save. The default login method, **One‑time PIN** (a code sent to your email), is enough.
-5. Open the application you created and copy its **Application Audience (AUD) Tag**. You
-   need it in the next step.
-
----
-
-## Step 6: Download and configure Karta
-
-On the machine (through `ssh`):
+Download Karta's **setup assistant** and run it:
 
 ```bash
 mkdir ~/karta && cd ~/karta
-curl -fsSLO https://raw.githubusercontent.com/osergios/karta/main/docker-compose.yml
-curl -fsSL  https://raw.githubusercontent.com/osergios/karta/main/.env.example -o .env
-python3 -c "import os,base64;print(base64.urlsafe_b64encode(os.urandom(32)).decode())"
-nano .env
+curl -fsSLO https://raw.githubusercontent.com/osergios/karta/main/setup.sh
+chmod +x setup.sh
+./setup.sh
 ```
 
-The third command prints a random key: copy it for `PIN_KEY`. In `nano`, fill in (move with
-the arrow keys):
+If Docker isn't installed, the assistant offers to install it (it asks for your password).
+It then tells you to log out (`exit`), log in again and rerun `cd ~/karta && ./setup.sh`.
 
-| Line | What to put |
-|---|---|
-| `ERGANI_MODE=` | `dry_run` (**always** this at first) |
-| `ERGANI_USERNAME=` / `ERGANI_PASSWORD=` | your Ergani web‑services user |
-| `EMPLOYER_AFM=` | the business's ΑΦΜ |
-| `BRANCH_NUMBER=` | the branch number (usually `0`) |
-| `CF_ACCESS_TEAM_DOMAIN=` | `yourshop.cloudflareaccess.com` (your team name + `.cloudflareaccess.com`) |
-| `CF_ACCESS_AUD=` | the AUD tag from step 5 |
-| `ADMIN_EMAILS=` | your email (the same as in the policy) |
-| `PUBLIC_ORIGIN=` | `https://karta.yourshop.gr` |
-| `PIN_KEY=` | the key the command printed |
-| `TUNNEL_TOKEN=` | the token from step 4 |
-
-Save with **Ctrl+O**, **Enter**, and exit with **Ctrl+X**. `.env` contains passwords: never
-send it anywhere.
-
-You can fill in `NTFY_*` (phone alerts) later; see [Alerts](Alerts-and-Reminders-EN).
+The assistant's questions are in Greek, like the app.
 
 ---
 
-## Step 7: Start Karta
+## Step 4: Create a Cloudflare key
+
+With this key, the assistant creates **by itself** everything Karta needs in Cloudflare: the
+tunnel, the `https://karta.…` address and the admin page protection.
+
+1. First, turn on **Zero Trust** once: in Cloudflare click **Zero Trust** (left menu), choose
+   a **team name** (e.g. `yourshop`) and the **Free** plan. It may ask for a card, but the
+   Free plan doesn't charge.
+2. Go to **My Profile → API Tokens → Create Token → Custom token**
+   ([dash.cloudflare.com/profile/api-tokens](https://dash.cloudflare.com/profile/api-tokens)).
+3. Name: `Karta setup`. Under **Permissions** add these five lines:
+
+   | | | |
+   |---|---|---|
+   | Account | Cloudflare Tunnel | Edit |
+   | Account | Access: Apps and Policies | Edit |
+   | Account | Access: Organizations, Identity Providers, and Groups | Read |
+   | Zone | DNS | Edit |
+   | Zone | Zone | Read |
+
+4. Under **Zone Resources** choose your domain. Click **Continue to summary → Create Token**
+   and **copy** the key (it's shown once).
+
+The assistant **doesn't store** the key. When you're done, you can delete it on the same
+page, or keep it to run the assistant again later.
+
+> Don't want a key? Answer «ο» (no) to «Να γίνει αυτόματα;» and follow the
+> [manual installation](#manual-installation-without-the-assistant) for Cloudflare.
+
+---
+
+## Step 5: Answer the assistant's questions
+
+The assistant asks five groups of questions:
+
+1. **Business:** ΑΦΜ (checked straight away) and branch number.
+2. **Ergani:** username, password and user type. The assistant **tests the login**
+   (read‑only: nothing is submitted) and tells you whether it's right.
+3. **Address and admins:** e.g. `karta.yourshop.gr` and your email.
+4. **Cloudflare:** paste the key from step 4, and the assistant creates the tunnel, address
+   and protection, showing ✓ for each.
+5. **Phone notifications** (optional): it gives you a topic name for the **ntfy** app and
+   sends a test notification.
+
+It then writes the settings file (`.env`), **starts Karta**, and offers to make an
+**automatic backup every night**. Karta always starts in **test mode** (`dry_run`): nothing
+is sent to Ergani until you decide.
+
+You can rerun `./setup.sh` whenever you like to change something: the current values are
+offered as defaults, and the old file is kept as a copy.
+
+---
+
+## Step 6: Check that everything works
+
+Wait a minute and run:
 
 ```bash
-cd ~/karta
-docker compose up -d
-docker compose ps
+cd ~/karta && ./setup.sh check
 ```
 
-Both lines (`karta` and `cloudflared`) should say **running** or **Up**. After a minute,
-open in your browser:
+It checks the settings, the Ergani login, Cloudflare, that Karta answers on your address, and
+that **the admin page is protected**. For every problem it tells you what to do.
 
-- `https://karta.yourshop.gr/healthz` → you should see `{"ok":true,"mode":"dry_run"}`.
-- `https://karta.yourshop.gr/admin` → Cloudflare asks for your email, sends you a code, and
-  then you see the admin page.
-
-Karta starts by itself whenever the machine boots.
-
-**Something wrong?** See what it says:
-
-```bash
-docker compose logs --tail 50 karta
-docker compose logs --tail 50 cloudflared
-```
-
-Common mistakes: a wrong or empty value in `.env` (Karta says which one is missing), a wrong
-tunnel token, or a wrong `PUBLIC_ORIGIN` (it must be exactly the address, with `https://`
-and no `/` at the end).
+Then open `https://karta.yourshop.gr/admin` in your browser: Cloudflare asks for your email,
+sends you a code, and you see the admin page.
 
 ---
 
-## Step 8: First setup and the shop screen
+## Step 7: Follow the «Πρώτα βήματα» (first steps)
 
-Continue from [Installation → First login and setup](Installation-EN#5-first-login-and-setup):
-import your staff from Ergani, set the name and logo, check the schedules, and register the
-shop laptop ([Shop screen](Kiosk-EN)).
+On the admin page's **«Σήμερα»** tab there's a **«Πρώτα βήματα»** checklist. Each step has a
+«Πάμε» button that takes you to the right place, and ticks itself off when it's done:
 
-When everything works, follow [Going live](Going-Live-EN) to move from `dry_run` to the
-real Ergani.
+1. Business details (name, colour, logo)
+2. Staff from Ergani
+3. Schedules
+4. Local holidays
+5. Shop screen (registering the laptop or tablet: [Shop screen](Kiosk-EN))
+6. Phone notifications (with a test-notification button)
+7. A trial run with the staff (training mode)
+8. Going live on Ergani ([Going live](Going-Live-EN))
 
 ---
 
-## Step 9: Backups (important!)
+## Step 8: Backups (important!)
+
+If you answered "yes" in the assistant, backups already run automatically every night into
+`~/karta/backups`: just read the last paragraph. Otherwise:
 
 All your data is in one file. These commands create a small script that keeps a dated copy
 (and deletes anything older than the last 30), and run it once to test it:
@@ -289,3 +263,132 @@ docker compose up -d
 ```
 
 Then click **«Σήμερα» → «Οθόνη καταστήματος και αποστολή» → «Ανανέωση οθόνης»**.
+
+---
+
+## Manual installation (without the assistant)
+
+If you prefer to do everything by hand, these are the steps the assistant performs.
+
+### Connect to the machine and install Docker
+
+On your computer, open a terminal (Windows: **PowerShell**; Mac: **Terminal**) and connect:
+
+```bash
+ssh USERNAME@karta.local          # Raspberry Pi on the same network
+ssh USERNAME@192.168.1.50         # or with the machine's IP address
+ssh -i key.key ubuntu@PUBLIC_IP   # Oracle Cloud
+```
+
+Then copy and run these commands one by one:
+
+```bash
+sudo apt update && sudo apt -y upgrade
+curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker $USER
+exit
+```
+
+Connect again with `ssh` (so the last command takes effect) and check:
+
+```bash
+docker run --rm hello-world
+```
+
+If you see "Hello from Docker!", all is well.
+
+
+### Create the Cloudflare Tunnel
+
+The tunnel is a secure "line" from your machine to Cloudflare. It makes Karta reachable at
+`https://karta.yourshop.gr` with no open ports on your router.
+
+1. In Cloudflare, open **Zero Trust** (left menu). The first time: choose a **team name**
+   (e.g. `yourshop`) and the **Free** plan (up to 50 users). It may ask for a card, but the
+   Free plan doesn't charge.
+2. Go to **Networks → Tunnels → Create a tunnel → Cloudflared**. Give it a name (e.g.
+   `karta`) and click **Save**.
+3. The next page shows a command with a long **token** (after `--token`). **Copy only the
+   token** and keep it; you don't need to run the command.
+4. Click **Next**. Under **Public hostname**:
+   - Subdomain: `karta` · Domain: your domain;
+   - Service: **Type** `HTTP`, **URL** `karta:8000`.
+5. Click **Save tunnel**.
+
+> Cloudflare renames its menus from time to time. If you can't find something, search for
+> "Tunnels" inside Zero Trust.
+
+
+### Protect the admin page (Cloudflare Access)
+
+1. In Zero Trust: **Access → Applications → Add an application → Self‑hosted**.
+2. Name: `Karta admin`. Under **Public hostname / Application domain**: subdomain `karta`,
+   your domain, and in **Path** type `admin`.
+3. Add a **policy**: Action **Allow**, rule **Emails** → your email address (and anyone else
+   who should have access).
+4. Save. The default login method, **One‑time PIN** (a code sent to your email), is enough.
+5. Open the application you created and copy its **Application Audience (AUD) Tag**. You
+   need it in the next step.
+
+
+### Download and configure Karta
+
+On the machine (through `ssh`):
+
+```bash
+mkdir ~/karta && cd ~/karta
+curl -fsSLO https://raw.githubusercontent.com/osergios/karta/main/docker-compose.yml
+curl -fsSL  https://raw.githubusercontent.com/osergios/karta/main/.env.example -o .env
+python3 -c "import os,base64;print(base64.urlsafe_b64encode(os.urandom(32)).decode())"
+nano .env
+```
+
+The third command prints a random key: copy it for `PIN_KEY`. In `nano`, fill in (move with
+the arrow keys):
+
+| Line | What to put |
+|---|---|
+| `ERGANI_MODE=` | `dry_run` (**always** this at first) |
+| `ERGANI_USERNAME=` / `ERGANI_PASSWORD=` | your Ergani web‑services user |
+| `EMPLOYER_AFM=` | the business's ΑΦΜ |
+| `BRANCH_NUMBER=` | the branch number (usually `0`) |
+| `CF_ACCESS_TEAM_DOMAIN=` | `yourshop.cloudflareaccess.com` (your team name + `.cloudflareaccess.com`) |
+| `CF_ACCESS_AUD=` | the AUD tag from "Protect the admin page" |
+| `ADMIN_EMAILS=` | your email (the same as in the policy) |
+| `PUBLIC_ORIGIN=` | `https://karta.yourshop.gr` |
+| `PIN_KEY=` | the key the command printed |
+| `TUNNEL_TOKEN=` | the token from "Create the Cloudflare Tunnel" |
+
+Save with **Ctrl+O**, **Enter**, and exit with **Ctrl+X**. `.env` contains passwords: never
+send it anywhere.
+
+You can fill in `NTFY_*` (phone alerts) later; see [Alerts](Alerts-and-Reminders-EN).
+
+
+### Start Karta
+
+```bash
+cd ~/karta
+docker compose up -d
+docker compose ps
+```
+
+Both lines (`karta` and `cloudflared`) should say **running** or **Up**. After a minute,
+open in your browser:
+
+- `https://karta.yourshop.gr/healthz` → you should see `{"ok":true,"mode":"dry_run"}`.
+- `https://karta.yourshop.gr/admin` → Cloudflare asks for your email, sends you a code, and
+  then you see the admin page.
+
+Karta starts by itself whenever the machine boots.
+
+**Something wrong?** See what it says:
+
+```bash
+docker compose logs --tail 50 karta
+docker compose logs --tail 50 cloudflared
+```
+
+Common mistakes: a wrong or empty value in `.env` (Karta says which one is missing), a wrong
+tunnel token, or a wrong `PUBLIC_ORIGIN` (it must be exactly the address, with `https://`
+and no `/` at the end).

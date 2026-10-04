@@ -6,7 +6,7 @@
 να τρέχει σε ένα μικρό μηχάνημα, με ασφαλή σύνδεση (HTTPS) στο δικό σας όνομα, π.χ.
 `https://karta.tokatastimamou.gr`, **χωρίς** να πειράξετε ρυθμίσεις στο router.
 
-Θα χρειαστείτε περίπου **1–2 ώρες** την πρώτη φορά. Αν κολλήσετε κάπου, δείτε τις
+Θα χρειαστείτε περίπου **μία ώρα** την πρώτη φορά· τα περισσότερα τα κάνει ο **οδηγός ρύθμισης** (`setup.sh`). Αν κολλήσετε κάπου, δείτε τις
 [Συχνές ερωτήσεις](FAQ) ή ρωτήστε στις [Συζητήσεις](https://github.com/osergios/karta/discussions/categories/q-a).
 
 > Αν είστε πιο έμπειρος, η σύντομη έκδοση είναι στην [Εγκατάσταση](Installation).
@@ -104,12 +104,12 @@ Karta μέσα από το internet του καταστήματος. Αν πέσ
    - κατεβάστε το **SSH key** που σας δίνει (θα το χρειαστείτε για να συνδεθείτε).
 3. Πατήστε **Create**. Σημειώστε τη **Public IP** του μηχανήματος.
 
-Δεν χρειάζεται να ανοίξετε καμία θύρα στο firewall του Oracle: το tunnel του βήματος 4
+Δεν χρειάζεται να ανοίξετε καμία θύρα στο firewall του Oracle: το tunnel του Cloudflare
 συνδέεται προς τα έξω.
 
 ---
 
-## Βήμα 3: Συνδεθείτε στο μηχάνημα και εγκαταστήστε το Docker
+## Βήμα 3: Συνδεθείτε στο μηχάνημα και ξεκινήστε τον οδηγό ρύθμισης
 
 Από τον υπολογιστή σας ανοίξτε ένα τερματικό (Windows: **PowerShell**· Mac: **Terminal**)
 και συνδεθείτε:
@@ -120,139 +120,111 @@ ssh ONOMA_XRISTI@192.168.1.50         # ή με τη διεύθυνση IP το�
 ssh -i kleidi.key ubuntu@PUBLIC_IP    # Oracle Cloud
 ```
 
-Μετά, αντιγράψτε και τρέξτε αυτές τις εντολές μία μία:
-
-```bash
-sudo apt update && sudo apt -y upgrade
-curl -fsSL https://get.docker.com | sudo sh
-sudo usermod -aG docker $USER
-exit
-```
-
-Συνδεθείτε ξανά με `ssh` (ώστε να ισχύσει η τελευταία εντολή) και ελέγξτε:
-
-```bash
-docker run --rm hello-world
-```
-
-Αν δείτε «Hello from Docker!», όλα είναι εντάξει.
-
----
-
-## Βήμα 4: Φτιάξτε το Cloudflare Tunnel
-
-Το tunnel είναι μια ασφαλής «γραμμή» από το μηχάνημά σας προς το Cloudflare. Έτσι η Karta
-είναι προσβάσιμη στο `https://karta.tokatastimamou.gr` χωρίς ανοιχτές θύρες στο router.
-
-1. Στο Cloudflare, ανοίξτε το **Zero Trust** (από το αριστερό μενού). Την πρώτη φορά:
-   διαλέξτε ένα **team name** (π.χ. `tokatastimamou`) και το **Free** πλάνο (έως 50
-   χρήστες). Μπορεί να ζητήσει κάρτα, αλλά το Free πλάνο δεν χρεώνει.
-2. Πηγαίνετε στο **Networks → Tunnels → Create a tunnel → Cloudflared**. Δώστε όνομα
-   (π.χ. `karta`) και πατήστε **Save**.
-3. Στη σελίδα που ανοίγει υπάρχει μια εντολή με ένα μακρύ **token** (μετά το `--token`).
-   **Αντιγράψτε μόνο το token** και φυλάξτε το· δεν χρειάζεται να τρέξετε την εντολή.
-4. Πατήστε **Next**. Στο **Public hostname**:
-   - Subdomain: `karta` · Domain: το domain σας·
-   - Service: **Type** `HTTP`, **URL** `karta:8000`.
-5. Πατήστε **Save tunnel**.
-
-> Τα ονόματα των μενού του Cloudflare αλλάζουν κάπου κάπου. Αν δεν βρίσκετε κάτι, ψάξτε
-> «Tunnels» μέσα στο Zero Trust.
-
----
-
-## Βήμα 5: Προστατέψτε τη σελίδα διαχείρισης (Cloudflare Access)
-
-1. Στο Zero Trust: **Access → Applications → Add an application → Self‑hosted**.
-2. Όνομα: `Karta admin`. Στο **Public hostname / Application domain**: subdomain `karta`,
-   domain το δικό σας, και στο **Path** γράψτε `admin`.
-3. Προσθέστε **policy**: Action **Allow**, κανόνας **Emails** → το δικό σας email (και όποιου
-   άλλου θέλετε να έχει πρόσβαση).
-4. Αποθηκεύστε. Ως τρόπος σύνδεσης αρκεί ο προκαθορισμένος **One‑time PIN** (σας έρχεται
-   κωδικός στο email).
-5. Ανοίξτε την εφαρμογή που φτιάξατε και αντιγράψτε το **Application Audience (AUD) Tag**.
-   Θα το χρειαστείτε στο επόμενο βήμα.
-
----
-
-## Βήμα 6: Κατεβάστε και ρυθμίστε την Karta
-
-Στο μηχάνημα (μέσω `ssh`):
+Κατεβάστε τον **οδηγό ρύθμισης** της Karta και τρέξτε τον:
 
 ```bash
 mkdir ~/karta && cd ~/karta
-curl -fsSLO https://raw.githubusercontent.com/osergios/karta/main/docker-compose.yml
-curl -fsSL  https://raw.githubusercontent.com/osergios/karta/main/.env.example -o .env
-python3 -c "import os,base64;print(base64.urlsafe_b64encode(os.urandom(32)).decode())"
-nano .env
+curl -fsSLO https://raw.githubusercontent.com/osergios/karta/main/setup.sh
+chmod +x setup.sh
+./setup.sh
 ```
 
-Η τρίτη εντολή τυπώνει ένα τυχαίο κλειδί: αντιγράψτε το για το `PIN_KEY`. Στο `nano`
-συμπληρώστε (μετακινηθείτε με τα βελάκια):
-
-| Γραμμή | Τι βάζετε |
-|---|---|
-| `ERGANI_MODE=` | `dry_run` (στην αρχή **πάντα** αυτό) |
-| `ERGANI_USERNAME=` / `ERGANI_PASSWORD=` | ο χρήστης web services του ΕΡΓΑΝΗ |
-| `EMPLOYER_AFM=` | το ΑΦΜ της επιχείρησης |
-| `BRANCH_NUMBER=` | ο αριθμός παραρτήματος (συνήθως `0`) |
-| `CF_ACCESS_TEAM_DOMAIN=` | `tokatastimamou.cloudflareaccess.com` (το team name σας + `.cloudflareaccess.com`) |
-| `CF_ACCESS_AUD=` | το AUD tag του βήματος 5 |
-| `ADMIN_EMAILS=` | το email σας (το ίδιο με την policy) |
-| `PUBLIC_ORIGIN=` | `https://karta.tokatastimamou.gr` |
-| `PIN_KEY=` | το κλειδί που τύπωσε η εντολή |
-| `TUNNEL_TOKEN=` | το token του βήματος 4 |
-
-Αποθηκεύστε με **Ctrl+O**, **Enter**, και βγείτε με **Ctrl+X**. Το `.env` περιέχει
-κωδικούς: μην το στείλετε πουθενά.
-
-Τα `NTFY_*` (ειδοποιήσεις στο κινητό) μπορείτε να τα συμπληρώσετε αργότερα· δείτε
-[Ειδοποιήσεις](Alerts-and-Reminders).
+Αν δεν υπάρχει το Docker, ο οδηγός προτείνει να το εγκαταστήσει (ζητά τον κωδικό σας).
+Μετά σας λέει να αποσυνδεθείτε (`exit`), να συνδεθείτε ξανά και να ξανατρέξετε
+`cd ~/karta && ./setup.sh`.
 
 ---
 
-## Βήμα 7: Ξεκινήστε την Karta
+## Βήμα 4: Φτιάξτε ένα κλειδί για το Cloudflare
+
+Με αυτό το κλειδί ο οδηγός φτιάχνει **μόνος του** στο Cloudflare όλα όσα χρειάζεται η Karta:
+το tunnel, τη διεύθυνση `https://karta.…` και την προστασία της σελίδας διαχείρισης.
+
+1. Πρώτα, ενεργοποιήστε μία φορά το **Zero Trust**: στο Cloudflare πατήστε **Zero Trust**
+   (αριστερό μενού), διαλέξτε ένα **team name** (π.χ. `tokatastimamou`) και το **Free**
+   πλάνο. Μπορεί να ζητήσει κάρτα, αλλά το Free πλάνο δεν χρεώνει.
+2. Πηγαίνετε στο **My Profile → API Tokens → Create Token → Custom token**
+   ([dash.cloudflare.com/profile/api-tokens](https://dash.cloudflare.com/profile/api-tokens)).
+3. Όνομα: `Karta setup`. Στα **Permissions** προσθέστε αυτές τις πέντε γραμμές:
+
+   | | | |
+   |---|---|---|
+   | Account | Cloudflare Tunnel | Edit |
+   | Account | Access: Apps and Policies | Edit |
+   | Account | Access: Organizations, Identity Providers, and Groups | Read |
+   | Zone | DNS | Edit |
+   | Zone | Zone | Read |
+
+4. Στο **Zone Resources** διαλέξτε το domain σας. Πατήστε **Continue to summary → Create
+   Token** και **αντιγράψτε** το κλειδί (εμφανίζεται μία φορά).
+
+Ο οδηγός **δεν αποθηκεύει** το κλειδί. Όταν τελειώσετε, μπορείτε να το διαγράψετε από την
+ίδια σελίδα, ή να το κρατήσετε για να ξανατρέξετε τον οδηγό αργότερα.
+
+> Δεν θέλετε κλειδί; Απαντήστε «ο» στο «Να γίνει αυτόματα;» και ακολουθήστε τη
+> [χειροκίνητη εγκατάσταση](#χειροκίνητη-εγκατάσταση-χωρίς-τον-οδηγό) για το Cloudflare.
+
+---
+
+## Βήμα 5: Απαντήστε στις ερωτήσεις του οδηγού
+
+Ο οδηγός κάνει πέντε ομάδες ερωτήσεων, στα ελληνικά:
+
+1. **Επιχείρηση:** ΑΦΜ (ελέγχεται αμέσως) και αριθμός παραρτήματος.
+2. **ΕΡΓΑΝΗ:** όνομα χρήστη, κωδικός και τύπος χρήστη. Ο οδηγός **δοκιμάζει τη σύνδεση**
+   (μόνο ανάγνωση: δεν υποβάλλεται τίποτα) και σας λέει αν είναι σωστά.
+3. **Διεύθυνση και διαχειριστές:** π.χ. `karta.tokatastimamou.gr` και το email σας.
+4. **Cloudflare:** επικολλάτε το κλειδί του βήματος 4 και ο οδηγός φτιάχνει tunnel,
+   διεύθυνση και προστασία, δείχνοντας ✓ σε κάθε βήμα.
+5. **Ειδοποιήσεις στο κινητό** (προαιρετικά): σας δίνει ένα όνομα θέματος για την εφαρμογή
+   **ntfy** και στέλνει δοκιμαστική ειδοποίηση.
+
+Μετά γράφει το αρχείο ρυθμίσεων (`.env`), **ξεκινά την Karta** και προτείνει να γίνεται
+**αυτόματα αντίγραφο ασφαλείας κάθε βράδυ**. Η Karta ξεκινά πάντα σε **δοκιμαστική
+λειτουργία** (`dry_run`): δεν στέλνεται τίποτα στο ΕΡΓΑΝΗ μέχρι να το αποφασίσετε.
+
+Μπορείτε να ξανατρέξετε το `./setup.sh` όποτε θέλετε για να αλλάξετε κάτι: οι τωρινές τιμές
+προτείνονται ως προεπιλογές, και το παλιό αρχείο κρατιέται ως αντίγραφο.
+
+---
+
+## Βήμα 6: Ελέγξτε ότι όλα δουλεύουν
+
+Περιμένετε ένα λεπτό και τρέξτε:
 
 ```bash
-cd ~/karta
-docker compose up -d
-docker compose ps
+cd ~/karta && ./setup.sh check
 ```
 
-Και οι δύο γραμμές (`karta` και `cloudflared`) πρέπει να γράφουν **running** ή **Up**.
-Μετά από ένα λεπτό, ανοίξτε στον browser:
+Ελέγχει τις ρυθμίσεις, τη σύνδεση στο ΕΡΓΑΝΗ, το Cloudflare, ότι η Karta απαντά στη
+διεύθυνσή σας, και ότι **η σελίδα διαχείρισης είναι προστατευμένη**. Για κάθε πρόβλημα
+λέει τι να κάνετε.
 
-- `https://karta.tokatastimamou.gr/healthz` → πρέπει να δείτε `{"ok":true,"mode":"dry_run"}`.
-- `https://karta.tokatastimamou.gr/admin` → το Cloudflare ζητά το email σας, σας στέλνει
-  κωδικό, και μετά βλέπετε τη σελίδα διαχείρισης.
-
-Η Karta ξεκινά μόνη της κάθε φορά που ανοίγει το μηχάνημα.
-
-**Κάτι δεν πάει καλά;** Δείτε τι λέει:
-
-```bash
-docker compose logs --tail 50 karta
-docker compose logs --tail 50 cloudflared
-```
-
-Συνηθισμένα λάθη: λάθος ή κενή τιμή στο `.env` (η Karta γράφει ποια λείπει), λάθος token
-στο tunnel, ή λάθος `PUBLIC_ORIGIN` (πρέπει να είναι ακριβώς η διεύθυνση, με `https://`
-και χωρίς `/` στο τέλος).
+Μετά ανοίξτε στον browser το `https://karta.tokatastimamou.gr/admin`: το Cloudflare ζητά το
+email σας, σας στέλνει κωδικό, και βλέπετε τη σελίδα διαχείρισης.
 
 ---
 
-## Βήμα 8: Πρώτες ρυθμίσεις και η οθόνη του καταστήματος
+## Βήμα 7: Ακολουθήστε τα «Πρώτα βήματα»
 
-Συνεχίστε από το [Εγκατάσταση → Πρώτη σύνδεση και αρχικές ρυθμίσεις](Installation#5-πρώτη-σύνδεση-και-αρχικές-ρυθμίσεις):
-φέρνετε το προσωπικό από το ΕΡΓΑΝΗ, βάζετε το όνομα και το λογότυπο, ελέγχετε τα ωράρια
-και γράφετε το laptop του καταστήματος ([Οθόνη καταστήματος](Kiosk)).
+Στην καρτέλα **«Σήμερα»** της διαχείρισης υπάρχει η λίστα **«Πρώτα βήματα»**. Κάθε βήμα
+έχει κουμπί «Πάμε» που σας πηγαίνει στο σωστό σημείο, και τσεκάρεται μόνο του όταν γίνει:
 
-Όταν όλα δουλεύουν, ακολουθήστε την [Έναρξη κανονικής λειτουργίας](Going-Live) για να
-περάσετε από το `dry_run` στο πραγματικό ΕΡΓΑΝΗ.
+1. Στοιχεία επιχείρησης (όνομα, χρώμα, λογότυπο)
+2. Προσωπικό από το ΕΡΓΑΝΗ
+3. Ωράρια
+4. Αργίες της περιοχής
+5. Οθόνη καταστήματος (εγγραφή του laptop ή tablet: [Οθόνη καταστήματος](Kiosk))
+6. Ειδοποιήσεις στο κινητό (με κουμπί για δοκιμαστική ειδοποίηση)
+7. Δοκιμή με το προσωπικό (λειτουργία εκπαίδευσης)
+8. Έναρξη στο ΕΡΓΑΝΗ ([Έναρξη κανονικής λειτουργίας](Going-Live))
 
 ---
 
-## Βήμα 9: Αντίγραφα ασφαλείας (σημαντικό!)
+## Βήμα 8: Αντίγραφα ασφαλείας (σημαντικό!)
+
+Αν απαντήσατε «ναι» στον οδηγό, τα αντίγραφα γίνονται ήδη αυτόματα κάθε βράδυ στον φάκελο
+`~/karta/backups`: διαβάστε μόνο την τελευταία παράγραφο. Αλλιώς:
 
 Όλα τα δεδομένα είναι σε ένα αρχείο. Αυτές οι εντολές φτιάχνουν ένα μικρό script που
 κρατά αντίγραφο με την ημερομηνία (και σβήνει όσα είναι παλαιότερα από τα 30 τελευταία), και
@@ -297,3 +269,135 @@ docker compose up -d
 ```
 
 Μετά πατήστε **«Σήμερα» → «Οθόνη καταστήματος και αποστολή» → «Ανανέωση οθόνης»**.
+
+---
+
+## Χειροκίνητη εγκατάσταση (χωρίς τον οδηγό)
+
+Αν προτιμάτε να κάνετε τα πάντα με το χέρι, αυτά είναι τα βήματα που κάνει ο οδηγός.
+
+### Συνδεθείτε στο μηχάνημα και εγκαταστήστε το Docker
+
+Από τον υπολογιστή σας ανοίξτε ένα τερματικό (Windows: **PowerShell**· Mac: **Terminal**)
+και συνδεθείτε:
+
+```bash
+ssh ONOMA_XRISTI@karta.local          # Raspberry Pi στο ίδιο δίκτυο
+ssh ONOMA_XRISTI@192.168.1.50         # ή με τη διεύθυνση IP του μηχανήματος
+ssh -i kleidi.key ubuntu@PUBLIC_IP    # Oracle Cloud
+```
+
+Μετά, αντιγράψτε και τρέξτε αυτές τις εντολές μία μία:
+
+```bash
+sudo apt update && sudo apt -y upgrade
+curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker $USER
+exit
+```
+
+Συνδεθείτε ξανά με `ssh` (ώστε να ισχύσει η τελευταία εντολή) και ελέγξτε:
+
+```bash
+docker run --rm hello-world
+```
+
+Αν δείτε «Hello from Docker!», όλα είναι εντάξει.
+
+
+### Φτιάξτε το Cloudflare Tunnel
+
+Το tunnel είναι μια ασφαλής «γραμμή» από το μηχάνημά σας προς το Cloudflare. Έτσι η Karta
+είναι προσβάσιμη στο `https://karta.tokatastimamou.gr` χωρίς ανοιχτές θύρες στο router.
+
+1. Στο Cloudflare, ανοίξτε το **Zero Trust** (από το αριστερό μενού). Την πρώτη φορά:
+   διαλέξτε ένα **team name** (π.χ. `tokatastimamou`) και το **Free** πλάνο (έως 50
+   χρήστες). Μπορεί να ζητήσει κάρτα, αλλά το Free πλάνο δεν χρεώνει.
+2. Πηγαίνετε στο **Networks → Tunnels → Create a tunnel → Cloudflared**. Δώστε όνομα
+   (π.χ. `karta`) και πατήστε **Save**.
+3. Στη σελίδα που ανοίγει υπάρχει μια εντολή με ένα μακρύ **token** (μετά το `--token`).
+   **Αντιγράψτε μόνο το token** και φυλάξτε το· δεν χρειάζεται να τρέξετε την εντολή.
+4. Πατήστε **Next**. Στο **Public hostname**:
+   - Subdomain: `karta` · Domain: το domain σας·
+   - Service: **Type** `HTTP`, **URL** `karta:8000`.
+5. Πατήστε **Save tunnel**.
+
+> Τα ονόματα των μενού του Cloudflare αλλάζουν κάπου κάπου. Αν δεν βρίσκετε κάτι, ψάξτε
+> «Tunnels» μέσα στο Zero Trust.
+
+
+### Προστατέψτε τη σελίδα διαχείρισης (Cloudflare Access)
+
+1. Στο Zero Trust: **Access → Applications → Add an application → Self‑hosted**.
+2. Όνομα: `Karta admin`. Στο **Public hostname / Application domain**: subdomain `karta`,
+   domain το δικό σας, και στο **Path** γράψτε `admin`.
+3. Προσθέστε **policy**: Action **Allow**, κανόνας **Emails** → το δικό σας email (και όποιου
+   άλλου θέλετε να έχει πρόσβαση).
+4. Αποθηκεύστε. Ως τρόπος σύνδεσης αρκεί ο προκαθορισμένος **One‑time PIN** (σας έρχεται
+   κωδικός στο email).
+5. Ανοίξτε την εφαρμογή που φτιάξατε και αντιγράψτε το **Application Audience (AUD) Tag**.
+   Θα το χρειαστείτε στο επόμενο βήμα.
+
+
+### Κατεβάστε και ρυθμίστε την Karta
+
+Στο μηχάνημα (μέσω `ssh`):
+
+```bash
+mkdir ~/karta && cd ~/karta
+curl -fsSLO https://raw.githubusercontent.com/osergios/karta/main/docker-compose.yml
+curl -fsSL  https://raw.githubusercontent.com/osergios/karta/main/.env.example -o .env
+python3 -c "import os,base64;print(base64.urlsafe_b64encode(os.urandom(32)).decode())"
+nano .env
+```
+
+Η τρίτη εντολή τυπώνει ένα τυχαίο κλειδί: αντιγράψτε το για το `PIN_KEY`. Στο `nano`
+συμπληρώστε (μετακινηθείτε με τα βελάκια):
+
+| Γραμμή | Τι βάζετε |
+|---|---|
+| `ERGANI_MODE=` | `dry_run` (στην αρχή **πάντα** αυτό) |
+| `ERGANI_USERNAME=` / `ERGANI_PASSWORD=` | ο χρήστης web services του ΕΡΓΑΝΗ |
+| `EMPLOYER_AFM=` | το ΑΦΜ της επιχείρησης |
+| `BRANCH_NUMBER=` | ο αριθμός παραρτήματος (συνήθως `0`) |
+| `CF_ACCESS_TEAM_DOMAIN=` | `tokatastimamou.cloudflareaccess.com` (το team name σας + `.cloudflareaccess.com`) |
+| `CF_ACCESS_AUD=` | το AUD tag από την «Προστασία της σελίδας διαχείρισης» |
+| `ADMIN_EMAILS=` | το email σας (το ίδιο με την policy) |
+| `PUBLIC_ORIGIN=` | `https://karta.tokatastimamou.gr` |
+| `PIN_KEY=` | το κλειδί που τύπωσε η εντολή |
+| `TUNNEL_TOKEN=` | το token από το «Cloudflare Tunnel» |
+
+Αποθηκεύστε με **Ctrl+O**, **Enter**, και βγείτε με **Ctrl+X**. Το `.env` περιέχει
+κωδικούς: μην το στείλετε πουθενά.
+
+Τα `NTFY_*` (ειδοποιήσεις στο κινητό) μπορείτε να τα συμπληρώσετε αργότερα· δείτε
+[Ειδοποιήσεις](Alerts-and-Reminders).
+
+
+### Ξεκινήστε την Karta
+
+```bash
+cd ~/karta
+docker compose up -d
+docker compose ps
+```
+
+Και οι δύο γραμμές (`karta` και `cloudflared`) πρέπει να γράφουν **running** ή **Up**.
+Μετά από ένα λεπτό, ανοίξτε στον browser:
+
+- `https://karta.tokatastimamou.gr/healthz` → πρέπει να δείτε `{"ok":true,"mode":"dry_run"}`.
+- `https://karta.tokatastimamou.gr/admin` → το Cloudflare ζητά το email σας, σας στέλνει
+  κωδικό, και μετά βλέπετε τη σελίδα διαχείρισης.
+
+Η Karta ξεκινά μόνη της κάθε φορά που ανοίγει το μηχάνημα.
+
+**Κάτι δεν πάει καλά;** Δείτε τι λέει:
+
+```bash
+docker compose logs --tail 50 karta
+docker compose logs --tail 50 cloudflared
+```
+
+Συνηθισμένα λάθη: λάθος ή κενή τιμή στο `.env` (η Karta γράφει ποια λείπει), λάθος token
+στο tunnel, ή λάθος `PUBLIC_ORIGIN` (πρέπει να είναι ακριβώς η διεύθυνση, με `https://`
+και χωρίς `/` στο τέλος).

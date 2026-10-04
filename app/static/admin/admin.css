@@ -359,3 +359,21 @@ button:disabled { cursor: default; }
   /* the ✕ of a full-screen panel stays at hand while scrolling a long panel */
   .qr-panel .sheet-x { position: fixed; top: .5rem; right: .6rem; z-index: 61; box-shadow: 0 2px 8px rgba(0, 0, 0, .12); }
 }
+
+/* «Πρώτα βήματα» checklist for a new installation */
+.steps { list-style: none; margin: .5rem 0 1rem; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.steps li { display: grid; grid-template-columns: 2rem 1fr; gap: .2rem .7rem; padding: .8rem .9rem; border-bottom: 1px solid var(--line); }
+.steps li:last-child { border-bottom: 0; }
+.steps .mark { grid-row: span 3; width: 1.7rem; height: 1.7rem; border-radius: 50%; display: grid; place-items: center; font-weight: 600; font-size: .9rem; border: 2px solid var(--line); color: var(--ink-soft); }
+.steps li.done .mark { background: var(--accent); border-color: var(--accent); color: #fff; }
+.steps li.done .step-title { color: var(--ink-soft); text-decoration: line-through; text-decoration-color: var(--line); }
+.steps .step-title { font-weight: 600; }
+.steps .step-text { color: var(--ink-soft); font-size: .92rem; line-height: 1.45; }
+.steps .step-actions { margin-top: .35rem; display: flex; flex-wrap: wrap; gap: .3rem 0; }
+.steps-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.steps-bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; min-width: 8rem; flex: 1; max-width: 16rem; }
+.steps-bar i { display: block; height: 100%; background: var(--accent); }
+.flash { animation: flash 1.6s ease-out; border-radius: 8px; }
+@keyframes flash { 0%, 40% { box-shadow: 0 0 0 4px var(--accent-pale); } 100% { box-shadow: 0 0 0 0 transparent; } }
+@media (prefers-reduced-motion: reduce) { .flash { animation: none; } }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

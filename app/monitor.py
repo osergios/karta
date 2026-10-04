@@ -51,15 +51,20 @@ def _ntfy(title: str, message: str, level: str) -> None:
     _ntfy_pool.submit(_ntfy_send, title, message, level)
 
 
-def _ntfy_send(title: str, message: str, level: str) -> None:
+def ntfy_post(title: str, message: str, level: str) -> None:
+    """Sends one phone notification now; raises if ntfy is unreachable or refuses it."""
     body = json.dumps({"topic": config.NTFY_TOPIC, "title": title, "message": message,
                        "priority": LEVEL_PRIORITY.get(level, 3), "tags": ["alarm_clock"]}).encode()
     req = urllib.request.Request(config.NTFY_URL, data=body, method="POST",
                                  headers={"Content-Type": "application/json"})
     if config.NTFY_TOKEN:
         req.add_header("Authorization", f"Bearer {config.NTFY_TOKEN}")
+    urllib.request.urlopen(req, timeout=10).close()
+
+
+def _ntfy_send(title: str, message: str, level: str) -> None:
     try:
-        urllib.request.urlopen(req, timeout=10).close()
+        ntfy_post(title, message, level)
     except Exception as e:  # never let a phone alert break the monitor
         log.warning("ntfy failed: %s", e)
 

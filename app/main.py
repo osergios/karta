@@ -699,6 +699,71 @@ def admin_asset(name: str, admin: str = Depends(security.require_admin)):
     return FileResponse(STATIC / "admin" / name, media_type=allowed[name])
 
 
+# ---- «Πρώτα βήματα»: a checklist for a new installation, ticked off from what is already in place
+FIRST_STEPS_MANUAL = ("holidays", "notify", "training")     # can't be detected: «Έγινε» / «Παράλειψη» marks them
+
+
+def first_steps():
+    """Steps of a new installation and whether each is done; None once hidden (or everything is done and hidden)."""
+    if db.setting("first_steps_hidden") == "1":
+        return None
+    marked = set(filter(None, (db.setting("first_steps_marked") or "").split(",")))
+    active = db.all_rows("SELECT id FROM employees WHERE active=1")
+    with_schedule = {r["employee_id"] for r in db.all_rows("SELECT employee_id, days FROM schedule_versions")
+                     if r["days"] not in ("", "{}")}
+    steps = [
+        ("brand", "Στοιχεία επιχείρησης", "Όνομα, χρώμα και λογότυπο για την οθόνη του καταστήματος.",
+         bool(db.setting("brand_name")), {"tab": "settings", "target": "brandBox"}),
+        ("staff", "Προσωπικό από το ΕΡΓΑΝΗ", "«Έλεγχος ΕΡΓΑΝΗ» και εισαγωγή των εργαζομένων. Δώστε σε καθέναν το PIN του.",
+         bool(active), {"tab": "settings", "target": "erganiCheck"}),
+        ("schedules", "Ωράρια", "Ελέγξτε ότι κάθε εργαζόμενος έχει το ωράριο που είναι δηλωμένο στο ΕΡΓΑΝΗ.",
+         bool(active) and all(r["id"] in with_schedule for r in active), {"tab": "sched", "target": "scheds"}),
+        ("holidays", "Αργίες της περιοχής", "Προσθέστε τοπικές αργίες (π.χ. του πολιούχου) ή κλεισίματα, αν υπάρχουν.",
+         bool(db.setting("local_holidays")) or "holidays" in marked, {"tab": "sched", "target": "offdays"}),
+        ("device", "Οθόνη καταστήματος", "«Δημιουργία κωδικού εγγραφής» και άνοιγμα του /enroll στη συσκευή του καταστήματος.",
+         db.one("SELECT 1 FROM devices WHERE revoked=0") is not None, {"tab": "settings", "target": "addDev"}),
+        ("notify", "Ειδοποιήσεις στο κινητό", "Προαιρετικά: ρυθμίζονται με ./setup.sh (εφαρμογή ntfy).",
+         bool(config.NTFY_URL and config.NTFY_TOPIC) or "notify" in marked, {"test": bool(config.NTFY_URL and config.NTFY_TOPIC)}),
+        ("training", "Δοκιμή με το προσωπικό", "«Λειτουργία εκπαίδευσης»: όλοι δοκιμάζουν να χτυπήσουν, χωρίς να καταγράφεται τίποτα.",
+         bool(db.setting("training_used")) or "training" in marked, {"tab": "today", "target": "sendState"}),
+        ("live", "Έναρξη στο ΕΡΓΑΝΗ", "Πέρασμα σε trial και μετά σε production (ERGANI_MODE στο .env), ή περίοδος προσαρμογής.",
+         config.ERGANI_MODE == "production" or onboarding.until() is not None,
+         {"href": "https://github.com/osergios/karta/wiki/Going-Live"}),
+    ]
+    return [{"key": k, "title": t, "text": x, "done": bool(d), "manual": k in FIRST_STEPS_MANUAL, **link}
+            for k, t, x, d, link in steps]
+
+
+class FirstStepIn(BaseModel):
+    step: str | None = Field(default=None, pattern="^(holidays|notify|training)$")
+    done: bool = True
+    hide: bool = False
+
+
+@app.post("/admin/api/first-steps")
+def admin_first_steps(body: FirstStepIn, admin: str = Depends(security.require_admin)):
+    with db.tx() as c:
+        if body.hide:
+            db.put_setting(c, "first_steps_hidden", "1")
+        if body.step:
+            marked = set(filter(None, (db.setting("first_steps_marked") or "").split(",")))
+            (marked.add if body.done else marked.discard)(body.step)
+            db.put_setting(c, "first_steps_marked", ",".join(sorted(marked)))
+    return {"ok": True, "first_steps": first_steps()}
+
+
+@app.post("/admin/api/ntfy/test")
+def admin_ntfy_test(admin: str = Depends(security.require_admin)):
+    """Sends a test phone notification right away and says whether ntfy accepted it."""
+    if not (config.NTFY_URL and config.NTFY_TOPIC):
+        raise HTTPException(status_code=409, detail="Οι ειδοποιήσεις κινητού δεν είναι ρυθμισμένες (NTFY_URL / NTFY_TOPIC στο .env).")
+    try:
+        monitor.ntfy_post("Κάρτα: δοκιμή", "Δοκιμαστική ειδοποίηση από τη σελίδα διαχείρισης. Αν τη βλέπετε, όλα είναι σωστά.", "info")
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Ο server ειδοποιήσεων δεν τη δέχτηκε: {type(e).__name__}")
+    return {"ok": True}
+
+
 @app.get("/admin/api/overview")
 def admin_overview(admin: str = Depends(security.require_admin)):
     emps = db.all_rows("SELECT * FROM employees ORDER BY active DESC, display_name")
@@ -733,6 +798,7 @@ def admin_overview(admin: str = Depends(security.require_admin)):
         "schedule_meta": sched_meta,
         "settings": monitor.get_settings(),
         "ntfy": bool(config.NTFY_URL and config.NTFY_TOPIC),
+        "first_steps": first_steps(),
         "admin": admin,
         "mode": config.ERGANI_MODE,
         "ergani_host": config.ERGANI_HOST,
@@ -908,6 +974,8 @@ def admin_training(body: TrainingIn, admin: str = Depends(security.require_admin
     until = (now_local() + timedelta(minutes=TRAINING_MINUTES)).isoformat(timespec="seconds") if body.on else ""
     with db.tx() as c:
         db.put_setting(c, "training_until", until)
+        if body.on:
+            db.put_setting(c, "training_used", "1")     # «Πρώτα βήματα»: the staff tried it
     with _training_lock:
         _training_state.clear()
     db.audit(admin, "training_on" if body.on else "training_off", until)

@@ -11,6 +11,19 @@ anything you're typing, and pauses while the page is in the background.
 On a computer the tabs are along the top; on a phone they're an icon bar at the bottom.
 The page reopens on the last tab you used. The alert count shows in the header.
 
+## «Πρώτα βήματα» (first steps)
+
+On a new installation, the top of this tab shows a **«Πρώτα βήματα»** checklist: business
+details, staff from Ergani, schedules, local holidays, the shop screen, phone notifications,
+a trial run with the staff, and going live on Ergani.
+
+- Each step **ticks itself off** once it's done, and has a **«Πάμε»** button that opens the
+  right place.
+- What Karta can't detect by itself (e.g. "we have no local holidays") you mark with
+  **«Έγινε / Παράλειψη»** or **«Δεν χρειάζεται»**.
+- The notifications step has a **«Δοκιμαστική ειδοποίηση»** (test notification) button.
+- **«Απόκρυψη»** hides the checklist.
+
 ## Who is where
 
 | Section | Who's in it |

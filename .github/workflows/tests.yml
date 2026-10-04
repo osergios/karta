@@ -34,6 +34,9 @@ jobs:
       - name: Run the tests
         run: python -m pytest
 
+      - name: Check setup.sh
+        run: bash -n setup.sh
+
       - name: Check the Docker image builds
         run: docker build -t karta-test .
 
@@ -49,3 +52,9 @@ jobs:
           done
           docker logs karta-test
           exit 1
+
+      - name: Check the setup assistant runs inside the image
+        run: |
+          out=$(docker run --rm -e PYTHONPATH=/srv:/srv/vendor -w /tmp karta-test python -m app.setup check 2>&1 || true)
+          echo "$out"
+          echo "$out" | grep -q "Δεν βρέθηκε το .env"     # it started and looked for .env (no crash)

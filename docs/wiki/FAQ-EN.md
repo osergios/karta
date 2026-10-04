@@ -4,6 +4,12 @@
 
 Didn't find the answer? Ask in [Discussions](https://github.com/osergios/karta/discussions/categories/q-a).
 
+### Something doesn't work. Where do I start?
+
+On Karta's machine run `cd ~/karta && ./setup.sh check`. It checks the settings, the Ergani
+login, Cloudflare, that Karta answers on your address and that the admin page is protected,
+and tells you what to fix. To change settings, run `./setup.sh` again.
+
 ### How do I add an employee?
 
 Only from Ergani: «Ρυθμίσεις» → «ΕΡΓΑΝΗ» → «Έλεγχος ΕΡΓΑΝΗ», then import. The person

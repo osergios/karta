@@ -281,3 +281,16 @@
     a brand-new named volume mounted there is writable. Before, a fresh `-v karta-data:/data` made the start-up
     fail with «unable to open database file». Existing installations are not affected. The Tests workflow now
     starts the built image with a fresh volume on every change.
+57. **Setup assistant (1.1.0).** `./setup.sh` asks in Greek for the business ΑΦΜ (checked), the Ergani user (the
+    login is tested, read-only), the address and admin emails, and writes `.env` (mode 600; an existing one is kept
+    as `.env.bak-…`; it always starts in `dry_run`). With a Cloudflare API key it creates the tunnel, the DNS record
+    and the Access application for `/admin` by itself (safe to run again; asks before replacing a DNS record),
+    otherwise it asks for the values by hand. Optional ntfy topic with a test notification. It then starts Karta
+    and can install a nightly backup (keeps the last 30). `./setup.sh check` tests the settings, the Ergani login,
+    the Cloudflare team domain, that the address answers, and warns if `/admin` is NOT behind Cloudflare Access. It
+    runs inside the Karta image as the host user, so the machine only needs Docker (which it offers to install).
+58. **«Πρώτα βήματα» in admin (1.1.0).** On «Σήμερα», a checklist for a new installation: business details, staff
+    from Ergani, schedules, local holidays, shop screen, phone notifications, a trial run in training mode, going
+    live. Steps tick themselves off from what is in place («Πάμε» opens the right section); the ones Karta can't
+    detect can be marked done or skipped; the list can be hidden. New «Δοκιμαστική ειδοποίηση» sends a phone
+    notification right away and reports whether ntfy accepted it.
