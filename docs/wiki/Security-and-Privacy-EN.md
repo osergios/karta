@@ -28,9 +28,9 @@ sites are refused.
 - **Ergani password:** in `.env` or, if you set it in the admin page, in the database
   encrypted with **AES‑GCM** and `PIN_KEY` (as is the ntfy token). It is never sent back
   to the page.
-- **Cloud backups:** encrypted on your machine before upload (rclone crypt); the cloud
+- **Cloud backups:** encrypted on your machine before upload (restic, AES-256); the cloud
   provider can't read them. The encryption password and the cloud access are kept on the
-  machine (`/data/rclone.conf`, for Karta only); on Google Drive Karta can only see the
+  machine (`/data/cloud-password`, `/data/rclone.conf`, for Karta only); on Google Drive Karta can only see the
   files it creates itself.
 
 ## Data minimisation

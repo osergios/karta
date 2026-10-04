@@ -1,7 +1,6 @@
 """Cloud backups (real rclone against a local folder, when rclone is installed) and restore from the admin page."""
 import base64
 import os
-import shutil
 from datetime import datetime, timedelta
 
 import pytest
@@ -9,7 +8,7 @@ from conftest import add_employee
 
 from app import cloud, config, db, restore, security
 
-needs_rclone = pytest.mark.skipif(shutil.which("rclone") is None, reason="rclone is not installed")
+needs_rclone = pytest.mark.skipif(not cloud.available(), reason="rclone / restic are not installed")
 
 
 @pytest.fixture
@@ -66,8 +65,6 @@ def test_restore_warns_when_pin_key_differs(client, admin, monkeypatch):
 
 # ---------- cloud ----------
 def test_cloud_schedule():
-    with db.tx() as c:
-        db.put_setting(c, "cloud_provider", "drive")
     evening = datetime(2026, 10, 6, 23, 45)
     noon = datetime(2026, 10, 6, 12, 0)
     orig = cloud.connected
@@ -95,26 +92,33 @@ def test_cloud_connect_checks_the_code(client, admin):
 
 
 @needs_rclone
-def test_cloud_backup_is_encrypted_and_can_be_restored(client, admin, employee, store):
+def test_cloud_backup_is_encrypted_deduplicated_and_can_be_restored(client, admin, employee, store):
     password = cloud.connect("local", local_path=str(store))
     assert password and len(password) == 24 and cloud.connected()
     cloud.run_backup(datetime(2026, 10, 6, 23, 40))
-    names = [p.name for p in store.rglob("*") if p.is_file()]
-    assert len(names) == 3 and not any("karta" in n for n in names)      # names are encrypted too
-    found = {b["path"] for b in cloud.list_backups()}
-    assert found == {"daily/karta-2026-10-06.db", "monthly/karta-2026-10.db", "yearly/karta-2026.db"}
-    d = client.get("/admin/api/overview").json()["backup"]["cloud"]
-    assert d["state"] == "ok"
+    size1 = sum(p.stat().st_size for p in store.rglob("*") if p.is_file())
+    cloud.run_backup(datetime(2026, 10, 7, 23, 40))
+    size2 = sum(p.stat().st_size for p in store.rglob("*") if p.is_file())
+    assert size2 - size1 < size1 / 3                                      # the second snapshot stores only changes
+    raw = b"".join(p.read_bytes() for p in store.rglob("*") if p.is_file())
+    assert "Παπαδοπούλου".encode() not in raw and b"SQLite format" not in raw   # encrypted
+    snaps = cloud.list_backups()
+    assert len(snaps) >= 1 and all(cloud.SNAPSHOT_ID.match(s["id"]) for s in snaps)
+    assert client.get("/admin/api/overview").json()["backup"]["cloud"]["state"] == "ok"
+    assert client.post("/admin/api/cloud/connect", json={"provider": "drive", "token": "{}"}).status_code == 400
 
     # a new machine: connect to the same backups with the password, then restore from the cloud
     cloud._forget()
     with pytest.raises(cloud.CloudError):
         cloud.connect("local", local_path=str(store), password="wrong-password-123")
+    assert not cloud.connected()
+    with pytest.raises(cloud.CloudError):
+        cloud.connect("local", local_path=str(store))                    # a new repository over the old one: refused
     assert cloud.connect("local", local_path=str(store), password=password) is None
     add_employee(afm="900000002", display="Γιώργος")
-    r = client.post("/admin/api/restore/cloud", json={"path": "daily/karta-2026-10-06.db"})
+    r = client.post("/admin/api/restore/cloud", json={"id": cloud.list_backups()[0]["id"]})
     assert r.status_code == 200 and r.json()["employees"] == 1, r.text
     r = client.post("/admin/api/restore/apply", json={"confirm": True})
     assert db.one("SELECT COUNT(*) n FROM employees")["n"] == 1
     os.remove(os.path.join(os.path.dirname(config.DB_PATH), r.json()["kept"]))
-    assert client.post("/admin/api/restore/cloud", json={"path": "../etc/passwd"}).status_code == 400
+    assert client.post("/admin/api/restore/cloud", json={"id": "../etc/passwd"}).status_code == 400

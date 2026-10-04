@@ -30,7 +30,7 @@ jobs:
 
       - name: Install
         run: |
-          sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends rclone     # cloud backups (also in the image)
+          sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends restic rclone     # cloud backups (also in the image)
           pip install -r requirements.txt -r requirements-dev.txt
 
       - name: Run the tests
@@ -60,4 +60,5 @@ jobs:
           out=$(docker run --rm -e PYTHONPATH=/srv:/srv/vendor -w /tmp karta-test python -m app.setup check 2>&1 || true)
           echo "$out"
           echo "$out" | grep -q "Δεν βρέθηκε το .env"     # it started and looked for .env (no crash)
-          docker run --rm --entrypoint rclone karta-test version | head -n1   # rclone is in the image
+          docker run --rm --entrypoint rclone karta-test version | head -n1   # rclone and restic are in the image
+          docker run --rm --entrypoint restic karta-test version
