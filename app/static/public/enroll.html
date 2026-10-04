@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#f7f5f1">
+  <title>Εγγραφή συσκευής{{SUFFIX}}</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/brand/icons/favicon-32.png">
+  <link rel="apple-touch-icon" href="/static/brand/icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Κάρτα">
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/brand.css">
+  <script src="/static/enroll.js" defer></script>
+</head>
+<body class="enroll">
+  <div class="enroll-card">
+    <img class="logo" id="logo" src="/brand/logo" alt="{{NAME}}">
+    <h1>Εγγραφή συσκευής</h1>
+    <p class="hint">Πληκτρολογήστε τον κωδικό από τη διαχείριση. Ισχύει για λίγα λεπτά και μία μόνο φορά.</p>
+    <div class="field">
+      <label for="code">Κωδικός εγγραφής</label>
+      <input id="code" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="12" placeholder="XXXX-XXXX">
+    </div>
+    <div class="row"><button class="action ARRIVAL" id="go">Εγγραφή συσκευής</button></div>
+    <p class="msg-error" id="err" role="alert"></p>
+  </div>
+</body>
+</html>

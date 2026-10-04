@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="el" class="kiosk-page">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#f7f5f1">
+  <title>Κάρτα εργασίας{{SUFFIX}}</title>
+  <meta name="brand" content="{{SHORT}}">
+  <meta name="brand-name" content="{{NAME}}">
+  <link rel="preload" href="/static/brand/fonts/inter-greek-300-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/brand/icons/favicon-32.png">
+  <link rel="apple-touch-icon" href="/static/brand/icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Κάρτα">
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/brand.css">
+  <script src="/static/festive.js" defer></script>
+  <script src="/static/kiosk.js" defer></script>
+</head>
+<body class="kiosk">
+  <aside class="side">
+    <div class="aura" aria-hidden="true"><i class="a1"></i><i class="a2"></i><i class="a3"></i></div>
+    <div class="training-banner" id="training" hidden>ΕΚΠΑΙΔΕΥΣΗ<small>Οι κινήσεις δεν καταγράφονται και δεν στέλνονται στο ΕΡΓΑΝΗ</small></div>
+    <div class="festive-side" id="festiveSide" aria-hidden="true"></div>
+    <img class="logo" id="logo" src="/brand/logo" alt="{{NAME}}">
+    <div class="brand-name" id="brandName" hidden>{{NAME}}</div>
+    <div class="reminders" id="reminders" aria-live="assertive"></div>
+    <div class="alerts" id="alerts" aria-live="assertive"></div>
+    <button class="sound-btn" id="soundBtn" hidden><svg class="sound-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><!-- speaker: Tabler Icons «volume» (MIT) --><path d="M15 8a5 5 0 0 1 0 8"/><path d="M17.7 5a9 9 0 0 1 0 14"/><path d="M6 15h-2a1 1 0 0 1 -1 -1v-4a1 1 0 0 1 1 -1h2l3.5 -4.5a.8 .8 0 0 1 1.5 .5v14a.8 .8 0 0 1 -1.5 .5l-3.5 -4.5"/></svg>Πάτα εδώ για να ενεργοποιηθεί ο ήχος</button>
+    <button class="notif" id="notif" hidden>Ενεργοποίηση ειδοποιήσεων</button>
+    <div class="time">
+      <div class="clock" id="clock">--:--</div>
+      <div class="date" id="date"></div>
+      <div class="closed-note" id="closedNote" hidden></div>
+    </div>
+    <span class="mode" id="mode" hidden></span>
+  </aside>
+  <div class="festive-sky" id="festiveSky" aria-hidden="true"></div>
+  <div class="punch-log" id="punchLog" aria-hidden="true" hidden></div>
+  <main id="screen" aria-live="polite"></main>
+</body>
+</html>

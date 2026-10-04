@@ -1,0 +1,28 @@
+# Secrets: never commit the real environment file
+.env
+.env.*
+!.env.example
+
+# Database and backups (contain employee data)
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+data/
+backups/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

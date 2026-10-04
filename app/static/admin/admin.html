@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Διαχείριση κάρτας{{SUFFIX}}</title>
+  <meta name="brand" content="{{SHORT}}">
+  <meta name="brand-name" content="{{NAME}}">
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/brand/icons/favicon-32.png">
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/admin/assets/admin.css">
+  <link rel="stylesheet" href="/brand.css">
+  <script src="/static/cardart.js" defer></script>
+  <script src="/admin/assets/admin.js" defer></script>
+</head>
+<body class="admin">
+  <header class="bar">
+    <span class="brand"><img id="logo" src="/brand/logo" alt="">Κάρτα εργασίας</span>
+    <button type="button" class="alert-badge" id="alertBadge" hidden></button>
+    <span id="status" class="small"></span>
+  </header>
+  <nav class="tabs" id="tabs" aria-label="Ενότητες">
+    <button type="button" data-tab="today"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg><span class="t-long">Σήμερα</span><span class="t-short">Σήμερα</span><b class="t-badge" hidden></b></button>
+    <button type="button" data-tab="people"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5z"/><circle cx="17" cy="9" r="2.8"/><path d="M16 14.6c3 .1 5 1.9 5.5 5.4H17"/></svg><span class="t-long">Προσωπικό</span><span class="t-short">Προσωπικό</span></button>
+    <button type="button" data-tab="sched"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span class="t-long">Ωράρια & αργίες</span><span class="t-short">Ωράρια</span></button>
+    <button type="button" data-tab="reports"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V10M12 21V4M19 21v-7"/></svg><span class="t-long">Αναφορές</span><span class="t-short">Αναφορές</span></button>
+    <button type="button" data-tab="settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg><span class="t-long">Ρυθμίσεις</span><span class="t-short">Ρυθμίσεις</span></button>
+  </nav>
+  <div class="wrap">
+    <div class="tab" data-tab="today" hidden>
+    <section>
+      <h2>Σήμερα</h2>
+      <div id="todayBox"></div>
+    </section>
+
+    <section>
+      <h2>Ειδοποιήσεις</h2>
+      <div class="er-actions"><span class="small" id="ntfyState"></span><button class="link" id="alertsClear" hidden>Εκκαθάριση λίστας</button></div>
+      <div id="alerts"></div>
+    </section>
+
+    <section>
+      <h2>Οθόνη καταστήματος και αποστολή</h2>
+      <div id="remState" class="send-state"></div>
+      <div id="kioskReload" class="send-state"></div>
+      <div id="sendState" class="send-state"></div>
+      <div id="onboardState" class="send-state"></div>
+    </section>
+    </div>
+    <div class="tab" data-tab="people" hidden>
+    <section>
+      <h2>Εργαζόμενοι</h2>
+      <div id="emps" class="emp-list"></div>
+      <p class="small">Οι εργαζόμενοι έρχονται μόνο από το ΕΡΓΑΝΗ («Ρυθμίσεις» → ΕΡΓΑΝΗ), ώστε ΑΦΜ και ονοματεπώνυμο να είναι ακριβώς όπως εκεί. Το PIN δημιουργείται αυτόματα· αν θέλεις δικό σου, πάτα «Ορισμός PIN». Η «Κάρτα QR» είναι εικόνα για το κινητό του εργαζόμενου (ή για εκτύπωση): τη δείχνει στην κάμερα του laptop και χτυπά κάρτα χωρίς PIN.</p>
+    </section>
+    </div>
+    <div class="tab" data-tab="sched" hidden>
+    <section>
+      <h2>Ωράρια</h2>
+      <p class="small">Η πρώτη γραμμή είναι το ωράριο λειτουργίας του καταστήματος: βοηθά να δεις τι σημαίνει για το προσωπικό και αντιγράφεται με «Από κατάστημα». Από κάτω, το ωράριο κάθε εργαζόμενου, ίδιο με αυτό που είναι δηλωμένο στο ΕΡΓΑΝΗ. Γράψε π.χ. 10:00-18:00, με διάλειμμα μέσα στο ωράριο 10:00-18:30/30, με διάλειμμα «εκτός ωραρίου» (όπως στο ΕΡΓΑΝΗ) 10:00-16:30/+30 — αποχώρηση από 16:30 έως 17:00 — σπαστό 10:00-14:00+17:00-21:00/20, κενό για ρεπό. Γράψε το διάλειμμα όπως είναι δηλωμένο στο ΕΡΓΑΝΗ (εντός ή εκτός ωραρίου). Κάτω από κάθε γραμμή βλέπεις αμέσως τι σημαίνουν οι ώρες.</p>
+      <div class="sched-from">
+        <label for="schedFrom">Οι αλλαγές που αποθηκεύεις ισχύουν από</label>
+        <input type="date" id="schedFrom">
+        <p class="small">Κάθε φορά που πατάς «Αποθήκευση» το ωράριο ισχύει από αυτή την ημερομηνία (προεπιλογή: σήμερα) και κρατιέται ιστορικό — μπορείς να το αλλάζεις όσες φορές θέλεις. Οι ημέρες πριν από αυτή μετρούν με το ωράριο που ίσχυε τότε. Αν διαλέξεις μελλοντική ημερομηνία, μέχρι τότε ισχύει το τωρινό.</p>
+      </div>
+      <div id="scheds" class="sched-list"></div>
+    </section>
+
+    <section>
+      <h2>Αργίες και κλειστό κατάστημα</h2>
+      <p class="small">Τις ημέρες που το κατάστημα είναι κλειστό (αργία, τοπική αργία, ανακαίνιση…) δεν γίνονται υπενθυμίσεις ούτε ειδοποιήσεις «δεν χτύπησε», η οθόνη δεν δέχεται προσέλευση (σου έρχεται ειδοποίηση αν κάποιος προσπαθήσει), και οι αναφορές γράφουν «Αργία» / «Κατάστημα κλειστό» αντί για απουσία, με λίστα για τον λογιστή. Στο ΕΡΓΑΝΗ οι ημέρες αυτές δηλώνονται ως μη εργασία από τον λογιστή — εδώ δεν στέλνεται τίποτα. Αν κάποιος πρέπει να δουλέψει μια τέτοια ημέρα: δήλωση στο ΕΡΓΑΝΗ και μετά «Υπερωρία / αλλαγή ημέρας…» στον εργαζόμενο.</p>
+      <div id="offdays"></div>
+    </section>
+    </div>
+    <div class="tab" data-tab="reports" hidden>
+    <section>
+      <h2>Αναφορές</h2>
+      <p class="small">Excel για τον λογιστή, με τα επίσημα ονόματα του ΕΡΓΑΝΗ: σύνοψη ανά εργαζόμενο (ώρες ωραρίου, ώρες εργασίας, δηλωμένες υπερωρίες χωριστά από τις επιπλέον ώρες χωρίς δήλωση, λιγότερες ώρες, κανονική άδεια / άδεια ασθενείας / άδεια ειδικού σκοπού, αργίες και κλειστό κατάστημα, ξεχασμένα χτυπήματα), λίστα αδειών και αργιών της περιόδου, λίστα «Προς ενέργεια» και «Αναλυτικά» με τις ακριβείς ώρες και τα πρωτόκολλα ΕΡΓΑΝΗ. Η ετήσια έχει επιπλέον το φύλλο «Ανά μήνα».</p>
+      <div class="grid dev">
+        <label>Μήνας<input type="month" id="month"></label>
+        <a class="btn" id="reportLink" href="#">Μηνιαία αναφορά</a>
+      </div>
+      <div class="grid dev">
+        <label>Έτος<input type="number" id="year" min="2026" max="2100" step="1"></label>
+        <a class="btn" id="reportYearLink" href="#">Ετήσια αναφορά</a>
+      </div>
+    </section>
+    </div>
+    <div class="tab" data-tab="settings" hidden>
+    <section>
+      <h2>ΕΡΓΑΝΗ</h2>
+      <p class="small">Διαβάζει από το ΕΡΓΑΝΗ τον εργοδότη, τα παραρτήματα και το τρέχον προσωπικό, και τα συγκρίνει με την εφαρμογή. Δεν υποβάλλει τίποτα. Από το ΕΡΓΑΝΗ κρατάμε μόνο ΑΦΜ, ονοματεπώνυμο και το δηλωμένο ωράριο.</p>
+      <div class="grid dev"><span id="erganiState" class="small"></span><button class="btn" id="erganiCheck">Έλεγχος ΕΡΓΑΝΗ</button></div>
+      <div class="er-actions"><button class="link" id="erganiRefresh">Ενημέρωση στοιχείων ωραρίου από ΕΡΓΑΝΗ</button><button class="link" id="erganiServices">Υπηρεσίες ΕΡΓΑΝΗ</button></div>
+      <div id="erganiResult"></div>
+      <div id="erganiExtra"></div>
+    </section>
+
+    <section>
+      <h2>Όρια και ειδοποιήσεις</h2>
+      <p class="small">Τα όρια ημέρας και εβδομάδας εξαρτώνται από τη σύμβαση και από το αν δουλεύετε 5 ή 6 ημέρες. Επιβεβαίωσέ τα με τον λογιστή.</p>
+      <form id="limits" class="grid limits"></form>
+    </section>
+
+    <section>
+      <h2>Στοιχεία επιχείρησης</h2>
+      <p class="small">Το όνομα, το λογότυπο και το χρώμα που βλέπουν οι εργαζόμενοι στην οθόνη του καταστήματος, στην κάρτα QR του κινητού και στους συνδέσμους. Τα επίσημα στοιχεία του εργοδότη στην αναφορά του λογιστή έρχονται πάντα από το ΕΡΓΑΝΗ.</p>
+      <div id="brandBox"></div>
+    </section>
+
+    <section>
+      <h2>Συσκευές</h2>
+      <table id="devs" class="cardify"></table>
+      <form id="addDev" class="grid dev">
+        <input name="device_name" placeholder="Όνομα συσκευής, π.χ. Tablet ρεσεψιόν" maxlength="40" required>
+        <button class="btn">Δημιουργία κωδικού εγγραφής</button>
+      </form>
+      <p id="code" class="code" hidden></p>
+    </section>
+
+    <section>
+      <h2>Κινήσεις</h2>
+      <p class="small">Οι τελευταίες 300 κινήσεις.</p>
+      <div id="testMoves"></div>
+      <div class="scroll"><table id="movs" class="cardify"></table></div>
+    </section>
+    </div>
+  </div>
+  <div class="sheet-backdrop" aria-hidden="true"></div>
+  <p id="pin" class="code" role="status" hidden></p>
+  <div id="qrcard" class="qr-panel" hidden></div>
+  <div id="departBox" class="qr-panel" hidden></div>
+  <div id="leaveBox" class="qr-panel" hidden></div>
+  <div id="dayBox" class="qr-panel" hidden></div>
+  <div id="earlyBox" class="qr-panel" hidden></div>
+  <p id="toast" class="toast" role="status" hidden></p>
+  <div id="printArea" aria-hidden="true"></div>
+</body>
+</html>

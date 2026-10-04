@@ -1,0 +1,2 @@
+withlogicco/ergani-python-sdk @ caa51f5ea8a508addfa2612f1a0547e900c35d90 (2026-09-25), MIT
+Local patch: auth.py reads UserType from env ERGANI_USER_TYPE (default "01", the SDK's value).
