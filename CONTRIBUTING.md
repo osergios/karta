@@ -53,6 +53,21 @@ PYTHONPATH=vendor uvicorn app.main:app --reload --port 8000
 - **Δοκιμάζετε πάντα σε `dry_run`**, ή σε `trial` με χρήστη του δοκιμαστικού ΕΡΓΑΝΗ. Μη
   στέλνετε ποτέ δοκιμαστικά χτυπήματα στο πραγματικό ΕΡΓΑΝΗ.
 
+## Αυτόματα τεστ
+
+Τα τεστ βρίσκονται στον φάκελο `tests/` και τρέχουν σε `dry_run` με προσωρινή βάση, χωρίς
+ποτέ να επικοινωνούν με το ΕΡΓΑΝΗ:
+
+```bash
+pip install -r requirements.txt -r requirements-dev.txt
+python -m pytest
+```
+
+Τρέχουν και αυτόματα στο GitHub σε κάθε pull request. Αν αλλάξετε συμπεριφορά, προσθέστε ή
+ενημερώστε το αντίστοιχο τεστ. Για ό,τι εξαρτάται από την ώρα (νωρίτερη προσέλευση,
+αργίες, υπενθυμίσεις), χρησιμοποιήστε το `clock` του `tests/conftest.py`, που «παγώνει» την
+ώρα.
+
 ## Οδηγίες για τον κώδικα
 
 - **Ακολουθήστε το ύφος του υπάρχοντος κώδικα**: ονόματα, δομή, πυκνότητα σχολίων.
@@ -74,7 +89,8 @@ PYTHONPATH=vendor uvicorn app.main:app --reload --port 8000
 
 1. Κάντε fork και δημιουργήστε branch από το `main`.
 2. Κρατήστε κάθε pull request μικρό και με ένα θέμα.
-3. Ελέγξτε την αλλαγή σε `dry_run`, και περιγράψτε στο pull request τι δοκιμάσατε.
+3. Τρέξτε τα τεστ (`python -m pytest`), ελέγξτε την αλλαγή σε `dry_run`, και περιγράψτε
+   στο pull request τι δοκιμάσατε.
 4. Αν αλλάζει κάτι που βλέπει ο χρήστης, ενημερώστε:
    - το [`CHANGES.md`](CHANGES.md)·
    - τον οδηγό χρήσης στο [`docs/wiki/`](docs/wiki/), **και στις δύο γλώσσες** (π.χ.
@@ -154,6 +170,21 @@ Good to know:
 - **Always test in `dry_run`**, or in `trial` with an Ergani test‑environment user. Never
   send test punches to the real Ergani.
 
+## Automated tests
+
+The tests live in `tests/` and run in `dry_run` against a temporary database, never talking
+to Ergani:
+
+```bash
+pip install -r requirements.txt -r requirements-dev.txt
+python -m pytest
+```
+
+They also run automatically on GitHub for every pull request. If you change behaviour, add
+or update the matching test. For anything that depends on the time (early arrivals,
+holidays, reminders), use the `clock` fixture from `tests/conftest.py`, which freezes the
+time.
+
 ## Code guidelines
 
 - **Match the existing code**: naming, structure, comment density.
@@ -175,7 +206,8 @@ Good to know:
 
 1. Fork the repository and branch from `main`.
 2. Keep each pull request small and about one thing.
-3. Check your change in `dry_run`, and describe in the pull request what you tested.
+3. Run the tests (`python -m pytest`), check your change in `dry_run`, and describe in the
+   pull request what you tested.
 4. If something users see changes, update:
    - [`CHANGES.md`](CHANGES.md);
    - the user guide in [`docs/wiki/`](docs/wiki/), **in both languages** (e.g.

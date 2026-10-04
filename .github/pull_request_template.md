@@ -35,6 +35,7 @@ Thanks for contributing! Fill in the sections below (in Greek or English).
 
 ## Έλεγχος · Checklist
 
+- [ ] Τα τεστ περνούν (`python -m pytest`), και πρόσθεσα τεστ για τη νέα συμπεριφορά. · Tests pass (`python -m pytest`), and I added tests for new behaviour.
 - [ ] Δοκιμάστηκε σε `dry_run` ή `trial`, ποτέ στο πραγματικό ΕΡΓΑΝΗ. · Tested in `dry_run` or `trial`, never against the real Ergani.
 - [ ] Οι αλλαγές στη βάση εφαρμόζονται αυτόματα σε υπάρχουσες εγκαταστάσεις (ή δεν υπάρχουν). · Database changes apply automatically to existing installations (or there are none).
 - [ ] Τα νέα κείμενα οθόνης είναι στα ελληνικά. · New screen texts are in Greek.
