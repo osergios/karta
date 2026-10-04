@@ -72,7 +72,7 @@ ENV_LAYOUT = [
     ("Cloudflare Access (σελίδα διαχείρισης)", ["CF_ACCESS_TEAM_DOMAIN", "CF_ACCESS_AUD", "ADMIN_EMAILS"]),
     ("Εφαρμογή", ["PUBLIC_ORIGIN", "LATE_THRESHOLD_SECONDS", "DEBOUNCE_SECONDS", "PIN_KEY"]),
     ("Ειδοποιήσεις στο κινητό (ntfy)", ["NTFY_URL", "NTFY_TOPIC", "NTFY_TOKEN"]),
-    ("Cloudflare Tunnel (docker-compose.yml)", ["TUNNEL_TOKEN"]),
+    ("Cloudflare Tunnel (docker-compose.yml)", ["TUNNEL_TOKEN", "TUNNEL_PROTOCOL"]),
 ]
 
 
@@ -333,6 +333,7 @@ def setup(path: str = ".env") -> int:
     env["ADMIN_EMAILS"] = ",".join(emails_list)
 
     title("2/2 · Cloudflare (HTTPS, tunnel, προστασία διαχείρισης)")
+    env["TUNNEL_PROTOCOL"] = tunnel_protocol(env.get("TUNNEL_PROTOCOL", ""))
     print("  Αυτόματα: δίνετε ένα κλειδί API του Cloudflare και φτιάχνω εγώ το tunnel, τη διεύθυνση")
     print("  και την προστασία της σελίδας διαχείρισης. Πώς φτιάχνεται το κλειδί: δείτε την Εύκολη εγκατάσταση στο wiki.")
     if yes("Να γίνει αυτόματα;"):
@@ -357,6 +358,20 @@ def setup(path: str = ".env") -> int:
     ok(f"Γράφτηκε το {path}" + (f" (το παλιό κρατήθηκε ως {backup})" if backup else ""))
     print(f"  Η σελίδα διαχείρισης: {env['PUBLIC_ORIGIN']}/admin  ·  εκεί, στις «Ρυθμίσεις», συμπληρώστε ΑΦΜ και χρήστη ΕΡΓΑΝΗ.")
     return 0
+
+
+def tunnel_protocol(current: str = "") -> str:
+    """How the tunnel talks to Cloudflare. On a home or shop connection, HTTP/2 (TCP): many home routers handle
+    the UDP of QUIC (HTTP/3) badly and pages become slow. On a VPS, auto: QUIC, falling back to HTTP/2."""
+    print("  Πού τρέχει η Karta;")
+    print("    1) στο κατάστημα ή στο σπίτι (Raspberry Pi, παλιό PC ή laptop, server στο τοπικό δίκτυο)")
+    print("    2) σε VPS / cloud server (π.χ. Oracle Cloud)")
+    default = "2" if current in ("auto", "quic") else "1"
+    choice = ask("Επιλογή", default, lambda v: v in ("1", "2"), "Γράψτε 1 ή 2.")
+    proto = "http2" if choice == "1" else "auto"
+    ok("σύνδεση tunnel: " + ("HTTP/2, η πιο σταθερή με router σπιτιού/καταστήματος" if proto == "http2"
+                             else "αυτόματη (QUIC / HTTP/3, με HTTP/2 αν χρειαστεί)"))
+    return proto
 
 
 def manual_cloudflare(env: dict) -> None:
@@ -403,6 +418,9 @@ def check(path: str = ".env", session=None) -> int:
                                                               ": λείπει ή δεν είναι έγκυρο (τα PIN δεν θα μπορούν να εμφανιστούν)"))
     if os.path.exists(os.path.join(os.path.dirname(os.path.abspath(path)), "docker-compose.yml")):
         (ok if env.get("TUNNEL_TOKEN") else fail)("TUNNEL_TOKEN" + ("" if env.get("TUNNEL_TOKEN") else ": λείπει"))
+        proto = env.get("TUNNEL_PROTOCOL") or "http2"
+        (ok if proto in ("http2", "auto", "quic") else fail)(
+            f"TUNNEL_PROTOCOL={proto}" + {"http2": " (μηχάνημα στο κατάστημα/σπίτι)", "auto": " (VPS)", "quic": " (VPS)"}.get(proto, ": http2 ή auto"))
 
     title("ΕΡΓΑΝΗ")
     if mode == "trial" and env.get("ERGANI_TRIAL_USERNAME"):
