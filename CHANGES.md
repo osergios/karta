@@ -351,7 +351,7 @@
 69. **«Ενημέρωση τώρα» (1.3.0).** «Ρυθμίσεις» → «Έκδοση και ενημέρωση» shows the running version (baked into the image
     by the release workflow) and, every few hours, checks GitHub for a newer release («Τι αλλάζει» links to it). The
     button only leaves a request: `update.sh`, installed by `./setup.sh` with a per-minute cron line, takes it
-    (`python -m app.updatemark poll`), makes a backup, runs `docker compose pull && up -d`, and the new container
+    (`python -m app.updatemark poll`, every 2 minutes, read-only unless asked; the "alive" mark is refreshed every 30 minutes), makes a backup, runs `docker compose pull && up -d`, and the new container
     reports the result (`updatemark done ok|fail`) and asks the shop screen to reload. Karta never gets access to
     Docker. The page follows the update and reloads when the new version answers. `./setup.sh update` does the
     same from the terminal.

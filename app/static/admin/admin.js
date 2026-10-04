@@ -901,7 +901,7 @@
       U.updater
         ? el("div", { class: "backup-row" }, el("button", { class: "btn", type: "button", onclick: act(async () => {
             if (!confirm(`Ενημέρωση στην έκδοση ${U.latest}; Η Karta θα είναι εκτός για περίπου ένα λεπτό (οι οθόνες του καταστήματος περιμένουν και συνεχίζουν). Πρώτα γίνεται αντίγραφο ασφαλείας.`)) return;
-            await api("/admin/api/update", {}); toast("Η ενημέρωση θα ξεκινήσει μέσα σε ένα λεπτό");
+            await api("/admin/api/update", {}); toast("Η ενημέρωση θα ξεκινήσει μέσα σε δύο λεπτά");
           }) }, "Ενημέρωση τώρα"))
         : el("div", { class: "small" }, "Ενημερώστε μία φορά από το μηχάνημα με ", el("code", {}, "cd ~/karta && ./setup.sh update"),
             ": από εκεί και πέρα, εδώ θα εμφανίζεται κουμπί «Ενημέρωση τώρα»."));
