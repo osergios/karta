@@ -7,6 +7,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH=/srv/vendor
 
 WORKDIR /srv
+# rclone: encrypted backups to the cloud («Ρυθμίσεις» → «Αντίγραφα ασφαλείας»)
+RUN apt-get update && apt-get install -y --no-install-recommends rclone ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 

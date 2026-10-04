@@ -311,18 +311,28 @@
     after installing Docker it says which folder to rerun it in, and run from the home folder it installs in
     `~/karta`. «Πρώτα βήματα» gains «Σύνδεση με το ΕΡΓΑΝΗ» (first) and «Αντίγραφα ασφαλείας».
 62. **Backups kept for years (1.2.0).** The nightly `backup.sh` keeps 30 daily, 24 monthly (last copy of each month)
-    and one copy per year for good, plus `karta.env`. `./setup.sh usb` mounts a USB stick permanently (by UUID,
-    `nofail`) and copies there every night; `./setup.sh cloud` uploads encrypted with rclone (crypt remote; Google
-    Drive with `drive.file` scope, Dropbox, Backblaze B2 or any rclone remote; a generated encryption password is
-    shown once). Cloud sync never deletes outright: removed files go to `deleted/<date>` for 30 days.
-    `./setup.sh restore` restores the latest (or a chosen) copy from the machine, the USB or the cloud, brings back
-    `.env` on a new machine and checks `PIN_KEY`, after backing up the current database. Each run reports to Karta;
-    the admin page shows the last result and an alert follows when backups stop (over 50 h) or a copy fails.
-    «Αντίγραφα ασφαλείας» in «Ρυθμίσεις»: «Λήψη αντιγράφου τώρα» (consistent SQLite copy) and «Αρχείο χτυπημάτων»,
-    every punch of a year in Excel with Ergani protocol number, submission time, late reason, method and device.
+    and one copy per year for good, plus `karta.env`; `./setup.sh usb` mounts a USB stick permanently (by UUID,
+    `nofail`) and copies there every night. **Cloud backups are made by Karta itself**: rclone is in the image, and
+    «Ρυθμίσεις» → «Αντίγραφα ασφαλείας» connects Google Drive (`drive.file` scope), Dropbox (token from
+    `rclone authorize` pasted in the page) or Backblaze B2 through an rclone crypt remote (`/data/rclone.conf`); the
+    generated encryption password is shown once. Every night at 23:40 (or as soon as the last good upload is over
+    36 h old) it uploads daily/monthly/yearly copies and prunes daily > 30 days, monthly > 24 months; «Ανέβασμα
+    τώρα», «Αποσύνδεση cloud», and «Έχω ήδη αντίγραφα στο cloud» (connect with the old password on a new machine).
+    **Restore from the admin page**: from an uploaded file or a cloud copy, in two steps (what the backup holds, a
+    quick_check and whether `PIN_KEY` can open its sealed values; then «Επαναφορά τώρα», which keeps the current
+    database as `before-restore-….db` and swaps it in while Karta runs, with migrations and settings reloaded).
+    `./setup.sh restore` does the same from the machine or the USB when the admin page is not available. The admin
+    page shows the last result of each; alerts follow when backups stop (over 50 h) or a copy fails. «Λήψη
+    αντιγράφου τώρα» (consistent SQLite copy) and «Αρχείο χτυπημάτων», every punch of a year in Excel with Ergani
+    protocol number, submission time, late reason, method and device.
 63. **Slow Ergani, clear answers (1.2.0).** Reads from Ergani («Έλεγχος ΕΡΓΑΝΗ», services) give up after 60″ with
     «Το ΕΡΓΑΝΗ δεν απάντησε…», before Cloudflare's 100″ limit; Cloudflare errors (524, 502/503/530, 522/523) are
     explained in Greek instead of «Σφάλμα 524».
 64. **Schedules: where the daily hours come from.** The «Ωράρια» tab and «Πρώτα βήματα» say that Ergani usually
     gives only the weekly hours, so each day's hours come from the accountant's timesheet; the editor shows whether
     the week matches Ergani.
+65. **Colours (1.2.0).** «Στοιχεία επιχείρησης» → «Χρώματα»: ready themes (Karta, Θάλασσα, Μπορντό, Ελιά, Τερακότα,
+    Γραφίτης, Νύχτα), and main colour, background, side panel, text, «Προσέλευση» and «Αποχώρηση» buttons one by
+    one, with automatic black/white text on buttons, readability warnings and a live preview. Dark theme separately
+    for the shop screen and the admin page. The admin page now follows the brand colours too. Hard-coded colours in
+    both stylesheets became variables; with the default colour and nothing else changed, `/brand.css` is unchanged.

@@ -483,15 +483,59 @@
     const b = d.brand;
     const name = el("input", { type: "text", maxlength: "80", value: b.name, placeholder: "π.χ. Κομμωτήριο Άλφα" });
     const short = el("input", { type: "text", maxlength: "30", value: b.short === b.name ? "" : b.short, placeholder: "προαιρετικά, π.χ. Άλφα" });
-    const color = el("input", { type: "color", value: b.color });
-    const lum = hex => { const c = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255).map(v => v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4); return .2126 * c[0] + .7152 * c[1] + .0722 * c[2]; };
+    // colours: helpers (same formulas as brand.py)
+    const rgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+    const blend = (x, y, t) => "#" + rgb(x).map((v, i) => Math.round(v + (rgb(y)[i] - v) * t).toString(16).padStart(2, "0")).join("");
+    const lum = h => { const c = rgb(h).map(v => v / 255).map(v => v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4); return .2126 * c[0] + .7152 * c[1] + .0722 * c[2]; };
+    const contrast = (x, y) => { const [p, q] = [lum(x), lum(y)].sort((m, n) => n - m); return (p + .05) / (q + .05); };
+    const onColor = h => contrast(h, "#0c1a17") >= contrast(h, "#ffffff") ? "#0c1a17" : "#ffffff";
+    const D = b.defaults;
+    const autoIn = c => blend(c, "#ffffff", .3);
+    const picker = v => el("input", { type: "color", value: v });
+    const main = picker(b.color);
+    const pk = { bg: picker(b.bg || D.bg), side: picker(b.side || D.side), ink: picker(b.ink || D.ink),
+                 in: picker(b.in || autoIn(b.color)), out: picker(b.out || D.out) };
+    const darkK = el("input", { type: "checkbox" }); darkK.checked = b.dark_kiosk;
+    const darkA = el("input", { type: "checkbox" }); darkA.checked = b.dark_admin;
+    const theme = el("select", {}, ...Object.entries(b.themes).map(([k, t]) => el("option", { value: k }, t.label)),
+      el("option", { value: "" }, "Δικά μου χρώματα"));
+    theme.value = b.theme && b.themes[b.theme] ? b.theme : (b.theme === "" && b.color === "#16897b" && !b.bg ? "karta" : "");
+    let inAuto = !b.in;
+    theme.addEventListener("change", () => {
+      const t = b.themes[theme.value]; if (!t) return;
+      main.value = t.color; for (const k of ["bg", "side", "ink", "out"]) pk[k].value = t[k] || D[k];
+      pk.in.value = autoIn(t.color); inAuto = true;
+      darkK.checked = t.dark_kiosk === "1"; darkA.checked = t.dark_admin === "1";
+      update();
+    });
+    // a small shop screen with the chosen colours (CSSOM: allowed by the CSP)
+    const prev = el("div", { class: "theme-preview", "aria-hidden": "true" },
+      el("div", { class: "tp-side" }, el("div", { class: "tp-clock" }, "09:41"), el("div", { class: "tp-date" }, "Τρίτη 6 Οκτωβρίου")),
+      el("div", { class: "tp-main" }, el("div", { class: "tp-title" }, "Καλημέρα!"),
+        el("div", { class: "tp-keys" }, ...["1", "2", "3"].map(k => el("span", { class: "tp-key" }, k))),
+        el("div", { class: "tp-btns" }, el("span", { class: "tp-in" }, "Προσέλευση"), el("span", { class: "tp-out" }, "Αποχώρηση"))));
     const warn = el("span", { class: "small" });
-    const checkColor = () => {
-      const ratio = 1.05 / (lum(color.value) + .05);
-      warn.className = ratio < 3 ? "small warn-text" : "small";
-      warn.textContent = ratio < 3 ? "Πολύ ανοιχτό χρώμα: τα κείμενα και τα κουμπιά δεν θα διαβάζονται καλά. Διάλεξε πιο σκούρο." : "Χρησιμοποιείται για κουμπιά, τίτλους και την κάρτα QR.";
-    };
-    color.addEventListener("input", checkColor); checkColor();
+    function update(ev) {
+      if (ev && ev.target === main && inAuto) pk.in.value = autoIn(main.value);
+      if (ev && (ev.target === main || Object.values(pk).includes(ev.target))) theme.value = "";   // changed by hand: «Δικά μου χρώματα»
+      const dark = darkK.checked;
+      for (const k of ["bg", "side", "ink"]) pk[k].disabled = dark;      // the dark theme has its own background and text
+      const v = dark
+        ? { bg: "#14191a", side: "#1c2224", panel: "#232a2c", ink: "#eef1f0", ink2: "#a9b4b2", acc: blend(main.value, "#ffffff", .45) }
+        : { bg: pk.bg.value, side: pk.side.value, panel: "#ffffff", ink: pk.ink.value, ink2: blend(pk.ink.value, pk.bg.value, .38), acc: main.value };
+      const out = dark && pk.out.value === D.out ? "#4a5559" : pk.out.value;
+      const set = (k, x) => prev.style.setProperty(k, x);
+      set("--p-bg", v.bg); set("--p-side", v.side); set("--p-panel", v.panel); set("--p-ink", v.ink); set("--p-ink2", v.ink2);
+      set("--p-acc", v.acc); set("--p-in", pk.in.value); set("--p-on-in", onColor(pk.in.value)); set("--p-out", out); set("--p-on-out", onColor(out));
+      const msgs = [];
+      if (!dark && contrast(pk.ink.value, pk.bg.value) < 4.5) msgs.push("Το κείμενο δεν διαβάζεται καλά πάνω στο φόντο: διαλέξτε πιο σκούρο κείμενο ή πιο ανοιχτό φόντο.");
+      if (contrast(main.value, "#ffffff") < 3 && !dark) msgs.push("Πολύ ανοιχτό κύριο χρώμα: τα κουμπιά και οι τίτλοι δεν θα διαβάζονται καλά.");
+      warn.className = msgs.length ? "small warn-text" : "small";
+      warn.textContent = msgs.join(" ") || "Τα κείμενα στα κουμπιά παίρνουν μόνα τους μαύρο ή λευκό χρώμα, όποιο διαβάζεται καλύτερα.";
+    }
+    pk.in.addEventListener("input", () => { inAuto = false; });
+    for (const x of [main, ...Object.values(pk), darkK, darkA]) x.addEventListener("input", update);
+    update();
     const logoImg = el("img", { class: "brand-logo", alt: "Λογότυπο", src: `/brand/logo?v=${Date.now()}` });
     logoImg.addEventListener("error", () => { logoImg.hidden = true; });
     const file = el("input", { type: "file", accept: "image/png,image/jpeg,image/webp" });
@@ -501,14 +545,32 @@
       const data = await new Promise((ok, fail) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = fail; r.readAsDataURL(f); });
       await api("/admin/api/brand/logo", { data }); toast("Το λογότυπο αποθηκεύτηκε");
     }));
+    const save = act(async () => {
+      const or = (x, dflt) => x.value.toLowerCase() === dflt.toLowerCase() ? "" : x.value;      // the default = "" (follows the theme)
+      await api("/admin/api/brand", { name: name.value.trim(), short: short.value.trim(), color: main.value, theme: theme.value,
+        bg: or(pk.bg, D.bg), side: or(pk.side, D.side), ink: or(pk.ink, D.ink), in_color: or(pk.in, autoIn(main.value)),
+        out_color: or(pk.out, D.out), dark_kiosk: darkK.checked, dark_admin: darkA.checked });
+      const link = document.querySelector('link[href^="/brand.css"]');
+      if (link) link.href = `/brand.css?v=${Date.now()}`;                                 // the admin page takes the new colours now
+      toast("Τα στοιχεία αποθηκεύτηκαν — η οθόνη του καταστήματος τα παίρνει στο επόμενο άνοιγμα ή με «Ανανέωση οθόνης»");
+    });
+    const col = (label, input) => el("label", { class: "brand-color" }, label, input);
     box.replaceChildren(el("div", { class: "brand-form" },
       el("label", {}, "Επωνυμία (όπως τη βλέπουν οι πελάτες) ", name),
-      el("label", {}, "Σύντομο όνομα (στους τίτλους και στα μηνύματα) ", short),
-      el("label", { class: "brand-color" }, "Χρώμα ", color, warn),
-      el("button", { class: "btn", onclick: act(async () => {
-        await api("/admin/api/brand", { name: name.value.trim(), short: short.value.trim(), color: color.value });
-        toast("Τα στοιχεία αποθηκεύτηκαν — η οθόνη του καταστήματος τα παίρνει στο επόμενο άνοιγμα ή σε λίγες ώρες μόνη της");
-      }) }, "Αποθήκευση στοιχείων")),
+      el("label", {}, "Σύντομο όνομα (στους τίτλους και στα μηνύματα) ", short)),
+      el("h3", { class: "brand-sub" }, "Χρώματα"),
+      el("div", { class: "brand-colors" },
+        el("div", { class: "brand-form" },
+          el("label", {}, "Έτοιμο θέμα ", theme),
+          col("Κύριο χρώμα", main), col("Φόντο", pk.bg), col("Πλαϊνό πάνελ", pk.side), col("Κείμενο", pk.ink),
+          col("Κουμπί «Προσέλευση»", pk.in), col("Κουμπί «Αποχώρηση»", pk.out),
+          el("label", { class: "check" }, darkK, " Σκούρο θέμα στην οθόνη του καταστήματος"),
+          el("label", { class: "check" }, darkA, " Σκούρο θέμα στη σελίδα διαχείρισης"),
+          warn),
+        prev),
+      el("div", { class: "backup-row" },
+        el("button", { class: "btn", type: "button", onclick: save }, "Αποθήκευση στοιχείων"),
+        el("button", { class: "link", type: "button", onclick: () => { theme.value = "karta"; theme.dispatchEvent(new Event("change")); } }, "Αρχικά χρώματα")),
       el("div", { class: "brand-logo-row" }, logoImg,
         el("div", {}, el("div", { class: "small" }, b.has_logo ? "Λογότυπο (PNG, JPG ή WebP, έως 1 MB· καλύτερα τετράγωνο με διάφανο φόντο):" : "Χωρίς λογότυπο: η οθόνη δείχνει την επωνυμία. Ανέβασε PNG, JPG ή WebP έως 1 MB (καλύτερα τετράγωνο με διάφανο φόντο):"),
           file,
@@ -651,36 +713,161 @@
         }) }, "Απενεργοποίηση") : null));
   }
 
-  // ---------- backups: status of the nightly copy, database download, yearly punch archive ----------
+  // ---------- backups: nightly copy (machine/USB), encrypted cloud upload, downloads, restore ----------
+  const dmyhm = iso => `${iso.slice(8, 10)}/${iso.slice(5, 7)} ${iso.slice(11, 16)}`;
+  function showCloudPassword(pw) {
+    const box = document.getElementById("cloudPass");
+    box.hidden = false;
+    box.replaceChildren(
+      el("h3", {}, "Κωδικός κρυπτογράφησης των αντιγράφων"),
+      el("p", { class: "pass" }, pw),
+      el("p", {}, el("strong", {}, "Γράψτε τον τώρα σε χαρτί ή σε διαχειριστή κωδικών. "),
+        "Εμφανίζεται μόνο αυτή τη φορά. Αν χαλάσει το μηχάνημα, χωρίς αυτόν τα αντίγραφα στο cloud δεν ανοίγουν."),
+      el("button", { class: "btn", type: "button", onclick: () => {
+        if (confirm("Τον έχετε σημειώσει; Δεν θα εμφανιστεί ξανά.")) hide(box);
+      } }, "Τον σημείωσα"));
+  }
+  function showRestore(info) {
+    const box = document.getElementById("restorePanel");
+    box.hidden = false;
+    const warn = info.pin_key_ok === false
+      ? el("p", { class: "warn-text" }, "Προσοχή: το αντίγραφο φτιάχτηκε με άλλο PIN_KEY. Μετά την επαναφορά ο κωδικός ΕΡΓΑΝΗ και τα PIN δεν θα εμφανίζονται: βάλτε στο .env το PIN_KEY της παλιάς εγκατάστασης (υπάρχει στο karta.env των αντιγράφων) ή ξαναγράψτε τον κωδικό ΕΡΓΑΝΗ και δώστε νέα PIN.")
+      : null;
+    box.replaceChildren(
+      el("h3", {}, "Επαναφορά από αντίγραφο"),
+      el("p", {}, `${info.business || "(χωρίς όνομα επιχείρησης)"} · ${info.employees} ενεργοί εργαζόμενοι · ${info.punches} πραγματικά χτυπήματα` +
+        (info.test_punches ? ` (και ${info.test_punches} δοκιμαστικά)` : "") +
+        (info.last_punch ? ` · τελευταίο χτύπημα ${info.last_punch.slice(8, 10)}/${info.last_punch.slice(5, 7)}/${info.last_punch.slice(0, 4)} ${info.last_punch.slice(11, 16)}` : "")),
+      ...(warn ? [warn] : []),
+      el("p", { class: "small" }, "Η τωρινή βάση θα αντικατασταθεί από αυτό το αντίγραφο. Πριν από αυτό κρατιέται αντίγραφό της (before-restore-…db, δίπλα στη βάση)."),
+      el("div", { class: "backup-row" },
+        el("button", { class: "btn danger", type: "button", onclick: act(async () => {
+          if (!confirm("Επαναφορά τώρα; Ό,τι έγινε μετά από αυτό το αντίγραφο δεν θα φαίνεται πια.")) return;
+          const r = await api("/admin/api/restore/apply", { confirm: true });
+          hide(box); toast(`Η επαναφορά έγινε (η προηγούμενη βάση κρατήθηκε ως ${r.kept}).`);
+          editorsFor = null;
+        }) }, "Επαναφορά τώρα"),
+        el("button", { class: "btn ghost", type: "button", onclick: act(async () => {
+          await api("/admin/api/restore/discard", {}); hide(box);
+        }) }, "Ακύρωση")));
+    box.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+  function cloudForm(B) {
+    const provider = el("select", {},
+      el("option", { value: "drive" }, "Google Drive"), el("option", { value: "dropbox" }, "Dropbox"),
+      el("option", { value: "b2" }, "Backblaze B2"));
+    const token = el("textarea", { rows: "3", placeholder: '{"access_token":"…","token_type":"Bearer",…}', autocomplete: "off" });
+    const account = el("input", { type: "text", placeholder: "keyID", autocomplete: "off" });
+    const key = el("input", { type: "password", placeholder: "applicationKey", autocomplete: "new-password" });
+    const bucket = el("input", { type: "text", placeholder: "όνομα bucket" });
+    const password = el("input", { type: "password", placeholder: "ο κωδικός κρυπτογράφησης των αντιγράφων", autocomplete: "new-password" });
+    const kind = () => provider.value === "b2" ? "b2" : "oauth";
+    const oauthHelp = el("ol", { class: "small" },
+      el("li", {}, "Σε έναν υπολογιστή κατεβάστε το rclone από ", el("a", { href: "https://rclone.org/downloads/", target: "_blank", rel: "noopener" }, "rclone.org/downloads"), " και αποσυμπιέστε το zip."),
+      el("li", {}, "Σε τερματικό σε εκείνο τον φάκελο τρέξτε ", el("code", { class: "cmd" }, ""), " (Windows: δεξί κλικ στον φάκελο → «Άνοιγμα στο τερματικό»)."),
+      el("li", {}, "Συνδεθείτε στον browser που ανοίγει και πατήστε «Allow»."),
+      el("li", {}, "Αντιγράψτε το κείμενο που τυπώνει (ξεκινά με {\"access_token\") και επικολλήστε το εδώ:"));
+    const b2Help = el("p", { class: "small" }, "Στο Backblaze: B2 Cloud Storage → Buckets → Create a Bucket (Private), και Application Keys → Add a New Key. Τα πρώτα 10 GB είναι δωρεάν.");
+    const oauthBox = el("div", {}, oauthHelp, token);
+    const b2Box = el("div", { class: "brand-form" }, b2Help, account, key, bucket);
+    const sync = () => {
+      oauthBox.hidden = kind() !== "oauth"; b2Box.hidden = kind() !== "b2";
+      oauthHelp.querySelector(".cmd").textContent = `rclone authorize "${provider.value}"`;
+    };
+    provider.addEventListener("change", sync); sync();
+    const send = existing => act(async () => {
+      const r = await api("/admin/api/cloud/connect", { provider: provider.value, token: token.value.trim(), account: account.value.trim(),
+        key: key.value.trim(), bucket: bucket.value.trim(), password: existing ? password.value : null });
+      if (r.password) showCloudPassword(r.password);
+      toast(existing ? "Συνδέθηκε με τα υπάρχοντα αντίγραφα· τώρα μπορείτε να κάνετε επαναφορά από το cloud." : "Το cloud ρυθμίστηκε· το πρώτο ανέβασμα γίνεται σε λίγο.");
+    });
+    const existingBox = el("details", { class: "help" },
+      el("summary", {}, "Έχω ήδη αντίγραφα στο cloud (νέο μηχάνημα / επαναφορά)"),
+      el("div", { class: "backup-row" }, password,
+        el("button", { class: "btn ghost", type: "button", onclick: send(true) }, "Σύνδεση στα υπάρχοντα αντίγραφα")));
+    return el("div", { class: "cloud-form" },
+      el("label", {}, "Πού ", provider), oauthBox, b2Box,
+      el("div", { class: "backup-row" }, el("button", { class: "btn", type: "button", onclick: send(false) }, "Σύνδεση και πρώτο ανέβασμα")),
+      existingBox);
+  }
+  async function restoreFromFile(file) {
+    if (!file) return;
+    const res = await fetch("/admin/api/restore/upload", { method: "POST", credentials: "same-origin",
+      headers: { "Content-Type": "application/octet-stream" }, body: file });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.detail || httpError(res.status));
+    showRestore(data);
+  }
+  async function restoreFromCloudList() {
+    const box = document.getElementById("restorePanel");      // outside #backupBox: the refresh doesn't redraw it
+    const { backups } = await api("/admin/api/cloud/backups");
+    if (!backups.length) { toast("Δεν βρέθηκαν αντίγραφα στο cloud", true); return; }
+    const label = { daily: "ημέρα", monthly: "μήνας", yearly: "έτος" };
+    const sel = el("select", {}, ...backups.map(b => el("option", { value: b.path },
+      `${b.path.replace(/^.*karta-|\.db$/g, "")} (${label[b.path.split("/")[0]]}, ${(b.size / 1e6).toFixed(1)} MB)`)));
+    box.hidden = false;
+    box.replaceChildren(el("h3", {}, "Επαναφορά από το cloud"),
+      el("div", { class: "backup-row" }, sel,
+        el("button", { class: "btn ghost", type: "button", onclick: act(async () => {
+          showRestore(await api("/admin/api/restore/cloud", { path: sel.value }));
+        }) }, "Έλεγχος αντιγράφου"),
+        el("button", { class: "link", type: "button", onclick: () => hide(box) }, "Ακύρωση")));
+  }
   function renderBackup(d) {
     const box = document.getElementById("backupBox");
     if (editing(box)) return;
-    const B = d.backup;
+    const H = d.backup.host, C = d.backup.cloud;
     const mark = v => v === "ok" ? "✓" : v === "fail" ? "✗ απέτυχε" : "δεν έχει ρυθμιστεί";
-    const status = !B
-      ? el("div", { class: "an-line bad" }, "Δεν έχει καταγραφεί αυτόματο αντίγραφο ασφαλείας. Στο μηχάνημα της Karta τρέξτε ",
-          el("code", {}, "./setup.sh"), " (αντίγραφο κάθε βράδυ) και μετά ", el("code", {}, "./setup.sh usb"), " ή ",
-          el("code", {}, "./setup.sh cloud"), " για αντίγραφο εκτός μηχανήματος.")
-      : el("div", { class: `an-line ${B.old || [B.local, B.usb, B.cloud].includes("fail") ? "bad" : (B.usb === "ok" || B.cloud === "ok") ? "" : "warn"}` },
-          `Τελευταίο αντίγραφο: ${B.when.slice(8, 10)}/${B.when.slice(5, 7)} ${B.when.slice(11, 16)}`,
-          ` · στο μηχάνημα ${mark(B.local)} · USB ${mark(B.usb)} · cloud ${mark(B.cloud)}`,
-          B.old ? el("div", { class: "small" }, "Είναι παλιό: ελέγξτε ότι το μηχάνημα είναι ανοιχτό και ότι τρέχει το backup.sh κάθε βράδυ.") : null,
-          !B.old && B.usb !== "ok" && B.cloud !== "ok" ? el("div", { class: "small" }, "Υπάρχει αντίγραφο μόνο στο ίδιο μηχάνημα: αν χαλάσει, χάνονται όλα. Ρυθμίστε USB ή cloud.") : null);
+    const hostLine = !H
+      ? el("div", { class: "an-line muted" }, "Στο μηχάνημα: δεν έχει καταγραφεί νυχτερινό αντίγραφο (το ρυθμίζει το ./setup.sh). USB: ", el("code", {}, "./setup.sh usb"), " στο μηχάνημα.")
+      : el("div", { class: `an-line ${H.old || H.local === "fail" || H.usb === "fail" ? "bad" : ""}` },
+          `Στο μηχάνημα: ${dmyhm(H.when)} ${mark(H.local)} · USB ${mark(H.usb)}`,
+          H.usb === "-" ? el("span", { class: "small" }, " (για USB: ", el("code", {}, "./setup.sh usb"), " στο μηχάνημα)") : null,
+          H.old ? el("div", { class: "small" }, "Είναι παλιό: ελέγξτε ότι το μηχάνημα είναι ανοιχτό και ότι τρέχει το backup.sh κάθε βράδυ.") : null);
+    const cloudPart = !d.backup.cloud_available
+      ? el("div", { class: "an-line muted" }, "Cloud: χρειάζεται νεότερο image της Karta (docker compose pull).")
+      : C
+        ? el("div", {},
+            el("div", { class: `an-line ${C.state === "fail" || C.old ? "bad" : C.state === "ok" ? "" : "muted"}` },
+              `Cloud (${C.provider}, κρυπτογραφημένο): ` + (C.when ? `${dmyhm(C.when)} ${C.state === "ok" ? "✓" : "✗ απέτυχε"}` : "αναμονή για το πρώτο ανέβασμα…"),
+              C.state === "fail" && C.error ? el("div", { class: "small" }, C.error) : null),
+            el("div", { class: "backup-row" },
+              el("button", { class: "btn ghost", type: "button", onclick: act(async () => {
+                await api("/admin/api/cloud/run", {}); toast("Το ανέβασμα ξεκίνησε· το αποτέλεσμα φαίνεται εδώ σε λίγο.");
+                setTimeout(load, 15000); setTimeout(load, 45000);
+              }) }, "Ανέβασμα τώρα"),
+              el("button", { class: "link danger", type: "button", onclick: act(async () => {
+                if (!confirm("Να σταματήσουν τα ανεβάσματα στο cloud; Όσα έχουν ήδη ανέβει μένουν εκεί.")) return;
+                await api("/admin/api/cloud/disconnect", {});
+              }) }, "Αποσύνδεση cloud")))
+        : el("div", {},
+            el("div", { class: "an-line warn" }, "Cloud: δεν έχει ρυθμιστεί. Κάθε βράδυ η Karta ανεβάζει ένα κρυπτογραφημένο αντίγραφο σε Google Drive, Dropbox ή Backblaze B2 (σε VPS είναι ο μόνος τρόπος για αντίγραφο εκτός μηχανήματος)."),
+            cloudForm(d.backup));
     const thisYear = Number(todayAthens().slice(0, 4));
     const year = el("input", { type: "number", min: "2020", max: String(thisYear), step: "1", value: String(thisYear), "aria-label": "Έτος" });
     const archive = el("a", { class: "btn ghost", href: `/admin/api/punches.xlsx?year=${thisYear}` }, "Αρχείο χτυπημάτων (Excel)");
     year.addEventListener("input", () => { archive.href = `/admin/api/punches.xlsx?year=${year.value}`; });
+    const file = el("input", { type: "file", accept: ".db,application/vnd.sqlite3,application/octet-stream", class: "visually-hidden", id: "restoreFile" });
+    file.addEventListener("change", act(async () => { await restoreFromFile(file.files[0]); file.value = ""; }));
     box.replaceChildren(
       el("p", { class: "small" }, "Τα χτυπήματα της κάρτας εργασίας πρέπει να φυλάσσονται για τουλάχιστον 5 χρόνια (ρωτήστε τον λογιστή σας). " +
-        "Η Karta δεν σβήνει ποτέ πραγματικό χτύπημα, και κάθε αντίγραφο έχει όλο το ιστορικό. Ο κίνδυνος είναι να χαλάσει το μηχάνημα: γι' αυτό χρειάζεται αντίγραφο και εκτός του."),
-      status,
+        "Η Karta δεν σβήνει ποτέ πραγματικό χτύπημα, και κάθε αντίγραφο έχει όλο το ιστορικό. Ο κίνδυνος είναι να χαλάσει το μηχάνημα: γι' αυτό χρειάζεται αντίγραφο και εκτός του (cloud ή USB)."),
+      hostLine, cloudPart,
+      el("h3", {}, "Λήψη"),
       el("div", { class: "backup-row" },
         el("a", { class: "btn ghost", href: "/admin/api/backup.db" }, "Λήψη αντιγράφου τώρα"),
         el("span", { class: "small" }, "Όλη η βάση σε ένα αρχείο, για να το φυλάξετε όπου θέλετε (περιέχει στοιχεία του προσωπικού).")),
       el("div", { class: "backup-row" },
         el("label", {}, "Έτος ", year), archive,
         el("span", { class: "small" }, "Όλα τα χτυπήματα του έτους, με ώρα και αριθμό πρωτοκόλλου ΕΡΓΑΝΗ. Ανοίγει χωρίς την Karta (π.χ. για έλεγχο).")),
+      el("h3", {}, "Επαναφορά"),
+      el("div", { class: "backup-row" },
+        el("label", { class: "btn ghost", for: "restoreFile" }, "Από αρχείο…"), file,
+        C ? el("button", { class: "btn ghost", type: "button", onclick: act(async () => { await restoreFromCloudList(); }) }, "Από το cloud…") : null,
+        el("span", { class: "small" }, "Πρώτα βλέπετε τι έχει το αντίγραφο· τίποτα δεν αλλάζει πριν πατήσετε «Επαναφορά τώρα».")),
       el("a", { class: "link", href: "https://github.com/osergios/karta/wiki/Backups", target: "_blank", rel: "noopener" }, "Οδηγίες για αντίγραφα και επαναφορά"));
+    const panel = document.getElementById("restorePanel");
+    if (d.backup.restore_pending && panel.hidden) api("/admin/api/restore/pending").then(showRestore).catch(() => {});
   }
 
   // ---------- restart the shop screen from here (it runs as an app from Windows startup) ----------

@@ -229,23 +229,30 @@ def backup_status() -> dict | None:
 
 
 def _check_backup(now: datetime) -> None:
-    """Once a day: the nightly backup stopped (or never ran although real punches exist), or a copy failed."""
+    """Once a day: backups stopped (or never ran although real punches exist), or a copy failed."""
     if now.hour < 9:          # backups run in the evening; look at them in the morning
         return
-    b = backup_status()
+    from . import cloud
+    b, c = backup_status(), cloud.status()
     today = now.date()
-    if b is None:
+    raw_ok = db.setting("cloud_last_ok")
+    cloud_ok = datetime.fromisoformat(raw_ok) if c and raw_ok else None
+    if b is None and cloud_ok is None:
         if db.one("SELECT 1 FROM movements WHERE mode='production' LIMIT 1") and today.weekday() == 0:
             raise_alert("backup_none", None, today, "warning",
-                        "Δεν γίνεται αυτόματο αντίγραφο ασφαλείας. Τα χτυπήματα πρέπει να φυλάσσονται για χρόνια: "
-                        "ρυθμίστε το με ./setup.sh στο μηχάνημα της Karta («Ρυθμίσεις» → «Αντίγραφα ασφαλείας»).", None, now)
+                        "Δεν γίνεται αντίγραφο ασφαλείας. Τα χτυπήματα πρέπει να φυλάσσονται για χρόνια: «Ρυθμίσεις» → "
+                        "«Αντίγραφα ασφαλείας» (cloud), ή ./setup.sh στο μηχάνημα της Karta.", None, now)
         return
-    age_h = (now - b["when"]).total_seconds() / 3600
-    if age_h > 50:
+    if b is not None and (now - b["when"]).total_seconds() > 50 * 3600:
         raise_alert("backup_old", None, today, "warning",
-                    f"Το τελευταίο αντίγραφο ασφαλείας είναι από {b['when']:%d/%m %H:%M}. Ελέγξτε ότι το μηχάνημα "
+                    f"Το τελευταίο αντίγραφο στο μηχάνημα είναι από {b['when']:%d/%m %H:%M}. Ελέγξτε ότι το μηχάνημα "
                     "της Karta είναι ανοιχτό και ότι τρέχει το backup.sh κάθε βράδυ.", None, now)
-    failed = [n for k, n in (("local", "στο μηχάνημα"), ("usb", "στο USB"), ("cloud", "στο cloud")) if b.get(k) == "fail"]
+    if c is not None and (cloud_ok is None or (now - cloud_ok).total_seconds() > 50 * 3600) and c.get("when"):
+        raise_alert("backup_cloud_old", None, today, "warning",
+                    "Το αντίγραφο στο cloud δεν ανέβηκε τις τελευταίες δύο ημέρες"
+                    + (f" ({c['error']})" if c.get("error") else "") + ". Δείτε «Ρυθμίσεις» → «Αντίγραφα ασφαλείας».",
+                    None, now)
+    failed = [n for k, n in (("local", "στο μηχάνημα"), ("usb", "στο USB")) if b and b.get(k) == "fail"]
     if failed:
         raise_alert("backup_failed", None, today, "warning",
                     f"Το αντίγραφο ασφαλείας της {b['when']:%d/%m} απέτυχε {', '.join(failed)}. Δείτε «Ρυθμίσεις» → "
