@@ -17,7 +17,7 @@ in [Discussions](https://github.com/osergios/karta/discussions/categories/q-a).
 
 | | What | Cost |
 |---|---|---|
-| 1 | **A domain name**, e.g. `yourshop.gr` | about €10–20 a year |
+| 1 | **A domain name**, e.g. `yourshop.gr` | about €10–20 a year (free ones exist for testing) |
 | 2 | **A machine that stays on** (see below) | €0 (old PC or free cloud) or ~€60–100 for a Raspberry Pi |
 | 3 | **A free Cloudflare account** | €0 |
 | 4 | **An Ergani web‑services user** (your accountant can create it, or you can in Ergani) | €0 |
@@ -31,7 +31,8 @@ Unfortunately **not** for real use, for two reasons:
 - The camera for QR cards and the shop screen's cookie only work over **HTTPS**, which
   Cloudflare provides for free on your domain.
 
-The domain is the **only** certain cost. Everything else can be free.
+The domain is the **only** certain cost. Everything else can be free. To **try** Karta
+before paying, there are free domains too: see [step 1](#a-free-domain-for-testing).
 
 ### Which machine?
 
@@ -63,6 +64,33 @@ the Ergani app instead. That's true wherever Karta runs.
 
 If you already have a domain for your website, you can use a **subdomain** of it, e.g.
 `karta.yourshop.gr`, without affecting the website.
+
+![The domain is active on Cloudflare](https://raw.githubusercontent.com/osergios/karta/main/docs/screenshots/cloudflare/domain-active.png)
+
+*When the domain is ready, its Cloudflare page says "Your domain is now protected by
+Cloudflare".*
+
+### A free domain for testing
+
+To try Karta without buying a domain:
+
+- **[DigitalPlat FreeDomain](https://domain.digitalplat.org/)**: free names such as
+  `karta-yourshop.dpdns.org`, in a few minutes. Pick the **`.dpdns.org`** ending (or
+  `.xx.kg` / `.qd.je`). `.qzz.io` needs a paid slot, and other endings may be temporarily
+  closed ("This domain is paused register"). Before registering you must open and accept
+  the terms the page lists.
+- **[EU.org](https://nic.eu.org/)**: free and permanent, but approved by hand, which can
+  take days or weeks.
+
+After registering: in Cloudflare, **Add a domain** → type the **full** name (e.g.
+`karta-yourshop.dpdns.org`) → **Free** plan. Cloudflare gives you two **nameservers**
+(`….ns.cloudflare.com`): enter them on the domain's page at DigitalPlat
+(**Nameservers / NS**) and wait for the "active" email. In this case Karta's address can
+be the domain itself.
+
+> For **real use** in a shop, get a real domain. Free services can change their terms or
+> shut down, and the shop screen stops with them. Switching later is easy: rerun
+> `./setup.sh` with the new name.
 
 ---
 
@@ -136,12 +164,17 @@ The assistant's questions are in Greek, like the app.
 With this key, the assistant creates **by itself** everything Karta needs in Cloudflare: the
 tunnel, the `https://karta.…` address and the admin page protection.
 
-1. First, turn on **Zero Trust** once: in Cloudflare click **Zero Trust** (left menu), choose
-   a **team name** (e.g. `yourshop`) and the **Free** plan. It may ask for a card, but the
-   Free plan doesn't charge.
-2. Go to **My Profile → API Tokens → Create Token → Custom token**
+1. **Clean up DNS:** in Cloudflare, on your domain, open **DNS → Records**. If there are
+   records (A, AAAA or CNAME) with the name Karta will use (e.g. `karta.yourshop.gr`, or the
+   domain itself if Karta will live there) that you didn't create, **delete them**. The
+   assistant creates the right one. An empty list is fine.
+2. **Turn on Zero Trust once:** in Cloudflare click **Zero Trust** (left menu), choose a
+   **team name** (e.g. `yourshop`) and the **Free** plan. It may ask for a card, but the
+   Free plan doesn't charge. This is needed to protect the admin page.
+3. Go to **My Profile → API Tokens → Create Token → Custom token → Get started**
    ([dash.cloudflare.com/profile/api-tokens](https://dash.cloudflare.com/profile/api-tokens)).
-3. Name: `Karta setup`. Under **Permissions** add these five lines:
+4. Name: `Karta setup`. Under **Permissions** add these five lines (click **+ Add more** for
+   each new line; each line has three drop‑downs):
 
    | | | |
    |---|---|---|
@@ -151,8 +184,11 @@ tunnel, the `https://karta.…` address and the admin page protection.
    | Zone | DNS | Edit |
    | Zone | Zone | Read |
 
-4. Under **Zone Resources** choose your domain. Click **Continue to summary → Create Token**
-   and **copy** the key (it's shown once).
+5. Under **Zone Resources** choose **Include → Specific zone →** your domain. Leave the rest
+   (Client IP Address Filtering, TTL) as it is.
+6. Click **Continue to summary → Create Token** and **copy** the key (it's shown **once**).
+   Keep it in a notepad until step 5, and **don't** send it to anyone: whoever has it can
+   change your Cloudflare.
 
 The assistant **doesn't store** the key. When you're done, you can delete it on the same
 page, or keep it to run the assistant again later.
