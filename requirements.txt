@@ -1,10 +1,10 @@
-fastapi>=0.110,<1
-uvicorn>=0.29,<1
+fastapi>=0.142.2,<1
+uvicorn>=0.54.0,<1
 # Ergani SDK is vendored in ./vendor/ergani (GitHub main, adds the read services that are
 # not in the PyPI 1.0.1 release). This is its only runtime dependency:
-requests>=2.31.0,<3
-argon2-cffi>=23.1,<26
-pyjwt[crypto]>=2.8,<3
+requests>=2.34.2,<3
+argon2-cffi>=25.1.0,<26
+pyjwt[crypto]>=2.15.1,<3
 tzdata
-openpyxl>=3.1,<4
-segno>=1.6,<2
+openpyxl>=3.1.5,<4
+segno>=1.6.6,<2
