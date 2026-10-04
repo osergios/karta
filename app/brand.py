@@ -87,7 +87,7 @@ def css() -> str:
 
 
 def render(text: str) -> str:
-    """Fill the brand into a page: {{SUFFIX}} (« · Centro» or nothing), {{NAME}}, {{SHORT}}."""
+    """Fill the brand into a page: {{SUFFIX}} (« · <short name>» or nothing), {{NAME}}, {{SHORT}}."""
     b = get()
     return (text.replace("{{SUFFIX}}", html.escape(f" · {b['short']}") if b["short"] else "")
                 .replace("{{NAME}}", html.escape(b["name"]))
@@ -106,16 +106,12 @@ def manifest(text: str) -> str:
 
 
 def migrate(static_dir: Path) -> None:
-    """Once: an install that already has employees keeps the shop it was made for (Centro), including the logo
-    that used to be a fixed file. A new install starts blank and is filled in at «Στοιχεία επιχείρησης»."""
+    """Once: an install that already has employees keeps the logo that used to be a fixed file
+    (static/brand/logo.png). Everything else is filled in at «Στοιχεία επιχείρησης»."""
     if db.one("SELECT 1 FROM settings WHERE key='migr_brand'"):
         return
     existing = db.one("SELECT 1 FROM employees LIMIT 1") is not None
     with db.tx() as c:
-        if existing and not db.one("SELECT 1 FROM settings WHERE key='brand_name'"):
-            _put(c, "brand_name", "Centro Hair & Beauty")
-            _put(c, "brand_short", "Centro")
-            _put(c, "brand_color", DEFAULT_COLOR)
         _put(c, "migr_brand", "1")
     old = static_dir / "brand" / "logo.png"
     if existing and old.is_file() and logo() is None:

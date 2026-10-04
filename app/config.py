@@ -66,7 +66,7 @@ CF_ACCESS_TEAM_DOMAIN = _require("CF_ACCESS_TEAM_DOMAIN").removeprefix("https://
 CF_ACCESS_AUD = _require("CF_ACCESS_AUD")
 ADMIN_EMAILS = {e.strip().lower() for e in _require("ADMIN_EMAILS").split(",") if e.strip()}
 
-PUBLIC_ORIGIN = _get("PUBLIC_ORIGIN", "https://karta.centro.gr").rstrip("/")
+PUBLIC_ORIGIN = _get("PUBLIC_ORIGIN", "http://localhost:8000").rstrip("/")
 DB_PATH = _get("DB_PATH", "/data/workcard.db")
 LATE_THRESHOLD_SECONDS = int(_get("LATE_THRESHOLD_SECONDS", "120"))
 DEBOUNCE_SECONDS = int(_get("DEBOUNCE_SECONDS", "60"))

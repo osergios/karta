@@ -54,7 +54,7 @@
     clearTimeout(showPin.h); showPin.h = setTimeout(() => hide(box), viewing ? 20000 : 120000);
   }
   // ---------- personal QR card (phone image / printable) ----------
-  const drawCard = (name, svg) => window.CentroCard.draw(name, svg);
+  const drawCard = (name, svg) => window.KartaCard.draw(name, svg);
   async function showQrCard(r, employee) {
     const box = document.getElementById("qrcard");
     const canvas = await drawCard(employee.display_name, r.svg);

@@ -1,4 +1,4 @@
-"""Centro digital work card (ψηφιακή κάρτα εργασίας) service."""
+"""Karta: digital work card (ψηφιακή κάρτα εργασίας) service."""
 import json
 import secrets
 import logging

@@ -138,7 +138,7 @@
     backups). Pages are filled in when served (titles, logo alt, the app name in the manifest, «η κάρτα εργασίας σου
     για το …» on the phone card and in the Viber/WhatsApp message), colours come from `/brand.css`, the logo from
     `/brand/logo` (no logo → the name is shown). No shop name is written in the code any more. An existing install
-    is migrated once to «Centro Hair & Beauty / Centro» with its current logo; a new install starts blank. Still
+    keeps the name and logo it was set up with; a new install starts blank. Still
     shop-specific: the icons in `static/brand/icons` (favicon / installed-app icon).
 37. **Closed-day screen.** On a holiday or closure the shop screen shows no QR / PIN: a greeting for the day
     («Καλά Χριστούγεννα!», «Χριστός Ανέστη!», «Καλή Σαρακοστή!», «Χρόνια πολλά! 28η Οκτωβρίου…», «Σήμερα είμαστε

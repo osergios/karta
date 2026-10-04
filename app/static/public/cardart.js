@@ -1,6 +1,6 @@
 /* Personal QR card artwork: the same image in the admin page and on the employee's phone. */
 "use strict";
-window.CentroCard = (() => {
+window.KartaCard = (() => {
   const CARD_W = 1080, CARD_H = 1712;          // portrait, ID-card proportions (54 × 85.6 mm)
   const loadImg = src => new Promise((ok, fail) => { const i = new Image(); i.onload = () => ok(i); i.onerror = fail; i.src = src; });
   function roundRect(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }

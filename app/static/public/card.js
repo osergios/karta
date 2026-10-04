@@ -29,7 +29,7 @@
     catch { return fail("Δεν υπάρχει σύνδεση. Δοκίμασε ξανά σε λίγο."); }
     if (!res.ok) return fail(data.detail || "Ζήτα νέο σύνδεσμο από το κατάστημα.");
 
-    const canvas = await window.CentroCard.draw(data.name, data.svg);
+    const canvas = await window.KartaCard.draw(data.name, data.svg);
     const url = canvas.toDataURL("image/png");
     const blob = await new Promise(ok => canvas.toBlob(ok, "image/png"));
     const fname = `karta-${data.name}.png`;

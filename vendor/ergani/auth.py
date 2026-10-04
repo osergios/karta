@@ -33,7 +33,7 @@ class ErganiAuthentication(AuthBase):
         payload = {
             "Username": self.username,
             "Password": self.password,
-            # Centro patch: 01 = external/API user (SDK default), 02 = «ΕΡΓΑΝΗ» branch user
+            # Karta patch: 01 = external/API user (SDK default), 02 = «ΕΡΓΑΝΗ» branch user
             "UserType": __import__("os").environ.get("ERGANI_USER_TYPE", "01"),
         }
 

@@ -160,7 +160,7 @@ def valid_afm(afm: str) -> bool:
 _jwks = jwt.PyJWKClient(
     f"https://{config.CF_ACCESS_TEAM_DOMAIN}/cdn-cgi/access/certs",
     cache_keys=True,
-    headers={"User-Agent": "centro-workcard/1.0"},
+    headers={"User-Agent": "karta-workcard/1.0"},
     timeout=10,
 )
 
