@@ -41,9 +41,12 @@ microSD του Raspberry Pi), γι' αυτό χρειάζεται αντίγρα
    σελίδα δείχνει τα ίδια βήματα):
    - κατεβάστε το rclone από [rclone.org/downloads](https://rclone.org/downloads/) και
      αποσυμπιέστε το zip·
-   - σε τερματικό σε εκείνο τον φάκελο τρέξτε `rclone authorize "drive"` (ή
-     `"dropbox"`)· στα Windows: δεξί κλικ στον φάκελο → «Άνοιγμα στο τερματικό» και
-     `.\rclone.exe authorize "drive"`·
+   - ανοίξτε τερματικό σε εκείνο τον φάκελο (Windows: δεξί κλικ μέσα στον φάκελο →
+     «Άνοιγμα στο τερματικό») και τρέξτε, για Google Drive:
+     - Windows: `.\rclone.exe authorize "drive"`
+     - Mac / Linux: `./rclone authorize "drive"`
+
+     (για Dropbox γράψτε `"dropbox"` αντί για `"drive"`)·
    - συνδεθείτε στον browser που ανοίγει και πατήστε «Allow»·
    - αντιγράψτε το κείμενο που τυπώνει (ξεκινά με `{"access_token"`) και επικολλήστε το
      στη σελίδα.

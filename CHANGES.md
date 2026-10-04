@@ -345,3 +345,6 @@
     (Raspberry Pi, old PC, local server) or on a VPS, and writes `TUNNEL_PROTOCOL=http2` or `auto` (QUIC/HTTP/3 with
     HTTP/2 fallback); `docker-compose.yml` passes it to cloudflared (default `http2`). Behind home and shop routers
     QUIC over UDP can make pages slow. `setup.sh` updates an unchanged first-version `docker-compose.yml`.
+68. **Cloud setup: the exact command for Windows (1.2.1).** The admin page and the guide show `.\rclone.exe authorize
+    "drive"` for Windows PowerShell (which doesn't run programs from the current folder without `.\`) and
+    `./rclone authorize "drive"` for Mac/Linux.
