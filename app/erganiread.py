@@ -5,6 +5,8 @@ family details...). Only the fields below are ever kept, returned or stored; the
 payload is discarded here and never logged."""
 import json
 import unicodedata
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import TimeoutError as FutureTimeout
 
 from ergani.client import ErganiClient
 from ergani.exceptions import APIError, AuthenticationError
@@ -15,6 +17,22 @@ from .timeutil import now_local
 
 class ErganiReadError(Exception):
     pass
+
+
+# Cloudflare drops a request after 100 seconds (error 524). Reads from Ergani give up well
+# before that, so the admin always gets a clear answer instead.
+READ_DEADLINE = 60
+_reader = ThreadPoolExecutor(max_workers=2, thread_name_prefix="ergani-read")
+SLOW = ("Το ΕΡΓΑΝΗ δεν απάντησε μέσα σε {s} δευτερόλεπτα. Συμβαίνει όταν είναι φορτωμένο· "
+        "δοκίμασε ξανά σε λίγα λεπτά.")
+
+
+def _within_deadline(fn):
+    fut = _reader.submit(fn)
+    try:
+        return fut.result(timeout=READ_DEADLINE)
+    except FutureTimeout:
+        raise ErganiReadError(SLOW.format(s=READ_DEADLINE))
 
 
 def _client() -> ErganiClient:
@@ -46,11 +64,12 @@ def _norm(s: str | None) -> str:
 
 def fetch() -> dict:
     """Everything the admin needs to review, with Ergani's personal data reduced to the minimum."""
-    try:
+    def read():
         c = _client()
-        emp = c.get_employer_details()
-        branches = c.get_branch_details()
-        workforce = c.get_current_workforce()
+        return c.get_employer_details(), c.get_branch_details(), c.get_current_workforce()
+
+    try:
+        emp, branches, workforce = _within_deadline(read)
     except ErganiReadError:
         raise
     except AuthenticationError as e:
@@ -276,7 +295,7 @@ def facts(info: dict) -> dict:
 def services() -> list[dict]:
     """The services Ergani offers this employer (metadata only, no personal data)."""
     try:
-        resp = _client().get_services_list()
+        resp = _within_deadline(lambda: _client().get_services_list())
         payload = resp.json() if resp is not None else []
     except ErganiReadError:
         raise
