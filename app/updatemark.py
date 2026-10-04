@@ -1,7 +1,8 @@
 """The host side of «Ενημέρωση τώρα» (update.sh on the machine runs this inside the container, every minute).
 
     python -m app.updatemark poll           -> prints "update" when the admin asked for an update (and takes the
-                                               request), otherwise nothing; also records that the updater runs
+                                               request), otherwise nothing; records that the updater runs (at most
+                                               every 30 minutes, so the poll is read-only almost every time)
     python -m app.updatemark done ok|fail   -> records the result (run by the new container after the update)
 
 Uses sqlite3 only (no app settings needed), like app/backupmark.py.
@@ -10,7 +11,7 @@ import json
 import os
 import sqlite3
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 
@@ -31,7 +32,14 @@ def main(argv: list[str]) -> int:
     try:
         with c:
             if argv[0] == "poll":
-                _put(c, "updater_seen", _now())
+                seen = c.execute("SELECT value FROM settings WHERE key='updater_seen'").fetchone()
+                try:
+                    fresh = seen and datetime.now(timezone.utc) - datetime.fromisoformat(seen[0]).replace(
+                        tzinfo=timezone.utc) < timedelta(minutes=30)
+                except ValueError:
+                    fresh = False
+                if not fresh:
+                    _put(c, "updater_seen", _now())
                 row = c.execute("SELECT value FROM settings WHERE key='update_request'").fetchone()
                 if row:
                     c.execute("DELETE FROM settings WHERE key='update_request'")

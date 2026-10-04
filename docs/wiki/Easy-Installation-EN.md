@@ -289,7 +289,7 @@ cloud). All the details: [Backups and restore](Backups-EN).
 
 When a new version comes out, the admin page says so under **«Ρυθμίσεις» → «Έκδοση και
 ενημέρωση»** (version and update), with a «Τι αλλάζει» (what's new) link. Press
-**«Ενημέρωση τώρα»** (update now): within a minute a backup is made, the new version is
+**«Ενημέρωση τώρα»** (update now): within two minutes a backup is made, the new version is
 downloaded and Karta restarts (it's offline for about a minute). The page reloads by itself,
 and so does the shop screen.
 

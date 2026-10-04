@@ -126,7 +126,7 @@ SH
 write_update_script() {
   cat > update.sh <<'SH'
 #!/bin/sh
-# Karta update — written by ./setup.sh (it rewrites this file). Runs every minute from cron: when «Ενημέρωση τώρα»
+# Karta update — written by ./setup.sh (it rewrites this file). Runs every 2 minutes from cron: when «Ενημέρωση τώρα»
 # is pressed in the admin page, it keeps a backup, downloads the new version and restarts Karta. The admin page
 # only leaves a request; Karta itself never gets control of Docker on this machine.
 set -u
@@ -149,9 +149,8 @@ docker compose exec -T karta python -m app.updatemark "done" fail >/dev/null 2>&
 exit 1
 SH
   chmod +x update.sh
-  if ! crontab -l 2>/dev/null | grep -q "$PWD/update.sh"; then
-    ( crontab -l 2>/dev/null; echo "* * * * * $PWD/update.sh >/dev/null 2>&1" ) | crontab -
-  fi
+  # every 2 minutes; a check only reads one row of the database (an earlier per-minute line is replaced)
+  ( crontab -l 2>/dev/null | grep -v "$PWD/update.sh"; echo "*/2 * * * * $PWD/update.sh >/dev/null 2>&1" ) | crontab -
   say "  ✓ Ενημερώσεις με ένα κουμπί από τη σελίδα διαχείρισης («Ρυθμίσεις» → «Έκδοση και ενημέρωση»)."
 }
 

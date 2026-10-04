@@ -72,7 +72,7 @@ def info() -> dict:
         "latest": lt["tag"].lstrip("v") if lt["tag"] else None,
         "latest_url": lt["url"],
         "available": newer(lt["tag"]),
-        "updater": seen is not None and now - seen < timedelta(minutes=5),     # update.sh runs on the host
+        "updater": seen is not None and now - seen < timedelta(minutes=45),    # update.sh runs on the host
         "requested": db.setting("update_request") is not None,
         "running": running is not None and now - running < timedelta(minutes=15),
         "result": result,

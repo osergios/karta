@@ -32,3 +32,17 @@ def test_update_request_is_carried_out_by_the_host(client, admin, capsys):
     assert db.setting("kiosk_reload_at")                       # and the shop screen reloads itself
     assert updatemark.main(["done", "maybe"]) == 2
     assert json.loads(db.setting("update_result"))["state"] == "ok"
+
+
+def test_poll_is_read_only_most_of_the_time(capsys):
+    from datetime import datetime, timedelta, timezone
+    stamp = lambda m: (datetime.now(timezone.utc) - timedelta(minutes=m)).strftime("%Y-%m-%dT%H:%M:%S")   # noqa: E731
+    with db.tx() as c:
+        db.put_setting(c, "updater_seen", stamp(10))
+    before = db.setting("updater_seen")
+    updatemark.main(["poll"])
+    assert db.setting("updater_seen") == before                # fresh enough: nothing written
+    with db.tx() as c:
+        db.put_setting(c, "updater_seen", stamp(40))
+    updatemark.main(["poll"])
+    assert db.setting("updater_seen") > stamp(1)               # refreshed
