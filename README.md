@@ -98,8 +98,19 @@ PYTHONPATH=vendor uvicorn app.main:app --host 0.0.0.0 --port 8000
 
 ## Άδεια χρήσης
 
-[MIT](LICENSE) για τον κώδικα της Karta. Τα ενσωματωμένα τμήματα τρίτων διατηρούν τις
-δικές τους άδειες.
+Copyright © 2026 osergios. Ο κώδικας της Karta διατίθεται με την άδεια
+[GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0-only).
+
+Με απλά λόγια: μπορείτε να χρησιμοποιήσετε, να αλλάξετε και να μοιραστείτε την Karta
+ελεύθερα, ακόμα και σε επιχείρηση. Αν όμως διανείμετε μια τροποποιημένη έκδοση, ή την
+προσφέρετε σε άλλους μέσω δικτύου (π.χ. ως υπηρεσία για καταστήματα), πρέπει να δώσετε
+σε όσους τη χρησιμοποιούν **ολόκληρο τον πηγαίο κώδικά σας με την ίδια άδεια**. Δεν
+επιτρέπεται να γίνει κλειστό, ιδιόκτητο προϊόν. Για εμπορική άδεια με άλλους όρους,
+επικοινωνήστε με τον δημιουργό.
+
+Τα ενσωματωμένα τμήματα τρίτων διατηρούν τις δικές τους άδειες (δείτε το
+[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)). Για να συνεισφέρετε, δείτε το
+[`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ---
 
@@ -190,5 +201,15 @@ local changes are in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
 
 ## License
 
-[MIT](LICENSE) for Karta's own code. Bundled third-party components keep their
-own licenses.
+Copyright © 2026 osergios. Karta's own code is licensed under the
+[GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0-only).
+
+In short: you may use, change and share Karta freely, including in a business. But if
+you distribute a modified version, or offer it to others over a network (for example as
+a service for shops), you must give its users **your complete source code under the same
+license**. It can't be turned into a closed, proprietary product. For a commercial
+license on other terms, contact the author.
+
+Bundled third-party components keep their own licenses (see
+[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)). To contribute, see
+[`CONTRIBUTING.md`](CONTRIBUTING.md).

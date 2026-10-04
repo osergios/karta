@@ -1,5 +1,9 @@
 # Third-party notices
 
+Karta is Copyright © 2026 osergios and licensed under the GNU Affero General Public
+License v3.0 (see [`LICENSE`](LICENSE)). The components below are not covered by that
+license.
+
 Karta includes code and assets written by other people. Each one keeps its
 original license, and the full license text ships next to it in this repository.
 Many thanks to their authors.
