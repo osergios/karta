@@ -10,13 +10,21 @@ set -euo pipefail
 IMAGE="${KARTA_IMAGE:-ghcr.io/osergios/karta:latest}"
 RAW="https://raw.githubusercontent.com/osergios/karta/main"
 cd "$(dirname "$(readlink -f "$0")")"
+# Run from the home folder (e.g. downloaded again there after reconnecting)? Everything goes in ~/karta,
+# unless this home folder already holds an installation.
+if [ "$PWD" = "$HOME" ] && [ ! -f .env ] && [ ! -f docker-compose.yml ]; then
+  mkdir -p "$HOME/karta"
+  cp -f "$0" "$HOME/karta/setup.sh" 2>/dev/null || true
+  cd "$HOME/karta"
+  printf 'Η Karta εγκαθίσταται στον φάκελο %s\n' "$PWD"
+fi
 
 bold=$(tput bold 2>/dev/null || true); norm=$(tput sgr0 2>/dev/null || true)
 say()  { printf '%s\n' "$*"; }
 step() { printf '\n%s%s%s\n' "$bold" "$*" "$norm"; }
 ask_yes() {  # ask_yes "Ερώτηση" -> 0 for yes (default yes)
   local a; read -r -p "  $1 (Ν/ο): " a || return 1
-  case "${a,,}" in ""|ν|ναι|n|nai|y|yes) return 0 ;; *) return 1 ;; esac
+  case "${a,,}" in ""|ν|ναι|nai|y|yes) return 0 ;; *) return 1 ;; esac   # "n" (English) means no
 }
 
 # ---- Docker -----------------------------------------------------------------------------------
@@ -26,7 +34,8 @@ if ! command -v docker >/dev/null 2>&1; then
     curl -fsSL https://get.docker.com | sudo sh
     sudo usermod -aG docker "$USER"
     say ""
-    say "Το Docker εγκαταστάθηκε. Αποσυνδεθείτε (exit), συνδεθείτε ξανά και τρέξτε πάλι: ./setup.sh"
+    say "Το Docker εγκαταστάθηκε. Αποσυνδεθείτε (exit), συνδεθείτε ξανά και τρέξτε πάλι:"
+    say "  cd $PWD && ./setup.sh"
   else
     say "Οδηγίες: https://github.com/osergios/karta/wiki/Easy-Installation"
   fi
@@ -34,7 +43,8 @@ if ! command -v docker >/dev/null 2>&1; then
 fi
 if ! docker info >/dev/null 2>&1; then
   say "Το Docker υπάρχει αλλά ο χρήστης σας δεν έχει πρόσβαση."
-  say "Τρέξτε:  sudo usermod -aG docker \$USER   , αποσυνδεθείτε, συνδεθείτε ξανά και ξανατρέξτε ./setup.sh"
+  say "Τρέξτε:  sudo usermod -aG docker \$USER   , αποσυνδεθείτε, συνδεθείτε ξανά και ξανατρέξτε:"
+  say "  cd $PWD && ./setup.sh"
   exit 1
 fi
 if ! docker compose version >/dev/null 2>&1; then
