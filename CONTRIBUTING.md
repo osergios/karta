@@ -5,6 +5,8 @@
 Ευχαριστούμε που θέλετε να βοηθήσετε! Κάθε συνεισφορά μετράει: αναφορά σφάλματος,
 διόρθωση στον οδηγό χρήσης, μετάφραση ή κώδικας.
 
+Όλοι όσοι συμμετέχουν ακολουθούν τον [κώδικα δεοντολογίας](CODE_OF_CONDUCT.md).
+
 ## Αναφορά σφάλματος ή πρόταση
 
 Ανοίξτε ένα [issue](https://github.com/osergios/karta/issues) και γράψτε:
@@ -105,6 +107,8 @@ PYTHONPATH=vendor uvicorn app.main:app --reload --port 8000
 
 Thank you for wanting to help! Every contribution counts: a bug report, a fix to the
 user guide, a translation, or code.
+
+Everyone taking part follows the [code of conduct](CODE_OF_CONDUCT.md#code-of-conduct).
 
 ## Reporting a bug or suggesting something
 
