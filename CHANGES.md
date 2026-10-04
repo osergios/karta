@@ -336,3 +336,8 @@
     one, with automatic black/white text on buttons, readability warnings and a live preview. Dark theme separately
     for the shop screen and the admin page. The admin page now follows the brand colours too. Hard-coded colours in
     both stylesheets became variables; with the default colour and nothing else changed, `/brand.css` is unchanged.
+66. **Leftovers of the original private version removed (1.2.0).** The one-time upgrade steps for databases of the
+    private versions (old fixed logo file, the old 10′ alert flexibility and «Παύση αποστολής», the single timeless
+    schedule table and the columns added over time) are gone: the schema now creates every column directly. The
+    unused `schedules` table is no longer written or read (an existing one is simply left alone). Texts no longer
+    assume a particular shop or a Windows laptop. Databases made by the public versions 1.0.0–1.1.0 work unchanged.

@@ -29,11 +29,6 @@ class Span(NamedTuple):
         return len(self.segments) > 1
 
 
-def _mins(hm: str) -> int:
-    h, m = map(int, hm.split(":"))
-    return h * 60 + m
-
-
 def parse_span(text: str):
     """'10:00-21:00/30' -> Span('10:00','21:00',30,(('10:00','21:00'),));
     split shift: '10:00-14:00+17:00-21:00/20' (segments joined with + or ,); '' -> None.
@@ -65,16 +60,6 @@ def parse_span(text: str):
     if brk > 120 or (brk >= work and not brk_out):
         raise ValueError(text)
     return Span(segs[0][0], segs[-1][1], brk, tuple(segs), bool(brk and brk_out))
-
-
-def segments_from_db(start: str, end: str, raw: str | None) -> tuple:
-    if raw:
-        return tuple(tuple(x.split("-")) for x in raw.split(","))
-    return ((start, end),)
-
-
-def span_text(start: str, end: str, break_min: int, raw: str | None) -> str:
-    return Span(start, end, int(break_min or 0), segments_from_db(start, end, raw)).text
 
 
 def net_seconds(gross: float, break_min: int) -> float:
@@ -123,22 +108,6 @@ class Sched(NamedTuple):
             f" /{'+' if self.break_out else ''}{self.break_min}′" if self.break_min else "")
 
 
-def ensure_schedule_versions() -> None:
-    """Older installs had one timeless schedule: keep it as the baseline version (valid since 2000-01-01), so
-    past days keep the hours they were worked under when a new schedule is saved from a later date."""
-    import json
-    have = {r["employee_id"] for r in db.all_rows("SELECT DISTINCT employee_id FROM schedule_versions")}
-    per: dict = {}
-    for r in db.all_rows('SELECT employee_id, weekday, start, "end", break_min, segments FROM schedules'):
-        if r["employee_id"] not in have:
-            per.setdefault(r["employee_id"], {})[str(r["weekday"])] = span_text(r["start"], r["end"], r["break_min"], r["segments"])
-    if per:
-        with db.tx() as c:
-            for eid, days in per.items():
-                c.execute("INSERT OR IGNORE INTO schedule_versions(employee_id, valid_from, days, created_at, created_by) "
-                          "VALUES (?, '2000-01-01', ?, ?, 'migration')", (eid, json.dumps(days), db.utc_now_iso()))
-
-
 def day_change(employee_id: int, day: date):
     """The one-day change of the declared schedule (overtime / other hours / no work) for that date, or None."""
     return db.one("SELECT * FROM day_changes WHERE employee_id=? AND day=?", (employee_id, day.isoformat()))
@@ -154,13 +123,7 @@ def schedule_text_for(employee_id: int, day: date, regular: bool = False):
             return ch["text"] or None
     r = db.one("SELECT days FROM schedule_versions WHERE employee_id=? AND valid_from<=? ORDER BY valid_from DESC LIMIT 1",
                (employee_id, day.isoformat()))
-    if r is not None:
-        return json.loads(r["days"]).get(str(day.weekday())) or None
-    if db.one("SELECT 1 FROM schedule_versions WHERE employee_id=? LIMIT 1", (employee_id,)):
-        return None                       # before the first version: no schedule yet
-    r = db.one('SELECT start, "end", break_min, segments FROM schedules WHERE employee_id=? AND weekday=?',
-               (employee_id, day.weekday()))
-    return span_text(r["start"], r["end"], r["break_min"], r["segments"]) if r else None
+    return (json.loads(r["days"]).get(str(day.weekday())) or None) if r else None     # none before the first version
 
 
 def schedule_for(employee_id: int, day: date, regular: bool = False):

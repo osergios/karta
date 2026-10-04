@@ -66,7 +66,7 @@ def apply(overrides: dict | None = None) -> None:
     # from another employer is refused at the kiosk.
     ERGANI_EMPLOYER_ID = v["ERGANI_EMPLOYER_ID"]
     BRANCH_NUMBER = int(v["BRANCH_NUMBER"] or "0")
-    # Phone alerts (optional) — same ntfy server/topic as the DR backup alerts.
+    # Phone alerts (optional), through an ntfy server and topic.
     NTFY_URL = v["NTFY_URL"].rstrip("/")
     NTFY_TOPIC = v["NTFY_TOPIC"]
     NTFY_TOKEN = v["NTFY_TOKEN"]
@@ -111,5 +111,5 @@ DEVICE_COOKIE_MAX_AGE = 400 * 24 * 3600  # browsers cap cookies at 400 days
 MAX_SUBMIT_ATTEMPTS = 30
 
 # Optional: lets the admin view current PINs. 32-byte key, urlsafe base64, kept ONLY in .env
-# (which the DR backup stores encrypted). Without it PINs are hash-only and cannot be shown.
+# (keep a copy of it with your backups). Without it PINs are hash-only and cannot be shown.
 PIN_KEY = _get("PIN_KEY")

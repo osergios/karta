@@ -1,7 +1,7 @@
 """Live checks on who is working: shift ending, shift over, daily/weekly limits, rest, off-schedule work.
 Runs every minute. Each alert is raised once per employee/day/kind and goes to:
   - the admin page and your phone (ntfy), with full detail;
-  - the shop laptop (banner + Windows notification) — only the neutral 'please punch out' kinds."""
+  - the shop screen (banner + system notification) — only the neutral 'please punch out' kinds."""
 import json
 import logging
 import threading
