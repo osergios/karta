@@ -1,4 +1,5 @@
-# Publishes a release when a version tag (e.g. v1.0.0) is pushed:
+# Publishes a release, either when a version tag (e.g. v1.0.0) is pushed, or from
+# Actions → Release → Run workflow (the tag is then created on the chosen branch):
 #   1. creates the GitHub Release, with notes from docs/releases/<tag>.md when that file exists;
 #   2. builds the Docker image for amd64 and arm64 and pushes it to ghcr.io/<owner>/karta.
 # Both jobs live in one workflow because a release created with GITHUB_TOKEN does not trigger
@@ -11,7 +12,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Existing tag to (re)build, e.g. v1.0.0"
+        description: "Version tag, e.g. v1.0.0 (created on this branch if it doesn't exist)"
         required: true
 
 permissions:
@@ -31,24 +32,26 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v5
-        with:
-          ref: ${{ env.TAG }}
 
-      - name: Create the GitHub Release
+      - name: Create the GitHub Release (and the tag, if needed)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Tag must look like v1.2.3, got '$TAG'"; exit 1
+          fi
           if gh release view "$TAG" >/dev/null 2>&1; then
             echo "Release $TAG already exists"; exit 0
           fi
           notes="docs/releases/$TAG.md"
           if [ -f "$notes" ]; then
-            gh release create "$TAG" --verify-tag --title "Karta $TAG" --notes-file "$notes"
+            gh release create "$TAG" --target "$GITHUB_SHA" --title "Karta $TAG" --notes-file "$notes"
           else
-            gh release create "$TAG" --verify-tag --title "Karta $TAG" --generate-notes
+            gh release create "$TAG" --target "$GITHUB_SHA" --title "Karta $TAG" --generate-notes
           fi
 
   docker-image:
+    needs: github-release
     runs-on: ubuntu-latest
     permissions:
       contents: read
