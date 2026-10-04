@@ -1,0 +1,45 @@
+# One-time: posts the welcome message to Discussions → Announcements. Removed after use.
+name: Post welcome discussion
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  discussions: write
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Create the discussion
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITLE: "Καλώς ήρθατε στην Karta!"
+        run: |
+          owner="${GITHUB_REPOSITORY%/*}"; name="${GITHUB_REPOSITORY#*/}"
+          info=$(gh api graphql -f owner="$owner" -f name="$name" -f query='
+            query($owner: String!, $name: String!) {
+              repository(owner: $owner, name: $name) {
+                id
+                discussionCategories(first: 25) { nodes { id name slug } }
+              }
+            }')
+          repo_id=$(echo "$info" | jq -r '.data.repository.id')
+          cat_id=$(echo "$info" | jq -r '.data.repository.discussionCategories.nodes[] | select(.slug=="announcements") | .id')
+          if [ -z "$cat_id" ]; then
+            echo "::error::No Announcements category"; echo "$info" | jq '.data.repository.discussionCategories.nodes'; exit 1
+          fi
+          existing=$(gh api graphql -f owner="$owner" -f name="$name" -f query='
+            query($owner: String!, $name: String!) {
+              repository(owner: $owner, name: $name) { discussions(first: 50) { nodes { title url } } }
+            }' | jq -r --arg t "$TITLE" '.data.repository.discussions.nodes[] | select(.title==$t) | .url')
+          if [ -n "$existing" ]; then echo "Already posted: $existing"; exit 0; fi
+          gh api graphql -f repo="$repo_id" -f cat="$cat_id" -f title="$TITLE" -F body=@.github/welcome/post.md -f query='
+            mutation($repo: ID!, $cat: ID!, $title: String!, $body: String!) {
+              createDiscussion(input: {repositoryId: $repo, categoryId: $cat, title: $title, body: $body}) {
+                discussion { url }
+              }
+            }' | jq -r '.data.createDiscussion.discussion.url'
