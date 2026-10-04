@@ -64,5 +64,6 @@ device registration, deletions…) are written to an audit table with who did it
 
 ## Reporting a security problem
 
-Please don't open a public issue. Contact the maintainer privately through GitHub (see
-the repository's security policy, if one is published) with the details.
+Please don't open a public issue. Use GitHub's
+[private vulnerability reporting](https://github.com/osergios/karta/security/advisories/new);
+see the [security policy](https://github.com/osergios/karta/blob/main/SECURITY.md).
