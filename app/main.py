@@ -2051,7 +2051,7 @@ async def admin_restore_upload(request: Request, admin: str = Depends(security.r
 
 
 class RestoreCloudIn(BaseModel):
-    path: str = Field(max_length=80)
+    id: str = Field(max_length=64)
 
 
 @app.post("/admin/api/restore/cloud")
@@ -2059,14 +2059,14 @@ def admin_restore_cloud(body: RestoreCloudIn, admin: str = Depends(security.requ
     """Step 1 (from the cloud): downloads the chosen copy and checks it."""
     tmp = restore.staged_path() + ".part"
     try:
-        cloud.download(body.path, tmp)
+        cloud.download(body.id, tmp)
         info = restore.stage_file(tmp)
     except (cloud.CloudError, restore.RestoreError) as e:
         raise HTTPException(status_code=400, detail=str(e))
     finally:
         if os.path.exists(tmp):
             os.remove(tmp)
-    db.audit(admin, "restore_staged", f"cloud {body.path}")
+    db.audit(admin, "restore_staged", f"cloud {body.id}")
     return info
 
 

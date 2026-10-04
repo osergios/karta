@@ -17,7 +17,7 @@ Two backups every night, independent of each other:
 | Where | Who makes it | What it keeps |
 |---|---|---|
 | **On the machine** (`~/karta/backups`) and, if you set it up, **on a USB stick** | `backup.sh`, set up by the setup assistant, at 23:30 | `daily/` 30 days · `monthly/` the last one of each month, for 24 months · `yearly/` one for each year, **forever** · `karta.env` (the settings, for a restore) |
-| **In the cloud**, encrypted | Karta itself, at 23:40 | `daily/` 30 days · `monthly/` 24 months · `yearly/` forever |
+| **In the cloud**, encrypted | Karta itself, at 23:40 | a "snapshot" for each of the last 30 days, one for each month (24 months) and one for each year, **forever** |
 
 The result shows on the admin page, in **«Ρυθμίσεις» → «Αντίγραφα ασφαλείας»** (Settings →
 Backups): «Στο μηχάνημα: … ✓ · USB ✓» and «Cloud (…): … ✓». If backups stop or one fails,
@@ -31,8 +31,13 @@ Set up **one or both**.
 
 For everyone, and **the only option on a VPS / cloud server** (e.g. Oracle Cloud), where
 there's no USB. Backups are encrypted on your machine before they're uploaded (with
-[rclone](https://rclone.org), which is built into Karta): not even the cloud provider can
+[restic](https://restic.net), which is built into Karta): not even the cloud provider can
 read them.
+
+**They take very little space:** each snapshot is the whole database and restores on its
+own, but the cloud only stores what changed since the previous one, compressed. So the 30
+daily, 24 monthly and yearly snapshots take little more than a single copy: a few MB a year
+for a small shop. A free Google Drive account is enough for good.
 
 In **«Ρυθμίσεις» → «Αντίγραφα ασφαλείας»**:
 
@@ -58,8 +63,8 @@ In **«Ρυθμίσεις» → «Αντίγραφα ασφαλείας»**:
    **encryption password** once. **Write it on paper or in a password manager.** Without
    it, if the machine breaks, the backups in the cloud **can't be opened**.
 
-On Google Drive the files go into the `Karta-backups` folder, with encrypted names (Karta
-can only see the files it creates itself). **«Ανέβασμα τώρα»** (upload now) uploads a
+On Google Drive the files go into the `Karta-backups` folder (encrypted pieces that don't
+open with a double click; Karta can only see the files it creates itself). **«Ανέβασμα τώρα»** (upload now) uploads a
 backup straight away; **«Αποσύνδεση cloud»** (disconnect cloud) stops the uploads (what's
 already uploaded stays).
 
@@ -96,7 +101,7 @@ In **«Ρυθμίσεις» → «Αντίγραφα ασφαλείας» → «
 
 - **«Από αρχείο…»** (from a file): a backup you have (from «Λήψη αντιγράφου τώρα», from the
   USB stick, or from the `backups` folder).
-- **«Από το cloud…»** (from the cloud): you pick a day, month or year from the list.
+- **«Από το cloud…»** (from the cloud): you pick a snapshot (date and time) from the list.
 
 First it shows **what the backup contains** (business, employees, punches, last punch), and
 nothing changes. With **«Επαναφορά τώρα»** (restore now) the current database is kept as

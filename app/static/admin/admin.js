@@ -804,14 +804,13 @@
     const box = document.getElementById("restorePanel");      // outside #backupBox: the refresh doesn't redraw it
     const { backups } = await api("/admin/api/cloud/backups");
     if (!backups.length) { toast("Δεν βρέθηκαν αντίγραφα στο cloud", true); return; }
-    const label = { daily: "ημέρα", monthly: "μήνας", yearly: "έτος" };
-    const sel = el("select", {}, ...backups.map(b => el("option", { value: b.path },
-      `${b.path.replace(/^.*karta-|\.db$/g, "")} (${label[b.path.split("/")[0]]}, ${(b.size / 1e6).toFixed(1)} MB)`)));
+    const sel = el("select", {}, ...backups.map(b => el("option", { value: b.id },
+      `${b.time.slice(8, 10)}/${b.time.slice(5, 7)}/${b.time.slice(0, 4)} ${b.time.slice(11, 16)}`)));
     box.hidden = false;
     box.replaceChildren(el("h3", {}, "Επαναφορά από το cloud"),
       el("div", { class: "backup-row" }, sel,
         el("button", { class: "btn ghost", type: "button", onclick: act(async () => {
-          showRestore(await api("/admin/api/restore/cloud", { path: sel.value }));
+          showRestore(await api("/admin/api/restore/cloud", { id: sel.value }));
         }) }, "Έλεγχος αντιγράφου"),
         el("button", { class: "link", type: "button", onclick: () => hide(box) }, "Ακύρωση")));
   }

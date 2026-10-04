@@ -355,3 +355,10 @@
     reports the result (`updatemark done ok|fail`) and asks the shop screen to reload. Karta never gets access to
     Docker. The page follows the update and reloads when the new version answers. `./setup.sh update` does the
     same from the terminal.
+70. **Cloud backups with restic (1.4.0).** The nightly cloud copy is now a restic snapshot (restic in the image, through
+    rclone): encrypted on the machine, compressed, and deduplicated, so 30 daily, 24 monthly and yearly snapshots
+    take little more than one copy (a few MB a year for a small shop). Each snapshot is a complete database; restore
+    picks one by date. Retention by `restic forget --keep-daily 30 --keep-monthly 24 --keep-yearly 1000 --prune`;
+    a stale lock is cleared first. `init` refuses to start a new repository over existing backups (use «Έχω ήδη
+    αντίγραφα στο cloud»). Connections made with 1.2–1.3 (rclone crypt copies) need to be connected again; the
+    older copies stay in the folder.
