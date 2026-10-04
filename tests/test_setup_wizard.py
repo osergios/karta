@@ -237,3 +237,14 @@ def test_check_catches_bad_values(tmp_path):
 
 def test_check_without_env(tmp_path):
     assert wizard.check(str(tmp_path / "missing.env"), session=FakeWeb()) == 1
+
+
+@pytest.mark.parametrize("answers, expected", [
+    (["ν"], True), (["yes"], True), (["nai"], True), ([""], True),
+    (["ο"], False), (["όχι"], False), (["n"], False), (["no"], False),
+    (["maybe", "ο"], False),
+])
+def test_yes_no_answers(monkeypatch, answers, expected):
+    replies = iter(answers)
+    monkeypatch.setattr("builtins.input", lambda prompt="": next(replies))
+    assert wizard.yes("Ερώτηση;") is expected
