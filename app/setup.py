@@ -315,10 +315,11 @@ def yes(question: str, default: bool = True) -> bool:
             print(); sys.exit(1)
         if not a:
             return default
-        if a in ("ν", "ναι", "n", "nai", "y", "yes"):
+        if a in ("ν", "ναι", "nai", "y", "yes"):
             return True
-        if a in ("ο", "όχι", "οχι", "o", "oxi", "no"):
+        if a in ("ο", "όχι", "οχι", "o", "oxi", "n", "no"):   # a Latin "n" means no, as in English
             return False
+        bad("Γράψτε ν (ναι) ή ο (όχι).")
 
 
 # ------------------------------------------------------------------ setup
