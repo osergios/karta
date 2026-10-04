@@ -26,7 +26,8 @@ def test_backup_status_is_shown_and_ticks_the_first_step(client, admin):
     assert backupmark.main(["maybe", "-", "-"]) == 2
     mark(usb="ok")
     d = client.get("/admin/api/overview").json()
-    assert d["backup"]["local"] == "ok" and d["backup"]["usb"] == "ok" and not d["backup"]["old"]
+    h = d["backup"]["host"]
+    assert h["local"] == "ok" and h["usb"] == "ok" and not h["old"] and d["backup"]["cloud"] is None
     assert {s["key"]: s for s in d["first_steps"]}["backup"]["done"]
 
 
@@ -37,9 +38,9 @@ def test_local_copy_only_is_not_enough_for_the_first_step(client, admin):
 
 def test_old_or_failed_backups_raise_an_alert():
     noon = datetime.now(config.TZ).replace(tzinfo=None, hour=12)
-    mark(cloud="fail")
+    mark(usb="fail")
     monitor._check_backup(noon)
-    assert "backup_failed" in alerts() and "cloud" in alerts()["backup_failed"]["message"]
+    assert "backup_failed" in alerts() and "USB" in alerts()["backup_failed"]["message"]
     mark(hours_ago=60)
     monitor._check_backup(noon)
     assert "backup_old" in alerts()

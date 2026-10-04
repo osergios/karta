@@ -12,27 +12,59 @@ schedules and settings. So the most recent one is enough to get everything back.
 
 ## What happens automatically
 
-The setup assistant (`./setup.sh`) creates `backup.sh` and sets it to run **every night at
-23:30**. In the `~/karta/backups` folder it keeps:
+Two backups every night, independent of each other:
 
-| Folder | What's in it |
-|---|---|
-| `daily/` | one backup for each of the last 30 days |
-| `monthly/` | the last backup of each month, for 24 months |
-| `yearly/` | the last backup of each year, **forever** |
-| `karta.env` | a copy of the settings (`.env`), needed for a restore |
+| Where | Who makes it | What it keeps |
+|---|---|---|
+| **On the machine** (`~/karta/backups`) and, if you set it up, **on a USB stick** | `backup.sh`, set up by the setup assistant, at 23:30 | `daily/` 30 days · `monthly/` the last one of each month, for 24 months · `yearly/` one for each year, **forever** · `karta.env` (the settings, for a restore) |
+| **In the cloud**, encrypted | Karta itself, at 23:40 | `daily/` 30 days · `monthly/` 24 months · `yearly/` forever |
 
-Each night's result shows on the admin page, in **«Ρυθμίσεις» → «Αντίγραφα ασφαλείας»**
-(backups): «Τελευταίο αντίγραφο: … · στο μηχάνημα ✓ · USB ✓ · cloud ✓». If backups stop or
-one fails, you get an **alert** (on your phone too).
+The result shows on the admin page, in **«Ρυθμίσεις» → «Αντίγραφα ασφαλείας»** (Settings →
+Backups): «Στο μηχάνημα: … ✓ · USB ✓» and «Cloud (…): … ✓». If backups stop or one fails,
+you get an **alert** (on your phone too).
 
 ## A backup off the machine
 
-Choose **one or both**. On Karta's machine (through `ssh`):
+Set up **one or both**.
+
+### Encrypted in the cloud (from the admin page)
+
+For everyone, and **the only option on a VPS / cloud server** (e.g. Oracle Cloud), where
+there's no USB. Backups are encrypted on your machine before they're uploaded (with
+[rclone](https://rclone.org), which is built into Karta): not even the cloud provider can
+read them.
+
+In **«Ρυθμίσεις» → «Αντίγραφα ασφαλείας»**:
+
+1. In **«Πού»** (where) choose **Google Drive**, **Dropbox** or **Backblaze B2** (10 GB
+   free).
+2. For **Google Drive / Dropbox** you briefly need a computer with a browser (the page
+   shows the same steps):
+   - download rclone from [rclone.org/downloads](https://rclone.org/downloads/) and unzip
+     it;
+   - in a terminal in that folder run `rclone authorize "drive"` (or `"dropbox"`); on
+     Windows: right-click the folder → «Open in Terminal» and run
+     `.\rclone.exe authorize "drive"`;
+   - log in in the browser that opens and press «Allow»;
+   - copy the text it prints (it starts with `{"access_token"`) and paste it into the
+     page.
+
+   For **Backblaze B2**: create a bucket (Private) and an Application Key, and enter the
+   keyID, the applicationKey and the bucket name.
+3. Press **«Σύνδεση και πρώτο ανέβασμα»** (connect and first upload). Karta shows an
+   **encryption password** once. **Write it on paper or in a password manager.** Without
+   it, if the machine breaks, the backups in the cloud **can't be opened**.
+
+On Google Drive the files go into the `Karta-backups` folder, with encrypted names (Karta
+can only see the files it creates itself). **«Ανέβασμα τώρα»** (upload now) uploads a
+backup straight away; **«Αποσύνδεση cloud»** (disconnect cloud) stops the uploads (what's
+already uploaded stays).
 
 ### To a USB stick: `./setup.sh usb`
 
-For a Raspberry Pi or PC in the shop or at home.
+For a Raspberry Pi or PC in the shop or at home. Connecting a USB stick needs administrator
+rights on the machine, which the admin page deliberately doesn't have, so it's done once
+from the terminal (through `ssh`):
 
 1. Plug in a USB stick (FAT32, exFAT, NTFS or ext4; whatever is already on it stays).
 2. `cd ~/karta && ./setup.sh usb`
@@ -40,36 +72,10 @@ For a Raspberry Pi or PC in the shop or at home.
    restart) and makes a test backup straight away.
 
 Every night the backups are also written to the USB stick, in the `karta-backups` folder.
-The USB stick is in the same place as the machine (fire, theft), so now and then take a
-copy somewhere else too, or also use the cloud.
-
-### Encrypted in the cloud: `./setup.sh cloud`
-
-For everyone, and **the only option on a VPS / cloud server** (e.g. Oracle Cloud), where
-there's no USB. Backups are uploaded **encrypted** with the
-[rclone](https://rclone.org) tool: not even the cloud provider can read them.
-
-1. `cd ~/karta && ./setup.sh cloud` (it installs rclone if needed).
-2. Choose where: **Google Drive**, **Dropbox**, **Backblaze B2** (10 GB free), or another.
-3. For Google Drive / Dropbox you briefly need a computer with a browser:
-   - download rclone from [rclone.org/downloads](https://rclone.org/downloads/) and unzip
-     it;
-   - in a terminal in that folder run `./rclone authorize "drive"` (or `"dropbox"`); on
-     Windows `.\rclone.exe authorize "drive"`;
-   - log in in the browser and press «Allow»;
-   - copy the text it prints (it starts with `{"access_token"`) and paste it into the
-     assistant.
-4. The assistant creates an **encryption password** and shows it to you once.
-   **Write it on paper or in a password manager.** Without it, if the machine breaks, the
-   backups in the cloud **can't be opened**.
-
-On Google Drive the files go into the `Karta-backups` folder (with encrypted names).
-Anything deleted locally (e.g. daily backups older than 30 days) first goes to the
-`deleted` folder and is permanently deleted after 30 days.
+The USB stick is in the same place as the machine (fire, theft), so combine it with the
+cloud.
 
 ## Downloading from the admin page
-
-In **«Ρυθμίσεις» → «Αντίγραφα ασφαλείας»**:
 
 - **«Λήψη αντιγράφου τώρα»** (download a backup now): downloads the whole database as one
   file, to keep wherever you like. It contains staff data: keep it somewhere safe.
@@ -79,31 +85,48 @@ In **«Ρυθμίσεις» → «Αντίγραφα ασφαλείας»**:
   an inspection. Good practice: every January, download the previous year's file and keep
   it with your accounting records.
 
-## Restore: `./setup.sh restore`
+## Restore
 
-If the machine breaks, or you need to go back to an earlier day:
+### From the admin page
 
-1. On a **new machine**: follow [Easy installation](Easy-Installation-EN) up to and
-   including installing Docker, download `setup.sh` into `~/karta` and run
-   `./setup.sh restore` **before** `./setup.sh`. On the same machine: just
-   `cd ~/karta && ./setup.sh restore`.
-2. Choose where from: the machine, the USB stick, or the cloud (you give access to the
-   cloud again, and the **encryption password**).
-3. The assistant suggests the most recent backup (or you type another file), also brings
-   back the settings (`karta.env`) if they're missing, and checks that `PIN_KEY` is the
-   same as the backup's (without it, the Ergani password and the PINs can't be read).
-4. Before replacing the database, it keeps a copy of the current one.
+In **«Ρυθμίσεις» → «Αντίγραφα ασφαλείας» → «Επαναφορά»** (restore):
 
-You can also give a file directly:
-`./setup.sh restore /mnt/karta-usb/karta-backups/daily/karta-2026-10-05.db`.
+- **«Από αρχείο…»** (from a file): a backup you have (from «Λήψη αντιγράφου τώρα», from the
+  USB stick, or from the `backups` folder).
+- **«Από το cloud…»** (from the cloud): you pick a day, month or year from the list.
 
-On a new machine, after the restore run `./setup.sh` for Cloudflare (the tunnel can stay
-the same: the assistant finds it and reuses it).
+First it shows **what the backup contains** (business, employees, punches, last punch), and
+nothing changes. With **«Επαναφορά τώρα»** (restore now) the current database is kept as
+`before-restore-….db` (next to the database) and the backup takes its place, without a
+restart. If the backup was made with a different `PIN_KEY`, the page tells you: then the
+Ergani password and the PINs aren't shown until you put the old `PIN_KEY` in `.env` (it's
+in the backups' `karta.env`) or enter them again.
+
+### On a new machine, from the cloud
+
+1. Install Karta with [Easy installation](Easy-Installation-EN) (`./setup.sh`: same
+   address and same Cloudflare key, the assistant reuses the tunnel).
+2. On the admin page: «Αντίγραφα ασφαλείας» → **«Έχω ήδη αντίγραφα στο cloud»** (I already
+   have backups in the cloud): same provider, a new access code (`rclone authorize`), and
+   the **encryption password** you wrote down → «Σύνδεση στα υπάρχοντα αντίγραφα» (connect
+   to the existing backups).
+3. «Επαναφορά» → «Από το cloud…» → the most recent one → «Επαναφορά τώρα».
+
+### From the terminal: `./setup.sh restore`
+
+For when the admin page won't open. It takes a backup from the machine (`backups/`) or from
+the USB stick, also brings back the settings (`karta.env`) if `.env` is missing, checks
+`PIN_KEY`, keeps a copy of the current database and does the restore:
+
+```bash
+cd ~/karta && ./setup.sh restore
+./setup.sh restore /mnt/karta-usb/karta-backups/daily/karta-2026-10-05.db   # or a specific file
+```
 
 ## Without the assistant
 
-If you don't use `setup.sh`, back up the database while Karta is running with SQLite's
-backup command (not a plain `cp`):
+If you don't use `setup.sh`, the admin page's cloud backup works as usual. To back up the
+database while Karta is running, use SQLite's backup command (not a plain `cp`):
 
 ```bash
 docker compose exec -T karta python -c "import sqlite3; s=sqlite3.connect('/data/workcard.db'); d=sqlite3.connect('/data/backup.db'); s.backup(d); d.close()"

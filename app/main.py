@@ -1,5 +1,6 @@
 """Karta: digital work card (ψηφιακή κάρτα εργασίας) service."""
 import json
+import os
 import secrets
 import logging
 import threading
@@ -14,7 +15,8 @@ from fastapi.responses import FileResponse, JSONResponse, Response as RawRespons
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from . import appconfig, archive, brand, config, db, erganiread, hours, monitor, onboarding, report, security, submitter
+from . import (appconfig, archive, brand, cloud, config, db, erganiread, hours, monitor, onboarding, report, restore,
+               security, submitter)
 from .timeutil import now_local
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -32,6 +34,17 @@ _enroll_lock = threading.Lock()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     db.init()
+    _prepare_db()
+    threading.Thread(target=submitter.worker, args=(_stop,), daemon=True).start()
+    threading.Thread(target=monitor.worker, args=(_stop,), daemon=True).start()
+    threading.Thread(target=cloud.worker, args=(_stop,), daemon=True).start()
+    log.info("Started in ERGANI_MODE=%s host=%s branch=%s", config.ERGANI_MODE, config.ERGANI_HOST or "-", config.BRANCH_NUMBER)
+    yield
+    _stop.set()
+
+
+def _prepare_db():
+    """Everything that follows opening the database: at start-up, and again after a restore."""
     appconfig.load()
     for problem in config.problems():
         log.error("Settings: %s (complete it in the admin page, «Ρυθμίσεις»)", problem)
@@ -39,11 +52,6 @@ async def lifespan(app: FastAPI):
     _grace_to_5()
     _retire_old_pause()
     brand.migrate(STATIC / "public")
-    threading.Thread(target=submitter.worker, args=(_stop,), daemon=True).start()
-    threading.Thread(target=monitor.worker, args=(_stop,), daemon=True).start()
-    log.info("Started in ERGANI_MODE=%s host=%s branch=%s", config.ERGANI_MODE, config.ERGANI_HOST or "-", config.BRANCH_NUMBER)
-    yield
-    _stop.set()
 
 
 def _grace_to_5():
@@ -732,8 +740,8 @@ def first_steps():
         ("notify", "Ειδοποιήσεις στο κινητό", "Προαιρετικά: εφαρμογή ntfy στο κινητό και ρύθμιση εδώ, στις «Ρυθμίσεις».",
          bool(config.NTFY_URL and config.NTFY_TOPIC) or "notify" in marked,
          {"tab": "settings", "target": "cfgNtfy", "test": bool(config.NTFY_URL and config.NTFY_TOPIC)}),
-        ("backup", "Αντίγραφα ασφαλείας", "Τα χτυπήματα φυλάσσονται για χρόνια: αυτόματο αντίγραφο κάθε βράδυ και ένα "
-         "εκτός μηχανήματος, σε USB (./setup.sh usb) ή σε cloud (./setup.sh cloud).",
+        ("backup", "Αντίγραφα ασφαλείας", "Τα χτυπήματα φυλάσσονται για χρόνια: αντίγραφο εκτός μηχανήματος, "
+         "κρυπτογραφημένο στο cloud (Google Drive, Dropbox, Backblaze B2) ή σε USB (./setup.sh usb).",
          _offsite_ok() or "backup" in marked, {"tab": "settings", "target": "backupBox"}),
         ("training", "Δοκιμή με το προσωπικό", "«Λειτουργία εκπαίδευσης»: όλοι δοκιμάζουν να χτυπήσουν, χωρίς να καταγράφεται τίποτα.",
          bool(db.setting("training_used")) or "training" in marked, {"tab": "today", "target": "sendState"}),
@@ -746,16 +754,23 @@ def first_steps():
 
 
 def _offsite_ok() -> bool:
-    b = monitor.backup_status()
-    return bool(b and "ok" in (b.get("usb"), b.get("cloud")))
+    b, c = monitor.backup_status(), cloud.status()
+    return bool((b and b.get("usb") == "ok") or (c and c.get("state") == "ok"))
 
 
-def backup_info() -> dict | None:
-    b = monitor.backup_status()
-    if b is None:
-        return None
-    return {"when": b["when"].isoformat(timespec="minutes"), "local": b.get("local"), "usb": b.get("usb"),
-            "cloud": b.get("cloud"), "old": (now_local() - b["when"]).total_seconds() > 50 * 3600}
+def backup_info() -> dict:
+    """The nightly copy on the machine (and USB) made by backup.sh, and the cloud upload made by Karta."""
+    b, c = monitor.backup_status(), cloud.status()
+    old = lambda w: w is not None and (now_local() - w).total_seconds() > 50 * 3600     # noqa: E731
+    return {
+        "host": None if b is None else {"when": b["when"].isoformat(timespec="minutes"), "local": b.get("local"),
+                                        "usb": b.get("usb"), "old": old(b["when"])},
+        "cloud": None if c is None else {"provider": c["provider"], "state": c["state"], "error": c["error"],
+                                         "when": c["when"].isoformat(timespec="minutes") if c["when"] else None,
+                                         "old": old(c["when"])},
+        "cloud_available": cloud.available(),
+        "restore_pending": os.path.exists(restore.staged_path()),
+    }
 
 
 class FirstStepIn(BaseModel):
@@ -1650,16 +1665,31 @@ def admin_kiosk_reload(admin: str = Depends(security.require_admin)):
 
 
 # ------------------------------------------------------------------ business details («Στοιχεία επιχείρησης»)
+_OPT_COLOR = r"^(#[0-9a-fA-F]{6})?$"      # empty = the theme's default
+
+
 class BrandIn(BaseModel):
     name: str = Field(default="", max_length=80)
     short: str = Field(default="", max_length=30)
     color: str = Field(pattern=r"^#[0-9a-fA-F]{6}$")
+    # optional: left out = unchanged
+    theme: str | None = Field(default=None, pattern=r"^[a-z]{0,20}$")
+    bg: str | None = Field(default=None, pattern=_OPT_COLOR)
+    side: str | None = Field(default=None, pattern=_OPT_COLOR)
+    ink: str | None = Field(default=None, pattern=_OPT_COLOR)
+    in_color: str | None = Field(default=None, pattern=_OPT_COLOR)
+    out_color: str | None = Field(default=None, pattern=_OPT_COLOR)
+    dark_kiosk: bool | None = None
+    dark_admin: bool | None = None
 
 
 @app.post("/admin/api/brand")
 def admin_brand(body: BrandIn, admin: str = Depends(security.require_admin)):
-    brand.set_info(body.name, body.short, body.color)
-    db.audit(admin, "brand", f"{body.name} / {body.short} / {body.color}")
+    colors = {k: v for k, v in (("theme", body.theme), ("bg", body.bg), ("side", body.side), ("ink", body.ink),
+                                ("in", body.in_color), ("out", body.out_color), ("dark_kiosk", body.dark_kiosk),
+                                ("dark_admin", body.dark_admin)) if v is not None}
+    brand.set_info(body.name, body.short, body.color, colors)
+    db.audit(admin, "brand", f"{body.name} / {body.short} / {body.color}" + (f" / {colors}" if colors else ""))
     return {"ok": True}
 
 
@@ -1959,6 +1989,140 @@ def admin_backup_download(admin: str = Depends(security.require_admin)):
     db.audit(admin, "backup_download", f"{len(data)} bytes")
     return RawResponse(data, media_type="application/vnd.sqlite3",
                        headers={"Content-Disposition": f'attachment; filename="karta-{now_local():%Y-%m-%d}.db"'})
+
+
+# ---- cloud backups and restore («Ρυθμίσεις» → «Αντίγραφα ασφαλείας»)
+class CloudIn(BaseModel):
+    provider: str = Field(pattern="^(drive|dropbox|b2)$")
+    token: str = Field(default="", max_length=8000)
+    account: str = Field(default="", max_length=200)
+    key: str = Field(default="", max_length=200)
+    bucket: str = Field(default="", max_length=60)
+    password: str | None = Field(default=None, max_length=200)   # the password of existing backups (restore)
+
+
+@app.post("/admin/api/cloud/connect")
+def admin_cloud_connect(body: CloudIn, admin: str = Depends(security.require_admin)):
+    try:
+        pw = cloud.connect(body.provider, token=body.token.strip(), account=body.account, key=body.key,
+                           bucket=body.bucket.strip(), password=(body.password or "").strip() or None)
+    except cloud.CloudError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    db.audit(admin, "cloud_connect", body.provider + (" (existing backups)" if pw is None else ""))
+    return {"ok": True, "password": pw}
+
+
+@app.post("/admin/api/cloud/disconnect")
+def admin_cloud_disconnect(admin: str = Depends(security.require_admin)):
+    cloud.disconnect()
+    db.audit(admin, "cloud_disconnect")
+    return {"ok": True}
+
+
+@app.post("/admin/api/cloud/run")
+def admin_cloud_run(admin: str = Depends(security.require_admin)):
+    """Uploads a copy now, in the background (the page shows the result when it is done)."""
+    if not cloud.connected():
+        raise HTTPException(status_code=409, detail="Το cloud δεν έχει ρυθμιστεί.")
+
+    def run():
+        try:
+            cloud.run_backup()
+        except Exception:
+            pass
+    threading.Thread(target=run, daemon=True).start()
+    db.audit(admin, "cloud_run")
+    return {"ok": True}
+
+
+@app.get("/admin/api/cloud/backups")
+def admin_cloud_backups(admin: str = Depends(security.require_admin)):
+    try:
+        return {"backups": cloud.list_backups()}
+    except cloud.CloudError as e:
+        raise HTTPException(status_code=502, detail=f"Το cloud δεν απάντησε: {e}")
+
+
+MAX_RESTORE_BYTES = 500_000_000
+
+
+@app.post("/admin/api/restore/upload")
+async def admin_restore_upload(request: Request, admin: str = Depends(security.require_admin)):
+    """Step 1 (from a file): the backup is kept aside and checked; nothing is replaced yet."""
+    tmp = restore.staged_path() + ".part"
+    size = 0
+    try:
+        with open(tmp, "wb") as f:
+            async for chunk in request.stream():
+                size += len(chunk)
+                if size > MAX_RESTORE_BYTES:
+                    raise HTTPException(status_code=413, detail="Το αρχείο είναι πολύ μεγάλο για αντίγραφο της Karta.")
+                f.write(chunk)
+        info = restore.stage_file(tmp)
+    except restore.RestoreError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        if os.path.exists(tmp):
+            os.remove(tmp)
+    db.audit(admin, "restore_staged", f"upload {size} bytes")
+    return info
+
+
+class RestoreCloudIn(BaseModel):
+    path: str = Field(max_length=80)
+
+
+@app.post("/admin/api/restore/cloud")
+def admin_restore_cloud(body: RestoreCloudIn, admin: str = Depends(security.require_admin)):
+    """Step 1 (from the cloud): downloads the chosen copy and checks it."""
+    tmp = restore.staged_path() + ".part"
+    try:
+        cloud.download(body.path, tmp)
+        info = restore.stage_file(tmp)
+    except (cloud.CloudError, restore.RestoreError) as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        if os.path.exists(tmp):
+            os.remove(tmp)
+    db.audit(admin, "restore_staged", f"cloud {body.path}")
+    return info
+
+
+@app.get("/admin/api/restore/pending")
+def admin_restore_pending(admin: str = Depends(security.require_admin)):
+    try:
+        return restore.inspect()
+    except restore.RestoreError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+class RestoreApplyIn(BaseModel):
+    confirm: bool = False
+
+
+@app.post("/admin/api/restore/apply")
+def admin_restore_apply(body: RestoreApplyIn, admin: str = Depends(security.require_admin)):
+    """Step 2: the current database is kept as before-restore-….db, and the backup takes its place."""
+    if not body.confirm:
+        raise HTTPException(status_code=400, detail="Χρειάζεται επιβεβαίωση.")
+
+    def after():
+        _prepare_db()
+        with _training_lock:
+            _training_state.clear()
+    try:
+        kept = restore.apply(after)
+    except restore.RestoreError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    db.audit(admin, "restore", f"previous database kept as {kept}")
+    log.warning("Database restored from a backup by %s (previous one kept as %s)", admin, kept)
+    return {"ok": True, "kept": kept}
+
+
+@app.post("/admin/api/restore/discard")
+def admin_restore_discard(admin: str = Depends(security.require_admin)):
+    restore.discard()
+    return {"ok": True}
 
 
 @app.post("/admin/api/salon-hours")
