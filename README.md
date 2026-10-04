@@ -50,6 +50,10 @@
   καταστήματος και προαιρετικά στο κινητό σας (μέσω [ntfy](https://ntfy.sh)).
 - **Μηνιαίες και ετήσιες αναφορές** σε Excel για τον λογιστή, με τις απολογιστικές
   δηλώσεις που πρέπει να γίνουν.
+- **Ρυθμίσεις από τη σελίδα διαχείρισης:** ΑΦΜ, χρήστης ΕΡΓΑΝΗ (με δοκιμή σύνδεσης,
+  κρυπτογραφημένος κωδικός), ειδοποιήσεις στο κινητό και αλλαγή λειτουργίας με επιβεβαίωση.
+- **Αντίγραφα ασφαλείας για χρόνια:** κάθε βράδυ, σε USB ή κρυπτογραφημένα σε cloud,
+  επαναφορά με μία εντολή, και «Αρχείο χτυπημάτων» κάθε έτους σε Excel.
 
 Το αναλυτικό ιστορικό αλλαγών είναι στο [`CHANGES.md`](CHANGES.md).
 
@@ -68,8 +72,9 @@
 ```bash
 mkdir ~/karta && cd ~/karta
 curl -fsSLO https://raw.githubusercontent.com/osergios/karta/main/setup.sh && chmod +x setup.sh
-./setup.sh          # ερωτήσεις στα ελληνικά → .env, Cloudflare, εκκίνηση, αντίγραφα ασφαλείας
+./setup.sh          # διεύθυνση και Cloudflare → .env, εκκίνηση, αντίγραφα ασφαλείας
 ./setup.sh check    # έλεγχος ότι όλα δουλεύουν
+./setup.sh usb      # αντίγραφα και σε USB · ./setup.sh cloud: κρυπτογραφημένα σε cloud
 ```
 
 Ή με το χέρι:
@@ -86,7 +91,9 @@ docker run -d --name karta --env-file .env -p 8000:8000 -v karta-data:/data \
 μόνοι σας με `docker build -t karta .`.
 
 Η βάση SQLite βρίσκεται στο `/data/workcard.db` (αλλάζει με το `DB_PATH`), οπότε
-**κρατάτε αντίγραφα αυτού του volume**. Περιέχει στοιχεία των εργαζομένων σας.
+**κρατάτε αντίγραφα αυτού του volume** (τα χτυπήματα φυλάσσονται για χρόνια· δείτε
+[Αντίγραφα ασφαλείας](https://github.com/osergios/karta/wiki/Backups)). Περιέχει στοιχεία
+των εργαζομένων σας.
 
 Χωρίς Docker:
 
@@ -102,8 +109,9 @@ PYTHONPATH=vendor uvicorn app.main:app --host 0.0.0.0 --port 8000
 ## Έναρξη κανονικής λειτουργίας
 
 1. Τρέξτε σε `dry_run` και ελέγξτε στη σελίδα διαχείρισης τι θα στελνόταν.
-2. Αλλάξτε σε `trial` και ελέγξτε τις κινήσεις στο δοκιμαστικό περιβάλλον του ΕΡΓΑΝΗ.
-3. Αλλάξτε σε `production`.
+2. Αλλάξτε σε `trial` («Ρυθμίσεις» → «Λειτουργία») και ελέγξτε τις κινήσεις στο
+   δοκιμαστικό περιβάλλον του ΕΡΓΑΝΗ.
+3. Αλλάξτε σε `production` (με επιβεβαίωση του ΑΦΜ και δοκιμή σύνδεσης).
 
 Είστε υπεύθυνοι για τις δηλώσεις που γίνονται στο ΕΡΓΑΝΗ από την εγκατάστασή σας. Το
 λογισμικό παρέχεται «ως έχει», χωρίς καμία εγγύηση (δείτε την άδεια χρήσης).
@@ -171,6 +179,10 @@ See the screenshots above.
   (via [ntfy](https://ntfy.sh)).
 - **Monthly and yearly Excel reports** for the accountant, including the
   retrospective declarations to file.
+- **Settings in the admin page:** employer ΑΦΜ, Ergani user (with a login test, password
+  stored encrypted), phone alerts, and switching mode with confirmation.
+- **Backups kept for years:** nightly, to a USB stick or encrypted to the cloud, one-command
+  restore, and a yearly "punch archive" in Excel.
 
 See [`CHANGES.md`](CHANGES.md) for the detailed history.
 
@@ -189,8 +201,9 @@ See [`CHANGES.md`](CHANGES.md) for the detailed history.
 ```bash
 mkdir ~/karta && cd ~/karta
 curl -fsSLO https://raw.githubusercontent.com/osergios/karta/main/setup.sh && chmod +x setup.sh
-./setup.sh          # questions (in Greek) → .env, Cloudflare, start, backups
+./setup.sh          # address and Cloudflare (in Greek) → .env, start, backups
 ./setup.sh check    # checks that everything works
+./setup.sh usb      # backups to a USB stick too · ./setup.sh cloud: encrypted to the cloud
 ```
 
 Or by hand:
@@ -207,7 +220,8 @@ A ready‑made image for amd64 and arm64. Versions and their changes are on the
 yourself with `docker build -t karta .`.
 
 The SQLite database lives at `/data/workcard.db` (change it with `DB_PATH`), so
-**back up that volume**. It holds your employees' data.
+**back up that volume** (punches must be kept for years; see
+[Backups](https://github.com/osergios/karta/wiki/Backups-EN)). It holds your employees' data.
 
 Without Docker:
 
@@ -223,8 +237,9 @@ your real `.env`.**
 ## Going live
 
 1. Run in `dry_run` and check the stored payloads on the admin page.
-2. Switch to `trial` and check the movements in the Ergani test environment.
-3. Switch to `production`.
+2. Switch to `trial` (admin page, «Ρυθμίσεις» → «Λειτουργία») and check the movements in
+   the Ergani test environment.
+3. Switch to `production` (confirmed by typing the ΑΦΜ, after a login test).
 
 You are responsible for the declarations made to Ergani from your installation.
 This software is provided as-is, without warranty (see the license).

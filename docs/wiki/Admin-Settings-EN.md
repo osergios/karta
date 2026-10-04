@@ -2,6 +2,27 @@
 
 # Admin: «Ρυθμίσεις» (Settings)
 
+## «Επιχείρηση και σύνδεση με το ΕΡΓΑΝΗ» (business and Ergani connection)
+
+Anything saved here applies immediately (no restart) and **overrides** `.env`. A value
+that comes from `.env` is marked «από το .env».
+
+- **«Λειτουργία» (mode):** test (`dry_run`), Ergani test environment (`trial`) or live
+  (`production`). For `trial` / `production` you type the ΑΦΜ (tax number) to confirm, and
+  Karta tests the connection first. See [Going live](Going-Live-EN).
+- **«Επιχείρηση» (business):** employer ΑΦΜ (the check digit is verified), branch number
+  (usually 0) and, optionally, your employer id in Ergani (the «id:» in Ergani's QR, so a
+  QR from another employer is refused).
+- **«Χρήστης web services του ΕΡΓΑΝΗ» (Ergani web‑services user):** username, password and
+  type (`01` API user, `02` branch «ΕΡΓΑΝΗ» user). **«Δοκιμή σύνδεσης»** (test connection)
+  connects read‑only. The password is stored **encrypted** (with `PIN_KEY`) and is never
+  shown again; to keep it unchanged, leave the box empty.
+- **«Χρήστης για το δοκιμαστικό ΕΡΓΑΝΗ»** (user for the Ergani test environment, optional):
+  for `trial` mode, if you have a separate user on `trialv2eservices.yeka.gr`.
+
+If something the current mode needs is missing, a red «Χρειάζεται συμπλήρωση» (needs
+filling in) line appears, and punches wait until it's filled in.
+
 ## «ΕΡΓΑΝΗ»
 
 Reads from Ergani and compares with Karta. **It never submits anything.** Of everything
@@ -33,6 +54,21 @@ The daily and weekly limits depend on the employment contract and on whether you
 
 The shop‑screen reminders and festive decorations switches are on the
 [Today](Admin-Today-EN) tab.
+
+## «Ειδοποιήσεις στο κινητό» (phone notifications)
+
+The ntfy server and topic, and optionally a token. The page suggests a random topic: add
+it in the ntfy app («+»), then press «Αποθήκευση» (save) and «Δοκιμαστική ειδοποίηση»
+(test notification). See [Alerts and reminders](Alerts-and-Reminders-EN#setting-up-ntfy).
+
+## «Αντίγραφα ασφαλείας» (backups)
+
+- The result of the last nightly backup: on the machine, on USB, in the cloud.
+- **«Λήψη αντιγράφου τώρα»** (download a backup now): the whole database in one file.
+- **«Αρχείο χτυπημάτων (Excel)»** (punch archive): every punch of a year, with its Ergani
+  protocol number, for your records and for inspections.
+
+See [Backups and restore](Backups-EN).
 
 ## «Στοιχεία επιχείρησης» (business details)
 

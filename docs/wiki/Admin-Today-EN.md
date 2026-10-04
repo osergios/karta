@@ -13,13 +13,15 @@ The page reopens on the last tab you used. The alert count shows in the header.
 
 ## «Πρώτα βήματα» (first steps)
 
-On a new installation, the top of this tab shows a **«Πρώτα βήματα»** checklist: business
-details, staff from Ergani, schedules, local holidays, the shop screen, phone notifications,
-a trial run with the staff, and going live on Ergani.
+On a new installation, the top of this tab shows a **«Πρώτα βήματα»** checklist: the Ergani
+connection (ΑΦΜ and user), business details, staff from Ergani, schedules, local holidays,
+the shop screen, phone notifications, backups, a trial run with the staff, and going live
+on Ergani.
 
 - Each step **ticks itself off** once it's done, and has a **«Πάμε»** button that opens the
   right place.
-- What Karta can't detect by itself (e.g. "we have no local holidays") you mark with
+- What Karta can't detect by itself (e.g. "we have no local holidays", or backups you keep
+  your own way) you mark with
   **«Έγινε / Παράλειψη»** or **«Δεν χρειάζεται»**.
 - The notifications step has a **«Δοκιμαστική ειδοποίηση»** (test notification) button.
 - **«Απόκρυψη»** hides the checklist.
@@ -63,8 +65,8 @@ undeclared overtime, rest or weekly limits, Ergani errors. Mark each one done, o
 the whole list with «Εκκαθάριση λίστας». Ergani rejections stay until you handle them.
 See [Alerts and reminders](Alerts-and-Reminders-EN).
 
-If phone alerts aren't configured, a note says so here («συμπλήρωσε NTFY_URL / NTFY_TOPIC
-στο .env»).
+If phone alerts aren't configured, a note says so here (they're set up in «Ρυθμίσεις» →
+«Ειδοποιήσεις στο κινητό»).
 
 ## «Οθόνη καταστήματος και αποστολή» (shop screen and sending)
 

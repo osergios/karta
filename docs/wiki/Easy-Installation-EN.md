@@ -200,20 +200,20 @@ page, or keep it to run the assistant again later.
 
 ## Step 5: Answer the assistant's questions
 
-The assistant asks five groups of questions:
+The assistant asks only what's needed for Karta to open safely:
 
-1. **Business:** ΑΦΜ (checked straight away) and branch number.
-2. **Ergani:** username, password and user type. The assistant **tests the login**
-   (read‑only: nothing is submitted) and tells you whether it's right.
-3. **Address and admins:** e.g. `karta.yourshop.gr` and your email.
-4. **Cloudflare:** paste the key from step 4, and the assistant creates the tunnel, address
+1. **Address and admins:** e.g. `karta.yourshop.gr`, and the email addresses allowed into
+   the admin page (any email you read; Cloudflare sends a login code there).
+2. **Cloudflare:** paste the key from step 4, and the assistant creates the tunnel, address
    and protection, showing ✓ for each.
-5. **Phone notifications** (optional): it gives you a topic name for the **ntfy** app and
-   sends a test notification.
 
-It then writes the settings file (`.env`), **starts Karta**, and offers to make an
-**automatic backup every night**. Karta always starts in **test mode** (`dry_run`): nothing
-is sent to Ergani until you decide.
+It then writes the settings file (`.env`), **starts Karta**, sets up an **automatic backup
+every night**, and offers a backup off the machine too (USB or cloud; see
+[step 8](#step-8-backups-important)).
+
+The **ΑΦΜ (tax number), Ergani user, phone notifications and mode** are set afterwards, on
+the admin page ([step 7](#step-7-follow-the-πρώτα-βήματα-first-steps)). Karta always
+starts in **test mode** (`dry_run`): nothing is sent to Ergani until you decide.
 
 You can rerun `./setup.sh` whenever you like to change something: the current values are
 offered as defaults, and the old file is kept as a copy.
@@ -241,50 +241,46 @@ sends you a code, and you see the admin page.
 On the admin page's **«Σήμερα»** tab there's a **«Πρώτα βήματα»** checklist. Each step has a
 «Πάμε» button that takes you to the right place, and ticks itself off when it's done:
 
-1. Business details (name, colour, logo)
-2. Staff from Ergani
-3. Schedules
-4. Local holidays
-5. Shop screen (registering the laptop or tablet: [Shop screen](Kiosk-EN))
-6. Phone notifications (with a test-notification button)
-7. A trial run with the staff (training mode)
-8. Going live on Ergani ([Going live](Going-Live-EN))
+1. **Ergani connection:** in «Ρυθμίσεις» → «Επιχείρηση και σύνδεση με το ΕΡΓΑΝΗ», enter
+   the **ΑΦΜ**, the **branch number** (usually 0) and the Ergani **web‑services user**
+   (username, password, type). Press **«Δοκιμή σύνδεσης»** (test connection; read‑only,
+   nothing is submitted) and **«Αποθήκευση»** (save). The password is stored encrypted.
+2. Business details (name, colour, logo)
+3. Staff from Ergani («Έλεγχος ΕΡΓΑΝΗ»)
+4. **Schedules:** Ergani usually gives only **how many hours a week** each person works,
+   not the hours of each day. Type each day's hours from the schedule your accountant
+   gives you; Karta shows whether the total matches Ergani.
+5. Local holidays
+6. Shop screen (registering the laptop or tablet: [Shop screen](Kiosk-EN))
+7. Phone notifications: in «Ρυθμίσεις» → «Ειδοποιήσεις στο κινητό» (ntfy app), with a
+   test-notification button
+8. Backups off the machine ([step 8](#step-8-backups-important))
+9. A trial run with the staff (training mode)
+10. Going live on Ergani: «Ρυθμίσεις» → «Λειτουργία» ([Going live](Going-Live-EN))
 
 ---
 
 ## Step 8: Backups (important!)
 
-If you answered "yes" in the assistant, backups already run automatically every night into
-`~/karta/backups`: just read the last paragraph. Otherwise:
-
-All your data is in one file. These commands create a small script that keeps a dated copy
-(and deletes anything older than the last 30), and run it once to test it:
+Punches must be **kept for at least 5 years**. The assistant has already set up a
+**backup every night** into `~/karta/backups` (30 daily, 24 monthly and one for each year).
+But if the Raspberry Pi's card or the disk fails, they're lost along with it. So also keep
+a backup **off the machine**, one or both of these:
 
 ```bash
-cat > ~/karta/backup.sh <<'SH'
-#!/bin/sh
-# Karta: nightly copy of the database, keeping the last 30
-set -e
-cd "$(dirname "$0")"
-mkdir -p backups
-docker compose exec -T karta python -c "import sqlite3; s=sqlite3.connect('/data/workcard.db'); d=sqlite3.connect('/data/backup.db'); s.backup(d); d.close()"
-docker compose cp karta:/data/backup.db "backups/karta-$(date +%F).db"
-ls -1t backups/karta-*.db | tail -n +31 | xargs -r rm --
-SH
-chmod +x ~/karta/backup.sh
-~/karta/backup.sh && ls ~/karta/backups
+cd ~/karta
+./setup.sh usb      # to a USB stick on the machine
+./setup.sh cloud    # encrypted, to Google Drive, Dropbox or Backblaze B2
 ```
 
-To run it **automatically every night** at 23:30, type `crontab -e` (the first time, choose
-`nano`) and add this line at the end:
+On a **VPS / cloud server** (e.g. Oracle Cloud) there's no USB: use `cloud`. With `cloud`
+you're given an **encryption password**: write it down somewhere safe, because without it
+the backups can't be opened.
 
-```text
-30 23 * * * $HOME/karta/backup.sh
-```
-
-The copy must also leave **the machine**: regularly copy the `backups` folder to a USB stick
-or another computer, and keep your `.env` safe. If the Raspberry Pi's card fails, without a
-backup the data is lost.
+Each night's result shows in «Ρυθμίσεις» → «Αντίγραφα ασφαλείας», which also has the
+**backup download** and each year's **«Αρχείο χτυπημάτων»** (punch archive) in Excel.
+All the details, and how to **restore** (`./setup.sh restore`):
+[Backups and restore](Backups-EN).
 
 ---
 
@@ -385,9 +381,6 @@ the arrow keys):
 | Line | What to put |
 |---|---|
 | `ERGANI_MODE=` | `dry_run` (**always** this at first) |
-| `ERGANI_USERNAME=` / `ERGANI_PASSWORD=` | your Ergani web‑services user |
-| `EMPLOYER_AFM=` | the business's ΑΦΜ |
-| `BRANCH_NUMBER=` | the branch number (usually `0`) |
 | `CF_ACCESS_TEAM_DOMAIN=` | `yourshop.cloudflareaccess.com` (your team name + `.cloudflareaccess.com`) |
 | `CF_ACCESS_AUD=` | the AUD tag from "Protect the admin page" |
 | `ADMIN_EMAILS=` | your email (the same as in the policy) |
@@ -398,7 +391,9 @@ the arrow keys):
 Save with **Ctrl+O**, **Enter**, and exit with **Ctrl+X**. `.env` contains passwords: never
 send it anywhere.
 
-You can fill in `NTFY_*` (phone alerts) later; see [Alerts](Alerts-and-Reminders-EN).
+The ΑΦΜ, the Ergani user and phone notifications are filled in afterwards, on the admin
+page («Ρυθμίσεις»). If you prefer, they can also go here (`EMPLOYER_AFM`, `BRANCH_NUMBER`,
+`ERGANI_USERNAME`, `ERGANI_PASSWORD`, `NTFY_*`); see [Configuration](Configuration-EN).
 
 
 ### Start Karta

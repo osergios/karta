@@ -5,6 +5,12 @@
 All server settings live in the `.env` file (start from `.env.example`). Restart the app
 after changing it. **Never commit your real `.env`**: it holds your Ergani password and keys.
 
+> **From the admin page:** the mode (`ERGANI_MODE`), the ΑΦΜ (tax number), the branch, the
+> Ergani users and phone notifications (`NTFY_*`) can also be set in the admin page's
+> **«Ρυθμίσεις»**, with no restart. Whatever is saved there **overrides** `.env` (the page
+> shows «από το .env» next to anything that comes from here). Passwords saved there are
+> encrypted with `PIN_KEY`.
+
 Day‑to‑day rules such as flexibility minutes, overtime deadlines and weekly limits are
 **not** set here. They're on the admin page, under
 [«Ρυθμίσεις» → «Όρια και ειδοποιήσεις»](Admin-Settings-EN).
@@ -13,12 +19,12 @@ Day‑to‑day rules such as flexibility minutes, overtime deadlines and weekly 
 
 | Variable | Required | Meaning |
 |---|---|---|
-| `ERGANI_MODE` | yes | `dry_run`, `trial` or `production`. See [Going live](Going-Live-EN). The Ergani URL follows the mode; don't set it yourself. |
+| `ERGANI_MODE` | no (default `dry_run`) | `dry_run`, `trial` or `production`. See [Going live](Going-Live-EN). The Ergani URL follows the mode; don't set it yourself. |
 | `ERGANI_USERNAME` / `ERGANI_PASSWORD` | for `production` (and for importing staff) | The business's Ergani web‑services user. |
 | `ERGANI_USER_TYPE` | no (default `01`) | `01` = API / external user, `02` = «ΕΡΓΑΝΗ» user from «Εξωτερικοί Χρήστες Παραρτημάτων». |
 | `ERGANI_TRIAL_USERNAME` / `ERGANI_TRIAL_PASSWORD` | for `trial` | A user created in the Ergani test environment (`trialv2eservices.yeka.gr`, TaxisNet login of the employer). |
 | `ERGANI_TRIAL_USER_TYPE` | no (default `02`) | Same as above, for the test user. |
-| `EMPLOYER_AFM` | yes | The employer's ΑΦΜ (9 digits). |
+| `EMPLOYER_AFM` | for `trial` / `production` | The employer's ΑΦΜ (9 digits). |
 | `BRANCH_NUMBER` | no (default `0`) | Branch number (Α/Α παραρτήματος). |
 | `ERGANI_EMPLOYER_ID` | no | Your employer id inside Ergani's employee QR (the `id:` part). When set, the shop screen refuses an Ergani QR issued by another employer. |
 

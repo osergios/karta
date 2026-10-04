@@ -10,7 +10,7 @@ def steps(client):
 
 def test_a_new_installation_has_nothing_done(client, admin):
     s = steps(client)
-    assert list(s) == ["brand", "staff", "schedules", "holidays", "device", "notify", "training", "live"]
+    assert list(s) == ["ergani", "brand", "staff", "schedules", "holidays", "device", "notify", "backup", "training", "live"]
     assert not any(x["done"] for x in s.values())
     assert s["staff"]["tab"] == "settings" and s["staff"]["target"] == "erganiCheck"
 

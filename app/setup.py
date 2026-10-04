@@ -10,7 +10,6 @@ import base64
 import getpass
 import os
 import re
-import secrets
 import shutil
 import socket
 import sys
@@ -269,20 +268,6 @@ def cloudflare_auto(token: str, host: str, emails: list[str], session=None, conf
             "TUNNEL_TOKEN": cf.tunnel_token(account, tun["id"])}
 
 
-# ------------------------------------------------------------------ ntfy
-
-def ntfy_send(url: str, topic: str, token: str = "", message: str = "Δοκιμαστική ειδοποίηση από την Karta ✓") -> tuple[bool, str]:
-    headers = {"Content-Type": "application/json"}
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
-    try:
-        r = requests.post(url.rstrip("/"), json={"topic": topic, "title": "Karta", "message": message},
-                          headers=headers, timeout=TIMEOUT)
-    except requests.RequestException as e:
-        return False, f"δεν απαντά ο server ειδοποιήσεων ({type(e).__name__})"
-    return (True, "στάλθηκε") if r.ok else (False, f"ο server απάντησε HTTP {r.status_code}")
-
-
 # ------------------------------------------------------------------ questions
 
 def ask(question: str, default: str = "", check=None, error: str = "Μη έγκυρη τιμή, δοκιμάστε ξανά.") -> str:
@@ -332,38 +317,22 @@ def setup(path: str = ".env") -> int:
     if env:
         warn(f"Βρέθηκε υπάρχον {path}: οι τιμές του προτείνονται ως προεπιλογές.")
 
-    title("1/5 · Επιχείρηση")
-    env["EMPLOYER_AFM"] = ask("ΑΦΜ επιχείρησης", env.get("EMPLOYER_AFM", ""), valid_afm,
-                              "Το ΑΦΜ δεν είναι έγκυρο (9 ψηφία, με σωστό ψηφίο ελέγχου).")
-    env["BRANCH_NUMBER"] = ask("Αριθμός παραρτήματος (Α/Α, συνήθως 0)", env.get("BRANCH_NUMBER", "0"),
-                               lambda v: v.isdigit(), "Γράψτε αριθμό, π.χ. 0.")
-
-    title("2/5 · ΕΡΓΑΝΗ")
-    print("  Ο χρήστης web services της επιχείρησης (τον φτιάχνει ο λογιστής ή εσείς στο ΕΡΓΑΝΗ).")
-    print("  Η Karta ξεκινά σε δοκιμαστική λειτουργία (dry_run): δεν στέλνεται τίποτα μέχρι να το αποφασίσετε.")
-    while True:
-        env["ERGANI_USERNAME"] = ask("Όνομα χρήστη ΕΡΓΑΝΗ", env.get("ERGANI_USERNAME", ""), bool, "Δεν μπορεί να είναι κενό.")
-        env["ERGANI_PASSWORD"] = ask_secret("Κωδικός ΕΡΓΑΝΗ", env.get("ERGANI_PASSWORD", ""))
-        env["ERGANI_USER_TYPE"] = ask("Τύπος χρήστη: 01 = χρήστης API, 02 = χρήστης «ΕΡΓΑΝΗ» παραρτήματος",
-                                      env.get("ERGANI_USER_TYPE", "01"), lambda v: v in ("01", "02"), "Γράψτε 01 ή 02.")
-        print("  Δοκιμή σύνδεσης (μόνο ανάγνωση, δεν υποβάλλεται τίποτα)…")
-        good, msg = ergani_login(env["ERGANI_USERNAME"], env["ERGANI_PASSWORD"], env["ERGANI_USER_TYPE"])
-        (ok if good else bad)(msg)
-        if good or not yes("Να το ξαναδοκιμάσουμε με άλλα στοιχεία;"):
-            break
+    print("  Εδώ ρυθμίζεται μόνο η διεύθυνση και το Cloudflare. ΑΦΜ, χρήστης ΕΡΓΑΝΗ, ειδοποιήσεις στο κινητό")
+    print("  και λειτουργία ρυθμίζονται μετά, από τη σελίδα διαχείρισης («Ρυθμίσεις»).")
     env.setdefault("ERGANI_MODE", "dry_run")
 
-    title("3/5 · Διεύθυνση και διαχειριστές")
+    title("1/2 · Διεύθυνση και διαχειριστές")
     print("  Η διεύθυνση όπου θα ανοίγει η Karta, π.χ. karta.tokatastimamou.gr (το domain πρέπει να είναι στο Cloudflare).")
     old_host = re.sub(r"^https?://", "", env.get("PUBLIC_ORIGIN", "")).rstrip("/")
     host = ask("Διεύθυνση", old_host, valid_hostname, "Γράψτε ένα όνομα όπως karta.tokatastimamou.gr (χωρίς https://).").lower()
     env["PUBLIC_ORIGIN"] = f"https://{host}"
+    print("  Τα email που μπορούν να μπαίνουν στη σελίδα διαχείρισης (το Cloudflare στέλνει εκεί κωδικό σύνδεσης).")
     emails = ask("Email διαχειριστών (χωρισμένα με κόμμα)", env.get("ADMIN_EMAILS", ""),
                  lambda v: v and all(valid_email(e.strip()) for e in v.split(",")), "Γράψτε έγκυρα email.")
     emails_list = [e.strip().lower() for e in emails.split(",")]
     env["ADMIN_EMAILS"] = ",".join(emails_list)
 
-    title("4/5 · Cloudflare (HTTPS, tunnel, προστασία διαχείρισης)")
+    title("2/2 · Cloudflare (HTTPS, tunnel, προστασία διαχείρισης)")
     print("  Αυτόματα: δίνετε ένα κλειδί API του Cloudflare και φτιάχνω εγώ το tunnel, τη διεύθυνση")
     print("  και την προστασία της σελίδας διαχείρισης. Πώς φτιάχνεται το κλειδί: δείτε την Εύκολη εγκατάσταση στο wiki.")
     if yes("Να γίνει αυτόματα;"):
@@ -381,27 +350,12 @@ def setup(path: str = ".env") -> int:
     else:
         manual_cloudflare(env)
 
-    title("5/5 · Ειδοποιήσεις στο κινητό (προαιρετικά)")
-    if yes("Θέλετε ειδοποιήσεις στο κινητό (εφαρμογή ntfy);", bool(env.get("NTFY_TOPIC"))):
-        env["NTFY_URL"] = ask("Server ntfy", env.get("NTFY_URL") or "https://ntfy.sh")
-        default_topic = env.get("NTFY_TOPIC") or "karta-" + secrets.token_hex(6)
-        env["NTFY_TOPIC"] = ask("Όνομα θέματος (topic), κρατήστε το μυστικό", default_topic,
-                                lambda v: re.fullmatch(r"[A-Za-z0-9_-]{6,64}", v), "Γράμματα, αριθμοί, - ή _ (6 έως 64).")
-        print(f"  Στο κινητό: εγκαταστήστε την εφαρμογή ntfy, πατήστε «+» και γράψτε το θέμα: {BOLD}{env['NTFY_TOPIC']}{END}")
-        print(f"  (ή ανοίξτε {env['NTFY_URL'].rstrip('/')}/{env['NTFY_TOPIC']})")
-        if yes("Να στείλω δοκιμαστική ειδοποίηση;"):
-            good, msg = ntfy_send(env["NTFY_URL"], env["NTFY_TOPIC"], env.get("NTFY_TOKEN", ""))
-            (ok if good else bad)(msg)
-    else:
-        for k in ("NTFY_URL", "NTFY_TOPIC", "NTFY_TOKEN"):
-            env.pop(k, None)
-
     if not valid_pin_key(env.get("PIN_KEY", "")):
         env["PIN_KEY"] = new_pin_key()
     backup = write_env(path, env)
     title("Έτοιμο")
     ok(f"Γράφτηκε το {path}" + (f" (το παλιό κρατήθηκε ως {backup})" if backup else ""))
-    print(f"  Λειτουργία: {env['ERGANI_MODE']}. Η σελίδα διαχείρισης: {env['PUBLIC_ORIGIN']}/admin")
+    print(f"  Η σελίδα διαχείρισης: {env['PUBLIC_ORIGIN']}/admin  ·  εκεί, στις «Ρυθμίσεις», συμπληρώστε ΑΦΜ και χρήστη ΕΡΓΑΝΗ.")
     return 0
 
 
@@ -436,7 +390,8 @@ def check(path: str = ".env", session=None) -> int:
     title("Ρυθμίσεις")
     mode = env.get("ERGANI_MODE", "dry_run")
     (ok if mode in ("dry_run", "trial", "production") else fail)(f"ERGANI_MODE={mode}")
-    (ok if valid_afm(env.get("EMPLOYER_AFM", "")) else fail)("ΑΦΜ επιχείρησης" + ("" if valid_afm(env.get("EMPLOYER_AFM", "")) else ": μη έγκυρο"))
+    if env.get("EMPLOYER_AFM"):
+        (ok if valid_afm(env["EMPLOYER_AFM"]) else fail)("ΑΦΜ επιχείρησης" + ("" if valid_afm(env["EMPLOYER_AFM"]) else ": μη έγκυρο"))
     for k in ("CF_ACCESS_TEAM_DOMAIN", "CF_ACCESS_AUD", "ADMIN_EMAILS"):
         (ok if env.get(k) else fail)(k + ("" if env.get(k) else ": λείπει"))
     origin = env.get("PUBLIC_ORIGIN", "")
@@ -457,10 +412,9 @@ def check(path: str = ".env", session=None) -> int:
     if creds[0] and creds[1]:
         good, msg = ergani_login(*creds)
         (ok if good else fail)(msg)
-    elif mode == "dry_run":
-        warn("χωρίς χρήστη ΕΡΓΑΝΗ: δεν θα μπορείτε να φέρετε το προσωπικό («Έλεγχος ΕΡΓΑΝΗ»)")
     else:
-        fail("λείπουν τα στοιχεία σύνδεσης στο ΕΡΓΑΝΗ")
+        print("  ΑΦΜ, χρήστης ΕΡΓΑΝΗ και λειτουργία ρυθμίζονται στη σελίδα διαχείρισης («Ρυθμίσεις»): εκεί υπάρχει")
+        print("  και η «Δοκιμή σύνδεσης». Ό,τι συμπληρώνεται εκεί υπερισχύει του .env.")
 
     title("Cloudflare και διεύθυνση")
     team = env.get("CF_ACCESS_TEAM_DOMAIN", "")

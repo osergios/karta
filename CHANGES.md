@@ -294,3 +294,35 @@
     live. Steps tick themselves off from what is in place («Πάμε» opens the right section); the ones Karta can't
     detect can be marked done or skipped; the list can be hidden. New «Δοκιμαστική ειδοποίηση» sends a phone
     notification right away and reports whether ntfy accepted it.
+59. **Settings in the admin page (1.2.0).** «Ρυθμίσεις» → «Επιχείρηση και σύνδεση με το ΕΡΓΑΝΗ»: employer ΑΦΜ
+    (checksum), branch, Ergani employer id, the Ergani web-services user (production) and an optional separate
+    trial user, each with «Δοκιμή σύνδεσης» (read-only login). «Ειδοποιήσεις στο κινητό»: ntfy server, topic
+    (a random one is suggested) and token. Values are stored in the database as `cfg.*` and take precedence over
+    `.env` (shown «από το .env» otherwise); passwords and the ntfy token are sealed with `PIN_KEY` (AES-GCM) and
+    never sent back to the page. Every change is in the audit log. While the current mode lacks the user, password
+    or ΑΦΜ, the page says what is missing and the queue waits without using up attempts.
+60. **Mode switch in the admin page (1.2.0).** «Λειτουργία»: `dry_run` / `trial` / `production` without editing
+    `.env` or restarting. Going to `trial` or `production` needs the employer ΑΦΜ typed again and a successful
+    login to that Ergani environment first; back to `dry_run` is a plain confirmation. Logged with who and when.
+    `ERGANI_MODE` in `.env` still works as the default.
+61. **Setup assistant: only the address and Cloudflare (1.2.0).** `./setup.sh` asks for the address, the admin
+    emails and the Cloudflare key (or the manual values); ΑΦΜ, Ergani user, phone alerts and mode are set in the
+    admin page. Values already in `.env` are kept. «n» now means no (it was read as «ν»), unclear answers get a hint,
+    after installing Docker it says which folder to rerun it in, and run from the home folder it installs in
+    `~/karta`. «Πρώτα βήματα» gains «Σύνδεση με το ΕΡΓΑΝΗ» (first) and «Αντίγραφα ασφαλείας».
+62. **Backups kept for years (1.2.0).** The nightly `backup.sh` keeps 30 daily, 24 monthly (last copy of each month)
+    and one copy per year for good, plus `karta.env`. `./setup.sh usb` mounts a USB stick permanently (by UUID,
+    `nofail`) and copies there every night; `./setup.sh cloud` uploads encrypted with rclone (crypt remote; Google
+    Drive with `drive.file` scope, Dropbox, Backblaze B2 or any rclone remote; a generated encryption password is
+    shown once). Cloud sync never deletes outright: removed files go to `deleted/<date>` for 30 days.
+    `./setup.sh restore` restores the latest (or a chosen) copy from the machine, the USB or the cloud, brings back
+    `.env` on a new machine and checks `PIN_KEY`, after backing up the current database. Each run reports to Karta;
+    the admin page shows the last result and an alert follows when backups stop (over 50 h) or a copy fails.
+    «Αντίγραφα ασφαλείας» in «Ρυθμίσεις»: «Λήψη αντιγράφου τώρα» (consistent SQLite copy) and «Αρχείο χτυπημάτων»,
+    every punch of a year in Excel with Ergani protocol number, submission time, late reason, method and device.
+63. **Slow Ergani, clear answers (1.2.0).** Reads from Ergani («Έλεγχος ΕΡΓΑΝΗ», services) give up after 60″ with
+    «Το ΕΡΓΑΝΗ δεν απάντησε…», before Cloudflare's 100″ limit; Cloudflare errors (524, 502/503/530, 522/523) are
+    explained in Greek instead of «Σφάλμα 524».
+64. **Schedules: where the daily hours come from.** The «Ωράρια» tab and «Πρώτα βήματα» say that Ergani usually
+    gives only the weekly hours, so each day's hours come from the accountant's timesheet; the editor shows whether
+    the week matches Ergani.

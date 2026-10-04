@@ -7,6 +7,7 @@
 - [Εγκατάσταση](Installation)
 - [Ρυθμίσεις server](Configuration)
 - [Έναρξη λειτουργίας](Going-Live)
+- [Αντίγραφα ασφαλείας](Backups)
 
 **Οθόνη καταστήματος**
 - [Οθόνη καταστήματος](Kiosk)
@@ -34,6 +35,7 @@
 [Installation](Installation-EN) ·
 [Configuration](Configuration-EN) ·
 [Going live](Going-Live-EN) ·
+[Backups](Backups-EN) ·
 [Shop screen](Kiosk-EN) ·
 [QR cards](QR-Cards-EN) ·
 [Today](Admin-Today-EN) ·

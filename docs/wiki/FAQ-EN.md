@@ -17,9 +17,25 @@ must already be declared in Ergani. This keeps ΑΦΜ and names exactly as Ergan
 
 ### «Έλεγχος ΕΡΓΑΝΗ» fails even in `dry_run`
 
-The read services always use the **production** Ergani (read‑only). Fill in
-`ERGANI_USERNAME`, `ERGANI_PASSWORD` and the right `ERGANI_USER_TYPE` (`01` API user,
-`02` branch user), then restart.
+The read services always use the **production** Ergani (read‑only). In «Ρυθμίσεις» →
+«Επιχείρηση και σύνδεση με το ΕΡΓΑΝΗ», fill in the web‑services user, the password and the
+right type (`01` API user, `02` branch user), and press «Δοκιμή σύνδεσης» (test
+connection).
+
+If the page says «σφάλμα 524» or «Το ΕΡΓΑΝΗ δεν απάντησε» (Ergani didn't answer), Ergani
+was slow at that moment: try again in a few minutes.
+
+### Where do I set the ΑΦΜ, the Ergani user, notifications and the mode?
+
+On the admin page, in **«Ρυθμίσεις»**. `./setup.sh` only sets up the address and
+Cloudflare. See [Settings](Admin-Settings-EN).
+
+### How long do I keep punches? What if the machine breaks?
+
+At least 5 years. Karta never deletes a real punch, and it keeps a backup every night.
+Make sure you also keep a backup off the machine (`./setup.sh usb` or
+`./setup.sh cloud`), and restore with `./setup.sh restore`. See
+[Backups and restore](Backups-EN).
 
 ### The admin page says "Access token missing" or 403
 

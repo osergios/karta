@@ -518,6 +518,171 @@
           }) }, "Αφαίρεση λογότυπου") : "")));
   }
 
+  // ---------- business, Ergani users and mode («Επιχείρηση και σύνδεση με το ΕΡΓΑΝΗ») ----------
+  const SRC = { gui: "", env: " (από το .env)", "": "" };
+  const MODE_TEXT = {
+    dry_run: "Δοκιμαστική λειτουργία: τα χτυπήματα καταγράφονται μόνο στην Karta, τίποτα δεν στέλνεται στο ΕΡΓΑΝΗ.",
+    trial: "Δοκιμαστικό ΕΡΓΑΝΗ: τα χτυπήματα στέλνονται στο περιβάλλον δοκιμών του ΕΡΓΑΝΗ, χωρίς νομική ισχύ.",
+    production: "Κανονική λειτουργία: κάθε χτύπημα δηλώνεται στο πραγματικό ΕΡΓΑΝΗ.",
+  };
+  const MODE_SWITCH = {
+    dry_run: ["Επιστροφή σε δοκιμαστική λειτουργία", "Επιστροφή σε δοκιμαστική λειτουργία; Τα νέα χτυπήματα δεν θα στέλνονται στο ΕΡΓΑΝΗ."],
+    trial: ["Πέρασμα σε δοκιμαστικό ΕΡΓΑΝΗ", "Τα χτυπήματα θα στέλνονται στο περιβάλλον δοκιμών του ΕΡΓΑΝΗ (χωρίς νομική ισχύ). Πρώτα γίνεται δοκιμή σύνδεσης."],
+    production: ["Έναρξη κανονικής λειτουργίας", "ΠΡΟΣΟΧΗ: από εδώ και πέρα κάθε χτύπημα δηλώνεται στο πραγματικό ΕΡΓΑΝΗ και έχει νομική ισχύ. Πρώτα γίνεται δοκιμή σύνδεσης."],
+  };
+  function field(label, input, src, help) {
+    return el("label", {}, label, input, src ? el("span", { class: "cfg-src" }, SRC[src] ? SRC[src].trim() : "") : null,
+      help ? el("span", { class: "cfg-src" }, help) : null);
+  }
+  const input = (value, attrs = {}) => el("input", { type: "text", value: value || "", ...attrs });
+  const secretInput = (info, ph) => el("input", { type: "password", autocomplete: "new-password",
+    placeholder: info.set ? "•••••• (αποθηκευμένος· άφησέ το κενό για να μείνει)" : ph });
+  function userTypeSelect(value, fallback) {
+    const s = el("select", {},
+      el("option", { value: "01" }, "01: χρήστης API (web services)"),
+      el("option", { value: "02" }, "02: χρήστης ΕΡΓΑΝΗ παραρτήματος"));
+    s.value = value || fallback;
+    return s;
+  }
+  function erganiUserForm(C, group, target, names, typeFallback) {
+    const [U, P, T] = names;
+    const user = input(C[group][U].value, { maxlength: "100", autocomplete: "off" });
+    const pass = secretInput(C[group][P], "κωδικός");
+    const type = userTypeSelect(C[group][T].value, typeFallback);
+    const result = el("span", { class: "small" });
+    const values = () => ({ [U]: user.value.trim(), [P]: pass.value ? pass.value : null, [T]: type.value });
+    return el("div", { class: "brand-form" },
+      field("Όνομα χρήστη", user, C[group][U].source),
+      field("Κωδικός", pass, C[group][P].source),
+      field("Τύπος χρήστη", type, C[group][T].source),
+      el("button", { class: "btn ghost", type: "button", onclick: act(async () => {
+        result.textContent = "Δοκιμή…";
+        const r = await api("/admin/api/config/login-test", { target, username: user.value.trim(),
+          password: pass.value ? pass.value : null, user_type: type.value });
+        result.className = r.ok ? "small" : "small warn-text";
+        result.textContent = r.ok ? "✓ Η σύνδεση πέτυχε (δεν υποβλήθηκε τίποτα)." : `✗ ${r.message}`;
+      }) }, "Δοκιμή σύνδεσης"),
+      el("button", { class: "btn", type: "button", onclick: act(async () => {
+        await api("/admin/api/config", { group, values: values() }); pass.value = "";
+        toast("Τα στοιχεία σύνδεσης αποθηκεύτηκαν");
+      }) }, "Αποθήκευση"),
+      result);
+  }
+  function renderConfig(d) {
+    const box = document.getElementById("cfgBox");
+    if (editing(box)) return;
+    const C = d.config;
+    const B = C.business;
+    const afm = input(B.EMPLOYER_AFM.value, { maxlength: "9", inputmode: "numeric", autocomplete: "off" });
+    const branch = input(B.BRANCH_NUMBER.value || "0", { maxlength: "4", inputmode: "numeric" });
+    const empId = input(B.ERGANI_EMPLOYER_ID.value, { maxlength: "40", placeholder: "προαιρετικά" });
+    const mode = C.mode.value;
+    const switches = Object.keys(MODE_SWITCH).filter(m => m !== mode).map(m => el("button", {
+      class: m === "production" ? "btn" : "btn ghost", type: "button", onclick: act(async () => {
+        const [, warning] = MODE_SWITCH[m];
+        let typed = "";
+        if (m === "dry_run") { if (!confirm(warning)) return; }
+        else {
+          typed = prompt(`${warning}\n\nΓια επιβεβαίωση γράψε το ΑΦΜ της επιχείρησης:`);
+          if (typed === null) return;
+        }
+        await api("/admin/api/mode", { mode: m, afm: typed.trim() });
+        toast(`Λειτουργία: ${MODE[m]}`);
+      }) }, MODE_SWITCH[m][0]));
+    box.replaceChildren(
+      ...(C.problems.length ? [el("div", { class: "an-line bad" }, el("strong", {}, "Χρειάζεται συμπλήρωση: "), C.problems.join(" · "),
+        mode !== "dry_run" ? " — μέχρι τότε τα χτυπήματα περιμένουν και δεν στέλνονται." : "")] : []),
+      el("div", { class: "cfg-group" },
+        el("h3", {}, "Λειτουργία"),
+        el("div", { class: `an-line ${mode === "production" ? "ok" : "muted"}` }, MODE_TEXT[mode],
+          C.mode.source === "env" ? el("span", { class: "cfg-src" }, " (από το .env)") : null),
+        el("div", { class: "mode-actions" }, ...switches)),
+      el("div", { class: "cfg-group" },
+        el("h3", {}, "Επιχείρηση"),
+        el("div", { class: "brand-form" },
+          field("ΑΦΜ εργοδότη", afm, B.EMPLOYER_AFM.source),
+          field("Αριθμός παραρτήματος", branch, B.BRANCH_NUMBER.source, "Συνήθως 0 (η έδρα)."),
+          field("Κωδικός εργοδότη στο ΕΡΓΑΝΗ", empId, B.ERGANI_EMPLOYER_ID.source, "Προαιρετικά: το «id:» στο QR του ΕΡΓΑΝΗ."),
+          el("button", { class: "btn", type: "button", onclick: act(async () => {
+            await api("/admin/api/config", { group: "business", values: {
+              EMPLOYER_AFM: afm.value.trim(), BRANCH_NUMBER: branch.value.trim(), ERGANI_EMPLOYER_ID: empId.value.trim() } });
+            toast("Τα στοιχεία της επιχείρησης αποθηκεύτηκαν");
+          }) }, "Αποθήκευση"))),
+      el("div", { class: "cfg-group" },
+        el("h3", {}, "Χρήστης web services του ΕΡΓΑΝΗ"),
+        el("p", { class: "small" }, "Τον φτιάχνει ο λογιστής σας ή εσείς στο ΕΡΓΑΝΗ. Με αυτόν η Karta διαβάζει το προσωπικό και, σε κανονική λειτουργία, στέλνει τα χτυπήματα. Ο κωδικός φυλάσσεται κρυπτογραφημένος."),
+        C.can_store_secrets ? null : el("p", { class: "small warn-text" }, "Λείπει το PIN_KEY από το .env: ο κωδικός μπορεί να αλλάξει μόνο στο .env."),
+        erganiUserForm(C, "ergani", "production", ["ERGANI_USERNAME", "ERGANI_PASSWORD", "ERGANI_USER_TYPE"], "01")),
+      el("details", { class: "help" },
+        el("summary", {}, "Χρήστης για το δοκιμαστικό ΕΡΓΑΝΗ (προαιρετικά)"),
+        el("p", { class: "small" }, "Το περιβάλλον δοκιμών (trialv2eservices.yeka.gr) έχει δικούς του χρήστες. Αν το αφήσετε κενό, χρησιμοποιείται ο παραπάνω χρήστης."),
+        erganiUserForm(C, "trial", "trial", ["ERGANI_TRIAL_USERNAME", "ERGANI_TRIAL_PASSWORD", "ERGANI_TRIAL_USER_TYPE"], "02")));
+  }
+
+  // ---------- phone alerts (ntfy) ----------
+  function renderNtfy(d) {
+    const box = document.getElementById("cfgNtfy");
+    if (editing(box)) return;
+    const N = d.config.ntfy;
+    // one suggestion per page load: the 30″ refresh must not change a topic someone is copying into the phone app
+    renderNtfy.topic ||= "karta-" + Array.from(crypto.getRandomValues(new Uint8Array(6)), b => b.toString(16).padStart(2, "0")).join("");
+    const url = input(N.NTFY_URL.value || "https://ntfy.sh", { maxlength: "200" });
+    const topic = input(N.NTFY_TOPIC.value || renderNtfy.topic, { maxlength: "64", autocomplete: "off" });
+    const token = secretInput(N.NTFY_TOKEN, "μόνο αν ο server θέλει token");
+    const on = !!(N.NTFY_URL.value && N.NTFY_TOPIC.value);
+    box.replaceChildren(
+      el("p", { class: "small" }, "Οι ειδοποιήσεις (δεν χτύπησε κάποιος, σφάλμα ΕΡΓΑΝΗ…) έρχονται στο κινητό σας με τη δωρεάν εφαρμογή ",
+        el("strong", {}, "ntfy"), " (Android / iPhone). Στην εφαρμογή πατήστε «+» και γράψτε το θέμα (topic) παρακάτω. Κρατήστε το θέμα μυστικό: όποιος το ξέρει βλέπει τις ειδοποιήσεις."),
+      el("div", { class: "brand-form" },
+        field("Server", url, N.NTFY_URL.source),
+        field("Θέμα (topic)", topic, N.NTFY_TOPIC.source),
+        field("Token (προαιρετικά)", token, N.NTFY_TOKEN.source),
+        el("button", { class: "btn", type: "button", onclick: act(async () => {
+          await api("/admin/api/config", { group: "ntfy", values: { NTFY_URL: url.value.trim(), NTFY_TOPIC: topic.value.trim(),
+            NTFY_TOKEN: token.value ? token.value : null } });
+          toast("Οι ειδοποιήσεις κινητού αποθηκεύτηκαν");
+        }) }, "Αποθήκευση"),
+        on ? el("button", { class: "btn ghost", type: "button", onclick: act(async () => {
+          await api("/admin/api/ntfy/test", {}); toast("Στάλθηκε δοκιμαστική ειδοποίηση στο κινητό");
+        }) }, "Δοκιμαστική ειδοποίηση") : null,
+        on ? el("button", { class: "link danger", type: "button", onclick: act(async () => {
+          if (!confirm("Απενεργοποίηση των ειδοποιήσεων στο κινητό;")) return;
+          await api("/admin/api/config", { group: "ntfy", values: { NTFY_URL: "", NTFY_TOPIC: "", NTFY_TOKEN: "" } });
+        }) }, "Απενεργοποίηση") : null));
+  }
+
+  // ---------- backups: status of the nightly copy, database download, yearly punch archive ----------
+  function renderBackup(d) {
+    const box = document.getElementById("backupBox");
+    if (editing(box)) return;
+    const B = d.backup;
+    const mark = v => v === "ok" ? "✓" : v === "fail" ? "✗ απέτυχε" : "δεν έχει ρυθμιστεί";
+    const status = !B
+      ? el("div", { class: "an-line bad" }, "Δεν έχει καταγραφεί αυτόματο αντίγραφο ασφαλείας. Στο μηχάνημα της Karta τρέξτε ",
+          el("code", {}, "./setup.sh"), " (αντίγραφο κάθε βράδυ) και μετά ", el("code", {}, "./setup.sh usb"), " ή ",
+          el("code", {}, "./setup.sh cloud"), " για αντίγραφο εκτός μηχανήματος.")
+      : el("div", { class: `an-line ${B.old || [B.local, B.usb, B.cloud].includes("fail") ? "bad" : (B.usb === "ok" || B.cloud === "ok") ? "" : "warn"}` },
+          `Τελευταίο αντίγραφο: ${B.when.slice(8, 10)}/${B.when.slice(5, 7)} ${B.when.slice(11, 16)}`,
+          ` · στο μηχάνημα ${mark(B.local)} · USB ${mark(B.usb)} · cloud ${mark(B.cloud)}`,
+          B.old ? el("div", { class: "small" }, "Είναι παλιό: ελέγξτε ότι το μηχάνημα είναι ανοιχτό και ότι τρέχει το backup.sh κάθε βράδυ.") : null,
+          !B.old && B.usb !== "ok" && B.cloud !== "ok" ? el("div", { class: "small" }, "Υπάρχει αντίγραφο μόνο στο ίδιο μηχάνημα: αν χαλάσει, χάνονται όλα. Ρυθμίστε USB ή cloud.") : null);
+    const thisYear = Number(todayAthens().slice(0, 4));
+    const year = el("input", { type: "number", min: "2020", max: String(thisYear), step: "1", value: String(thisYear), "aria-label": "Έτος" });
+    const archive = el("a", { class: "btn ghost", href: `/admin/api/punches.xlsx?year=${thisYear}` }, "Αρχείο χτυπημάτων (Excel)");
+    year.addEventListener("input", () => { archive.href = `/admin/api/punches.xlsx?year=${year.value}`; });
+    box.replaceChildren(
+      el("p", { class: "small" }, "Τα χτυπήματα της κάρτας εργασίας πρέπει να φυλάσσονται για τουλάχιστον 5 χρόνια (ρωτήστε τον λογιστή σας). " +
+        "Η Karta δεν σβήνει ποτέ πραγματικό χτύπημα, και κάθε αντίγραφο έχει όλο το ιστορικό. Ο κίνδυνος είναι να χαλάσει το μηχάνημα: γι' αυτό χρειάζεται αντίγραφο και εκτός του."),
+      status,
+      el("div", { class: "backup-row" },
+        el("a", { class: "btn ghost", href: "/admin/api/backup.db" }, "Λήψη αντιγράφου τώρα"),
+        el("span", { class: "small" }, "Όλη η βάση σε ένα αρχείο, για να το φυλάξετε όπου θέλετε (περιέχει στοιχεία του προσωπικού).")),
+      el("div", { class: "backup-row" },
+        el("label", {}, "Έτος ", year), archive,
+        el("span", { class: "small" }, "Όλα τα χτυπήματα του έτους, με ώρα και αριθμό πρωτοκόλλου ΕΡΓΑΝΗ. Ανοίγει χωρίς την Karta (π.χ. για έλεγχο).")),
+      el("a", { class: "link", href: "https://github.com/osergios/karta/wiki/Backups", target: "_blank", rel: "noopener" }, "Οδηγίες για αντίγραφα και επαναφορά"));
+  }
+
   // ---------- restart the shop screen from here (it runs as an app from Windows startup) ----------
   function renderKioskReload(d) {
     const R = d.kiosk_reload || {};
@@ -557,7 +722,7 @@
                                "aria-label": "Υποχρεωτική χρήση από" });
     const notReal = d.mode !== "production"
       ? el("div", { class: "an-line muted" }, `Η εφαρμογή είναι σε λειτουργία ${d.mode === "dry_run" ? "dry run" : "δοκιμαστικού ΕΡΓΑΝΗ"}: ` +
-          "και μετά το τέλος της περιόδου δεν θα σταλεί τίποτα στο πραγματικό ΕΡΓΑΝΗ μέχρι να βάλεις ERGANI_MODE=production στο .env.") : null;
+          "και μετά το τέλος της περιόδου δεν θα σταλεί τίποτα στο πραγματικό ΕΡΓΑΝΗ μέχρι να περάσεις σε κανονική λειτουργία («Ρυθμίσεις» → «Λειτουργία»).") : null;
     const kids = [];
     if (ob) {
       kids.push(el("div", { class: "an-line ok onb-line" },
@@ -1232,7 +1397,7 @@
         s.key === "notify" && !s.test ? el("a", { class: "link", href: "https://github.com/osergios/karta/wiki/Alerts-and-Reminders",
           target: "_blank", rel: "noopener" }, "Οδηγίες") : null,
         s.manual && !s.done ? el("button", { class: "link", onclick: mark(s.key, true) }, s.key === "holidays" ? "Δεν χρειάζεται" : "Έγινε / Παράλειψη") : null,
-        s.manual && s.done && !(s.key === "notify" && s.test) ? el("button", { class: "link", onclick: mark(s.key, false) }, "Αναίρεση") : null)));
+        s.manual && s.marked ? el("button", { class: "link", onclick: mark(s.key, false) }, "Αναίρεση") : null)));     // only what was ticked by hand
     box.replaceChildren(
       el("div", { class: "steps-head" },
         el("span", { class: "small" }, done === steps.length ? "Όλα έτοιμα! Η Karta είναι στημένη." : `${done} από ${steps.length} έτοιμα`),
@@ -1250,11 +1415,11 @@
     try { d = await api("/admin/api/overview"); } catch (e) { toast(e.message, true); return; }
     if (editorsFor !== d.employees.filter(e => e.active).map(e => e.id).join(",")) renderEditors(d);
     document.getElementById("erganiState").textContent = d.ergani_configured
-      ? "Στοιχεία σύνδεσης ΕΡΓΑΝΗ: ρυθμισμένα." : "Στοιχεία σύνδεσης ΕΡΓΑΝΗ: λείπουν από το .env.";
+      ? "Στοιχεία σύνδεσης ΕΡΓΑΝΗ: ρυθμισμένα." : "Στοιχεία σύνδεσης ΕΡΓΑΝΗ: συμπλήρωσέ τα παραπάνω, στο «Επιχείρηση και σύνδεση με το ΕΡΓΑΝΗ».";
     document.getElementById("erganiCheck").disabled = !d.ergani_configured;
     document.getElementById("ntfyState").textContent = d.ntfy
       ? "Οι ειδοποιήσεις έρχονται και στο κινητό σου (ntfy)."
-      : "Ειδοποιήσεις κινητού ανενεργές: συμπλήρωσε NTFY_URL / NTFY_TOPIC στο .env.";
+      : "Ειδοποιήσεις κινητού ανενεργές: ρυθμίζονται στις «Ρυθμίσεις» → «Ειδοποιήσεις στο κινητό».";
     const alertRows = d.alerts.map(a => el("div", { class: `alert-row ${a.level}${a.resolved_at ? " done" : ""}` },
       el("span", { class: "when" }, fmt(a.created_at)),
       el("span", { class: "msg" }, el("strong", {}, LEVEL[a.level] + ": "), a.message),
@@ -1269,6 +1434,9 @@
     renderRemState(d);
     renderOffDays(d);
     renderBrand(d);
+    renderConfig(d);
+    renderNtfy(d);
+    renderBackup(d);
     renderKioskReload(d);
     renderBadge(d);
     const tm = document.getElementById("testMoves");
@@ -1360,7 +1528,7 @@
     if (r.mode === "trial") lines.push(el("div", { class: "er-line warn" },
       "Αυτά είναι τα στοιχεία του ΔΟΚΙΜΑΣΤΙΚΟΥ ΕΡΓΑΝΗ (trialv2eservices), όχι του πραγματικού. Μην κάνεις εισαγωγή ή απενεργοποίηση με βάση αυτή τη λίστα."));
     lines.push(el("div", { class: "er-line " + (em.afm_matches ? "" : "bad") },
-      `Εργοδότης: ${em.name || "—"} · ` + (em.afm_matches ? "ο ΑΦΜ ταιριάζει με το EMPLOYER_AFM ✓" : "ο ΑΦΜ ΔΕΝ ταιριάζει με το EMPLOYER_AFM στο .env")));
+      `Εργοδότης: ${em.name || "—"} · ` + (em.afm_matches ? "ο ΑΦΜ ταιριάζει ✓" : "ο ΑΦΜ ΔΕΝ ταιριάζει με το ΑΦΜ στις «Ρυθμίσεις»")));
     lines.push(el("div", { class: "er-line " + (em.in_card_sector === true ? "" : "warn") },
       em.in_card_sector === true ? "Η επιχείρηση είναι ενταγμένη στην ψηφιακή κάρτα ✓"
         : em.in_card_sector === false ? "Το ΕΡΓΑΝΗ δεν δείχνει ακόμα ένταξη στην ψηφιακή κάρτα — ρώτα τον λογιστή."
@@ -1368,7 +1536,7 @@
     const found = r.branches.find(b => b.number === r.configured_branch);
     lines.push(el("div", { class: "er-line " + (found ? "" : "bad") },
       "Παραρτήματα: " + (r.branches.map(b => `#${b.number} ${b.address || ""}${b.status ? " (" + b.status + ")" : ""}`).join(" · ") || "—") +
-      (found ? ` — η εφαρμογή χρησιμοποιεί το #${r.configured_branch} ✓` : ` — το BRANCH_NUMBER=${r.configured_branch} στο .env δεν υπάρχει`)));
+      (found ? ` — η εφαρμογή χρησιμοποιεί το #${r.configured_branch} ✓` : ` — το παράρτημα #${r.configured_branch} των «Ρυθμίσεων» δεν υπάρχει στο ΕΡΓΑΝΗ`)));
     (r.mode === "trial" ? [] : r.not_in_ergani).forEach(x => {
       const off = el("button", { class: "link", onclick: act(async () => {
         await api(`/admin/api/employees/${x.employee_id}/active`, { active: false });

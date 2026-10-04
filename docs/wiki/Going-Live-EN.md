@@ -2,7 +2,7 @@
 
 # Going live
 
-Karta has three **modes** (`ERGANI_MODE` in `.env`) and two **practice features** on the
+Karta has three **modes** and two **practice features** on the
 admin page. Use them in this order, so you never send a wrong declaration to Ergani.
 
 ## The three modes
@@ -29,10 +29,28 @@ When you've finished testing, «Ρυθμίσεις» → «Κινήσεις» �
 
 1. **`dry_run`.** Import staff, set schedules, register the shop screen, and let everyone
    try punching. Check the stored payloads on the admin page.
-2. **`trial`.** Set `ERGANI_TRIAL_*` in `.env`, switch the mode and restart. Make a few
-   punches and confirm they appear in the Ergani test environment.
-3. **`production`.** Switch the mode and restart. From now on every punch is a legal
-   declaration.
+2. **`trial`.** In «Ρυθμίσεις» → «Επιχείρηση και σύνδεση με το ΕΡΓΑΝΗ», fill in the
+   **«Χρήστης για το δοκιμαστικό ΕΡΓΑΝΗ»** (user for the Ergani test environment; if you
+   leave it empty, the normal user is used) and press **«Πέρασμα σε δοκιμαστικό ΕΡΓΑΝΗ»**
+   (switch to the Ergani test environment). Make a few punches and confirm they appear in
+   the Ergani test environment.
+3. **`production`.** Press **«Έναρξη κανονικής λειτουργίας»** (go live). From now on every
+   punch is a legal declaration.
+
+### How to change the mode
+
+From the admin page, **«Ρυθμίσεις» → «Λειτουργία»** (mode), with no restart:
+
+- For `trial` or `production` you're asked to type **the business's ΑΦΜ** (tax number) to
+  confirm, and Karta **tests the connection first** to the matching Ergani. If the
+  connection fails, the mode doesn't change.
+- Going back to `dry_run` («Επιστροφή σε δοκιμαστική λειτουργία», back to test mode) just
+  needs an «ΟΚ».
+- Every change is logged (who, when, from what to what).
+
+If something the mode needs is missing (e.g. the Ergani password), the page says so in
+red, and punches **wait** without being lost until you fill it in. The mode can also be set
+in `.env` (`ERGANI_MODE`); whatever is chosen on the admin page takes priority.
 
 ## Training mode («Λειτουργία εκπαίδευσης»)
 
@@ -70,4 +88,4 @@ that started during the period is closed in Karta only, so Ergani never receives
 departure without its arrival.
 
 You'll get a notice on the last day of the period and on the first mandatory day. That
-notice is urgent if `ERGANI_MODE` is still not `production`.
+notice is urgent if the mode is still not `production`.
