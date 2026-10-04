@@ -105,6 +105,15 @@ What staff see on the shop screen, the phone QR card and the links:
 The official employer details in the accountant's report always come from Ergani, not
 from here.
 
+## «Έκδοση και ενημέρωση» (version and update)
+
+The running version, and whether a newer one is out (checked every few hours), with a
+«Τι αλλάζει» (what's new) link. **«Ενημέρωση τώρα»** (update now) leaves a request for
+`update.sh` on the machine, which within a minute keeps a backup, downloads the new version
+and restarts Karta; the page and the shop screen reload by themselves. If the button is
+missing, run `cd ~/karta && ./setup.sh update` once on the machine (it updates and installs
+`update.sh`).
+
 ## «Συσκευές» (devices)
 
 The registered shop screens: name, when registered and last seen. Create a registration

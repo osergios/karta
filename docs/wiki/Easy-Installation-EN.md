@@ -287,15 +287,18 @@ cloud). All the details: [Backups and restore](Backups-EN).
 
 ## Updating to a new version
 
-When a new version comes out ([Releases](https://github.com/osergios/karta/releases)):
+When a new version comes out, the admin page says so under **«Ρυθμίσεις» → «Έκδοση και
+ενημέρωση»** (version and update), with a «Τι αλλάζει» (what's new) link. Press
+**«Ενημέρωση τώρα»** (update now): within a minute a backup is made, the new version is
+downloaded and Karta restarts (it's offline for about a minute). The page reloads by itself,
+and so does the shop screen.
+
+The button works through `update.sh`, which the setup assistant installs on the machine:
+Karta itself never gets access to Docker, for security. Without it (or from the terminal):
 
 ```bash
-cd ~/karta
-docker compose pull
-docker compose up -d
+cd ~/karta && ./setup.sh update
 ```
-
-Then click **«Σήμερα» → «Οθόνη καταστήματος και αποστολή» → «Ανανέωση οθόνης»**.
 
 ---
 

@@ -23,7 +23,9 @@ os.environ.update(
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
-from app import appconfig, db, main, security  # noqa: E402
+from app import appconfig, db, main, security, updates  # noqa: E402
+
+updates._latest["at"] = float("inf")      # never ask GitHub for the latest release during the tests
 
 ORIGIN = {"origin": "http://testserver"}
 DEVICE_TOKEN = "test-device-token"

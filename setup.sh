@@ -5,6 +5,7 @@
 #   ./setup.sh check    έλεγχος: ΕΡΓΑΝΗ, Cloudflare, διεύθυνση, προστασία διαχείρισης
 #   ./setup.sh usb      αντίγραφα ασφαλείας και σε USB stick
 #   ./setup.sh restore  επαναφορά από αντίγραφο στο μηχάνημα ή στο USB (από cloud: στη σελίδα διαχείρισης)
+#   ./setup.sh update   ενημέρωση στη νεότερη έκδοση (ή «Ενημέρωση τώρα» στη σελίδα διαχείρισης)
 #
 # Χρειάζεται μόνο Docker. Ο οδηγός τρέχει μέσα στο image της Karta, ως ο δικός σας χρήστης.
 set -euo pipefail
@@ -120,6 +121,38 @@ tail -n 2000 backups/backup.log > backups/backup.log.tmp 2>/dev/null && mv backu
 [ "$local_state" = ok ] && [ "$usb_state" != fail ]
 SH
   chmod +x backup.sh
+}
+
+write_update_script() {
+  cat > update.sh <<'SH'
+#!/bin/sh
+# Karta update — written by ./setup.sh (it rewrites this file). Runs every minute from cron: when «Ενημέρωση τώρα»
+# is pressed in the admin page, it keeps a backup, downloads the new version and restarts Karta. The admin page
+# only leaves a request; Karta itself never gets control of Docker on this machine.
+set -u
+cd "$(dirname "$0")" || exit 1
+r=$(docker compose exec -T karta python -m app.updatemark poll 2>/dev/null) || exit 0
+[ "$r" = update ] || exit 0
+mkdir -p backups
+exec >> backups/update.log 2>&1
+echo "== $(date '+%F %T') update"
+[ -x ./backup.sh ] && ./backup.sh >/dev/null 2>&1      # a copy of the database first
+if docker compose pull && docker compose up -d; then
+  for _ in $(seq 1 45); do
+    sleep 2
+    docker compose exec -T karta python -m app.updatemark "done" ok >/dev/null 2>&1 && { echo "ok"; exit 0; }
+  done
+fi
+echo "failed"
+docker compose up -d >/dev/null 2>&1
+docker compose exec -T karta python -m app.updatemark "done" fail >/dev/null 2>&1 || true
+exit 1
+SH
+  chmod +x update.sh
+  if ! crontab -l 2>/dev/null | grep -q "$PWD/update.sh"; then
+    ( crontab -l 2>/dev/null; echo "* * * * * $PWD/update.sh >/dev/null 2>&1" ) | crontab -
+  fi
+  say "  ✓ Ενημερώσεις με ένα κουμπί από τη σελίδα διαχείρισης («Ρυθμίσεις» → «Έκδοση και ενημέρωση»)."
 }
 
 backup_now() {
@@ -241,8 +274,13 @@ case "${1:-}" in
   restore) write_backup_script; restore "${2:-}"; exit $? ;;
   usb)   write_backup_script; usb_setup; exit $? ;;
   cloud) say "Το αντίγραφο στο cloud ρυθμίζεται πλέον στη σελίδα διαχείρισης: «Ρυθμίσεις» → «Αντίγραφα ασφαλείας»."; exit 0 ;;
+  update) [ -f docker-compose.yml ] || { say "Δεν βρέθηκε η Karta σε αυτόν τον φάκελο."; exit 1; }
+          write_backup_script                    # the helpers of this version of setup.sh
+          if command -v crontab >/dev/null 2>&1; then write_update_script; fi
+          say "Αντίγραφο ασφαλείας…"; ./backup.sh >/dev/null 2>&1 || say "  (το αντίγραφο απέτυχε· δείτε backups/backup.log)"
+          docker compose pull && docker compose up -d && say "✓ Η Karta ενημερώθηκε."; exit $? ;;
   ""|check) ;;
-  *) say "Χρήση: ./setup.sh [check|usb|restore]"; exit 2 ;;
+  *) say "Χρήση: ./setup.sh [check|usb|restore|update]"; exit 2 ;;
 esac
 
 [ -f docker-compose.yml ] || { say "Κατέβασμα docker-compose.yml…"; curl -fsSLO "$RAW/docker-compose.yml"; }
@@ -297,6 +335,10 @@ if ! grep -qE '^USB_DIR="..*"' backup.conf 2>/dev/null; then
   say "  · σε USB stick στο μηχάνημα:  ./setup.sh usb"
   if ask_yes "Να ρυθμίσουμε τώρα το USB; (αν δεν έχετε USB ή είστε σε VPS: ο)"; then usb_setup || true; fi
 fi
+
+# ---- Ενημερώσεις -------------------------------------------------------------------------------
+step "Ενημερώσεις"
+if command -v crontab >/dev/null 2>&1; then write_update_script; fi
 
 # ---- Επόμενα βήματα -----------------------------------------------------------------------------
 origin=$(grep -E '^PUBLIC_ORIGIN=' .env | cut -d= -f2- || true)
