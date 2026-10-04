@@ -25,7 +25,11 @@ sites are refused.
 - **QR card codes, device tokens, registration codes and link tokens:** stored as
   SHA‑256 hashes only. QR codes are also encrypted with `PIN_KEY`, so a card can be shown
   again.
-- **Ergani password:** only in `.env`.
+- **Ergani password:** in `.env` or, if you set it in the admin page, in the database
+  encrypted with **AES‑GCM** and `PIN_KEY` (as is the ntfy token). It is never sent back
+  to the page.
+- **Cloud backups:** encrypted on your machine before upload (rclone crypt); the cloud
+  provider can't read them.
 
 ## Data minimisation
 
@@ -56,7 +60,8 @@ device registration, deletions…) are written to an audit table with who did it
 
 - Serve Karta **only over HTTPS**, and keep `/admin` behind Cloudflare Access.
 - Keep `.env` private and backed up (especially `PIN_KEY`); never commit it.
-- Back up the database regularly and keep the backups encrypted.
+- Back up the database regularly, including off the machine (see [Backups](Backups-EN)).
+  Punches must be kept for at least 5 years.
 - Real punches are **legal working‑time records**. Karta refuses to delete an employee
   who has real punches; deactivate them instead.
 - You're responsible for the declarations made to Ergani from your installation. Test

@@ -30,8 +30,9 @@ nano .env        # fill it in; keep ERGANI_MODE=dry_run for now
 ```
 
 Every setting is explained in [Configuration](Configuration-EN). At minimum you need:
-`EMPLOYER_AFM`, `CF_ACCESS_TEAM_DOMAIN`, `CF_ACCESS_AUD`, `ADMIN_EMAILS`,
-`PUBLIC_ORIGIN`, and Ergani credentials (needed to import your staff).
+`CF_ACCESS_TEAM_DOMAIN`, `CF_ACCESS_AUD`, `ADMIN_EMAILS`, `PUBLIC_ORIGIN` and `PIN_KEY`.
+The ΑΦΜ (tax number), Ergani credentials, mode and notifications can go here or on the
+admin page («Ρυθμίσεις»).
 
 ## 2. Run it
 
@@ -93,7 +94,9 @@ Cloudflare Access. Those pages have their own protection; see
 ## 5. First login and setup
 
 1. Open `https://karta.yourshop.gr/admin` and log in through Cloudflare Access.
-2. **«Ρυθμίσεις» → «ΕΡΓΑΝΗ» → «Έλεγχος ΕΡΓΑΝΗ»**: reads your employer details,
+2. **«Ρυθμίσεις» → «Επιχείρηση και σύνδεση με το ΕΡΓΑΝΗ»**: ΑΦΜ, branch and Ergani user,
+   with «Δοκιμή σύνδεσης» (test connection). Then
+   **«Ρυθμίσεις» → «ΕΡΓΑΝΗ» → «Έλεγχος ΕΡΓΑΝΗ»**: reads your employer details,
    branches and current staff from Ergani, and lets you import the employees. This is the
    only way to add staff. Each new employee gets a 6‑digit PIN, shown once. Write it down
    or give it to them.
@@ -107,8 +110,11 @@ Cloudflare Access. Those pages have their own protection; see
 ## Backups
 
 Everything (employees, PIN hashes, punches, schedules, settings, logo) is in the one
-SQLite file. Back up the `/data` volume regularly and keep the copies encrypted: they
-contain staff data. Also keep a safe copy of your `.env`, especially `PIN_KEY`.
+SQLite file. Punches must be kept for at least 5 years: back up the `/data` volume
+regularly, also off the machine, and keep the copies encrypted, because they contain
+staff data. Also keep a safe copy of your `.env`, especially `PIN_KEY`. With `setup.sh`
+all of this happens automatically (USB, cloud, restore): see
+[Backups and restore](Backups-EN).
 
 To copy the database while the app is running, use SQLite's backup command rather than a
 plain `cp`:

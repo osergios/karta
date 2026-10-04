@@ -205,6 +205,14 @@ body.env-trial .bar { box-shadow: inset 0 -4px 0 #e0a340; }
 .brand-logo-row > div { display: flex; flex-direction: column; gap: .4rem; align-items: flex-start; }
 .brand-logo { height: 96px; width: auto; max-width: 240px; object-fit: contain; background: var(--sand); border-radius: 10px; padding: .4rem; }
 .preview-links { display: flex; flex-wrap: wrap; gap: .5rem; }
+.cfg-group { margin: 0 0 1.2rem; }
+.cfg-group h3 { font-size: 1rem; margin: 0 0 .5rem; }
+.brand-form input[type=password], .brand-form select { font: inherit; padding: .45rem .55rem; border: 1px solid var(--line); border-radius: 6px; min-width: 16rem; background: #fff; }
+.cfg-src { font-size: .8rem; color: var(--ink-soft); }
+.backup-row { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1rem; margin: .8rem 0; }
+.backup-row input[type=number] { width: 6rem; font: inherit; padding: .4rem .5rem; border: 1px solid var(--line); border-radius: 6px; }
+.backup-row .small { flex: 1 1 18rem; }
+.mode-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .5rem; }
 
 /* =================== layout: tabs, «Σήμερα», employee cards, sheets =================== */
 .alert-badge { margin-left: auto; background: #c77d1a; color: #fff; border: 0; border-radius: 999px; padding: .3rem .8rem; font: inherit; font-weight: 600; font-size: .9rem; cursor: pointer; }

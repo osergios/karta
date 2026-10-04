@@ -14,7 +14,7 @@ from fastapi.responses import FileResponse, JSONResponse, Response as RawRespons
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from . import brand, config, db, erganiread, hours, monitor, onboarding, report, security, submitter
+from . import appconfig, archive, brand, config, db, erganiread, hours, monitor, onboarding, report, security, submitter
 from .timeutil import now_local
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -32,6 +32,9 @@ _enroll_lock = threading.Lock()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     db.init()
+    appconfig.load()
+    for problem in config.problems():
+        log.error("Settings: %s (complete it in the admin page, «Ρυθμίσεις»)", problem)
     hours.ensure_schedule_versions()
     _grace_to_5()
     _retire_old_pause()
@@ -700,7 +703,7 @@ def admin_asset(name: str, admin: str = Depends(security.require_admin)):
 
 
 # ---- «Πρώτα βήματα»: a checklist for a new installation, ticked off from what is already in place
-FIRST_STEPS_MANUAL = ("holidays", "notify", "training")     # can't be detected: «Έγινε» / «Παράλειψη» marks them
+FIRST_STEPS_MANUAL = ("holidays", "notify", "backup", "training")     # can't be detected: «Έγινε» / «Παράλειψη» marks them
 
 
 def first_steps():
@@ -712,30 +715,51 @@ def first_steps():
     with_schedule = {r["employee_id"] for r in db.all_rows("SELECT employee_id, days FROM schedule_versions")
                      if r["days"] not in ("", "{}")}
     steps = [
+        ("ergani", "Σύνδεση με το ΕΡΓΑΝΗ", "ΑΦΜ, αριθμός παραρτήματος και ο χρήστης web services του ΕΡΓΑΝΗ, με «Δοκιμή σύνδεσης».",
+         bool(config.EMPLOYER_AFM and config.VALUES.get("ERGANI_USERNAME") and config.VALUES.get("ERGANI_PASSWORD")),
+         {"tab": "settings", "target": "cfgBox"}),
         ("brand", "Στοιχεία επιχείρησης", "Όνομα, χρώμα και λογότυπο για την οθόνη του καταστήματος.",
          bool(db.setting("brand_name")), {"tab": "settings", "target": "brandBox"}),
         ("staff", "Προσωπικό από το ΕΡΓΑΝΗ", "«Έλεγχος ΕΡΓΑΝΗ» και εισαγωγή των εργαζομένων. Δώστε σε καθέναν το PIN του.",
          bool(active), {"tab": "settings", "target": "erganiCheck"}),
-        ("schedules", "Ωράρια", "Ελέγξτε ότι κάθε εργαζόμενος έχει το ωράριο που είναι δηλωμένο στο ΕΡΓΑΝΗ.",
+        ("schedules", "Ωράρια", "Το ΕΡΓΑΝΗ δίνει συνήθως μόνο τις ώρες την εβδομάδα: γράψτε το ωράριο κάθε ημέρας από "
+         "το πρόγραμμα που σας δίνει ο λογιστής. Η Karta ελέγχει ότι οι ώρες ταιριάζουν.",
          bool(active) and all(r["id"] in with_schedule for r in active), {"tab": "sched", "target": "scheds"}),
         ("holidays", "Αργίες της περιοχής", "Προσθέστε τοπικές αργίες (π.χ. του πολιούχου) ή κλεισίματα, αν υπάρχουν.",
          bool(db.setting("local_holidays")) or "holidays" in marked, {"tab": "sched", "target": "offdays"}),
         ("device", "Οθόνη καταστήματος", "«Δημιουργία κωδικού εγγραφής» και άνοιγμα του /enroll στη συσκευή του καταστήματος.",
          db.one("SELECT 1 FROM devices WHERE revoked=0") is not None, {"tab": "settings", "target": "addDev"}),
-        ("notify", "Ειδοποιήσεις στο κινητό", "Προαιρετικά: ρυθμίζονται με ./setup.sh (εφαρμογή ntfy).",
-         bool(config.NTFY_URL and config.NTFY_TOPIC) or "notify" in marked, {"test": bool(config.NTFY_URL and config.NTFY_TOPIC)}),
+        ("notify", "Ειδοποιήσεις στο κινητό", "Προαιρετικά: εφαρμογή ntfy στο κινητό και ρύθμιση εδώ, στις «Ρυθμίσεις».",
+         bool(config.NTFY_URL and config.NTFY_TOPIC) or "notify" in marked,
+         {"tab": "settings", "target": "cfgNtfy", "test": bool(config.NTFY_URL and config.NTFY_TOPIC)}),
+        ("backup", "Αντίγραφα ασφαλείας", "Τα χτυπήματα φυλάσσονται για χρόνια: αυτόματο αντίγραφο κάθε βράδυ και ένα "
+         "εκτός μηχανήματος, σε USB (./setup.sh usb) ή σε cloud (./setup.sh cloud).",
+         _offsite_ok() or "backup" in marked, {"tab": "settings", "target": "backupBox"}),
         ("training", "Δοκιμή με το προσωπικό", "«Λειτουργία εκπαίδευσης»: όλοι δοκιμάζουν να χτυπήσουν, χωρίς να καταγράφεται τίποτα.",
          bool(db.setting("training_used")) or "training" in marked, {"tab": "today", "target": "sendState"}),
-        ("live", "Έναρξη στο ΕΡΓΑΝΗ", "Πέρασμα σε trial και μετά σε production (ERGANI_MODE στο .env), ή περίοδος προσαρμογής.",
+        ("live", "Έναρξη στο ΕΡΓΑΝΗ", "Πέρασμα σε δοκιμαστικό ΕΡΓΑΝΗ και μετά σε κανονική λειτουργία («Ρυθμίσεις» → «Λειτουργία»), ή περίοδος προσαρμογής.",
          config.ERGANI_MODE == "production" or onboarding.until() is not None,
          {"href": "https://github.com/osergios/karta/wiki/Going-Live"}),
     ]
-    return [{"key": k, "title": t, "text": x, "done": bool(d), "manual": k in FIRST_STEPS_MANUAL, **link}
+    return [{"key": k, "title": t, "text": x, "done": bool(d), "manual": k in FIRST_STEPS_MANUAL, "marked": k in marked, **link}
             for k, t, x, d, link in steps]
 
 
+def _offsite_ok() -> bool:
+    b = monitor.backup_status()
+    return bool(b and "ok" in (b.get("usb"), b.get("cloud")))
+
+
+def backup_info() -> dict | None:
+    b = monitor.backup_status()
+    if b is None:
+        return None
+    return {"when": b["when"].isoformat(timespec="minutes"), "local": b.get("local"), "usb": b.get("usb"),
+            "cloud": b.get("cloud"), "old": (now_local() - b["when"]).total_seconds() > 50 * 3600}
+
+
 class FirstStepIn(BaseModel):
-    step: str | None = Field(default=None, pattern="^(holidays|notify|training)$")
+    step: str | None = Field(default=None, pattern="^(holidays|notify|backup|training)$")
     done: bool = True
     hide: bool = False
 
@@ -756,12 +780,66 @@ def admin_first_steps(body: FirstStepIn, admin: str = Depends(security.require_a
 def admin_ntfy_test(admin: str = Depends(security.require_admin)):
     """Sends a test phone notification right away and says whether ntfy accepted it."""
     if not (config.NTFY_URL and config.NTFY_TOPIC):
-        raise HTTPException(status_code=409, detail="Οι ειδοποιήσεις κινητού δεν είναι ρυθμισμένες (NTFY_URL / NTFY_TOPIC στο .env).")
+        raise HTTPException(status_code=409, detail="Οι ειδοποιήσεις κινητού δεν είναι ρυθμισμένες: συμπλήρωσε server και θέμα στις «Ρυθμίσεις».")
     try:
         monitor.ntfy_post("Κάρτα: δοκιμή", "Δοκιμαστική ειδοποίηση από τη σελίδα διαχείρισης. Αν τη βλέπετε, όλα είναι σωστά.", "info")
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Ο server ειδοποιήσεων δεν τη δέχτηκε: {type(e).__name__}")
     return {"ok": True}
+
+
+# ---- settings changed from the admin page (business, Ergani users, mode, phone alerts)
+class ConfigIn(BaseModel):
+    group: str = Field(pattern="^(business|ergani|trial|ntfy)$")
+    values: dict[str, str | None] = Field(max_length=10)
+
+
+class LoginTestIn(BaseModel):
+    target: str = Field(pattern="^(production|trial)$")
+    username: str | None = Field(default=None, max_length=100)
+    password: str | None = Field(default=None, max_length=200)     # None: the saved one
+    user_type: str | None = Field(default=None, pattern="^(01|02)$")
+
+
+class ModeIn(BaseModel):
+    mode: str = Field(pattern="^(dry_run|trial|production)$")
+    afm: str = Field(default="", max_length=9)
+
+
+@app.get("/admin/api/config")
+def admin_config(admin: str = Depends(security.require_admin)):
+    return appconfig.view()
+
+
+@app.post("/admin/api/config")
+def admin_config_save(body: ConfigIn, admin: str = Depends(security.require_admin)):
+    try:
+        appconfig.save(body.group, body.values, admin)
+    except appconfig.ConfigError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return appconfig.view()
+
+
+@app.post("/admin/api/config/login-test")
+def admin_config_login_test(body: LoginTestIn, admin: str = Depends(security.require_admin)):
+    """Tries to log in to Ergani (read-only: nothing is submitted) with what is typed, or with what is saved."""
+    user, pwd, utype, url = appconfig.creds_for(body.target)
+    if body.target == "trial" and body.username is not None and not config.VALUES.get("ERGANI_TRIAL_USERNAME"):
+        pwd = ""                                  # typing a trial user: don't fall back to the production password
+    user = body.username if body.username is not None else user
+    pwd = body.password if body.password is not None else pwd
+    utype = body.user_type or utype
+    ok, msg = appconfig.login_test(user.strip(), pwd, utype, url)
+    return {"ok": ok, "message": msg}
+
+
+@app.post("/admin/api/mode")
+def admin_mode(body: ModeIn, admin: str = Depends(security.require_admin)):
+    try:
+        appconfig.set_mode(body.mode, body.afm, admin)
+    except appconfig.ConfigError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return appconfig.view()
 
 
 @app.get("/admin/api/overview")
@@ -798,6 +876,9 @@ def admin_overview(admin: str = Depends(security.require_admin)):
         "schedule_meta": sched_meta,
         "settings": monitor.get_settings(),
         "ntfy": bool(config.NTFY_URL and config.NTFY_TOPIC),
+        "config_problems": config.problems(),
+        "config": appconfig.view(),
+        "backup": backup_info(),
         "first_steps": first_steps(),
         "admin": admin,
         "mode": config.ERGANI_MODE,
@@ -1848,6 +1929,36 @@ def admin_report_year(year: int, admin: str = Depends(security.require_admin)):
     return RawResponse(report.build_year(year),
                        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                        headers={"Content-Disposition": f'attachment; filename="karta-{year:04d}.xlsx"'})
+
+
+@app.get("/admin/api/punches.xlsx")
+def admin_punch_archive(year: int, admin: str = Depends(security.require_admin)):
+    """«Αρχείο χτυπημάτων ΕΕΕΕ»: every punch of the year, for the archive (kept for years) and for an inspection."""
+    if not 2020 <= year <= 2100:
+        raise HTTPException(status_code=400, detail="year=YYYY")
+    db.audit(admin, "punch_archive", str(year))
+    return RawResponse(archive.build(year),
+                       media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                       headers={"Content-Disposition": f'attachment; filename="karta-xtypimata-{year:04d}.xlsx"'})
+
+
+@app.get("/admin/api/backup.db")
+def admin_backup_download(admin: str = Depends(security.require_admin)):
+    """A consistent copy of the whole database, taken while Karta runs (SQLite online backup)."""
+    import sqlite3
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        path = f"{tmp}/karta.db"
+        dst = sqlite3.connect(path)
+        try:
+            with db._lock:
+                db._conn.backup(dst)
+        finally:
+            dst.close()
+        data = open(path, "rb").read()
+    db.audit(admin, "backup_download", f"{len(data)} bytes")
+    return RawResponse(data, media_type="application/vnd.sqlite3",
+                       headers={"Content-Disposition": f'attachment; filename="karta-{now_local():%Y-%m-%d}.db"'})
 
 
 @app.post("/admin/api/salon-hours")

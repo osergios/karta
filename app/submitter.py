@@ -31,6 +31,13 @@ _submit_lock = threading.Lock()
 _client: ErganiClient | None = None
 
 
+def reset_client() -> None:
+    """Forget the Ergani client after the user, password or mode changed in the admin page."""
+    global _client
+    with _submit_lock:
+        _client = None
+
+
 def _get_client() -> ErganiClient:
     global _client
     if _client is None:
@@ -76,6 +83,10 @@ def process(movement_id: int, force: bool = False):
             log.warning("Movement %s was made in %s mode; not sending it in %s mode", movement_id, row["mode"], config.ERGANI_MODE)
             return row
         if not force and row["next_attempt_at"] > db.utc_now_iso():
+            return row
+        # Missing user, password or ΑΦΜ: hold the queue (attempts are not used up) until it is completed
+        # in the admin page. The page shows what is missing.
+        if config.ERGANI_MODE != "dry_run" and config.problems():
             return row
 
         # A movement that could not be sent in (near) real time is declared late.

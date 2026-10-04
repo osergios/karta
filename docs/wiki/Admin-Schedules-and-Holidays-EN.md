@@ -16,6 +16,13 @@ closed day the shop screen uses them to say when you reopen. Leave a day empty f
 One row per employee, one box per weekday (Δευ … Κυρ). Type the **declared** schedule,
 exactly as it's declared in Ergani. Leave a box empty for a day off («ρεπό»).
 
+> **Where do I get each day's hours?** Ergani usually gives Karta only **how many hours a
+> week** each employee works (and, less often, a schedule in free text), not the hours of
+> each day. Type each day's hours from the **schedule your accountant gives you**, as they
+> declared it. Under each employee, Karta shows whether the weekly total **matches** the
+> Ergani hours («Ταιριάζει … ✓», or by how much it differs). When Ergani has a readable
+> per‑day schedule, a button appears to fill it in automatically.
+
 ### How to write a schedule
 
 | You write | Meaning |

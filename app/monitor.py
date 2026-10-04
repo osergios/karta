@@ -7,7 +7,7 @@ import logging
 import threading
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from . import config, db, hours
 from .timeutil import now_local
@@ -155,6 +155,10 @@ def check(now: datetime | None = None) -> None:
         onboarding.check_alerts(now)      # the day before / the day the card becomes mandatory
     except Exception:
         log.exception("onboarding notice failed")
+    try:
+        _check_backup(now)
+    except Exception:
+        log.exception("backup check failed")
     with _lock:
         for emp in db.all_rows("SELECT id, display_name FROM employees WHERE active=1"):
             eid, name = emp["id"], emp["display_name"]
@@ -211,6 +215,41 @@ def check(now: datetime | None = None) -> None:
                 raise_alert("weekly_legal", eid, today, "urgent",
                             f"{name}: {hours.hm(week)} αυτή την εβδομάδα — πέρασε το νόμιμο όριο των "
                             f"{s['weekly_legal_hours']:g} ωρών. Από εδώ μόνο δηλωμένη υπερωρία.", None, now)
+
+
+def backup_status() -> dict | None:
+    """The last nightly backup as recorded by backup.sh (app/backupmark.py), with its local time."""
+    raw = db.setting("backup_status")
+    try:
+        b = json.loads(raw) if raw else None
+        b["when"] = datetime.fromisoformat(b["at"]).replace(tzinfo=timezone.utc).astimezone(config.TZ).replace(tzinfo=None)
+    except (ValueError, TypeError, KeyError):
+        return None
+    return b
+
+
+def _check_backup(now: datetime) -> None:
+    """Once a day: the nightly backup stopped (or never ran although real punches exist), or a copy failed."""
+    if now.hour < 9:          # backups run in the evening; look at them in the morning
+        return
+    b = backup_status()
+    today = now.date()
+    if b is None:
+        if db.one("SELECT 1 FROM movements WHERE mode='production' LIMIT 1") and today.weekday() == 0:
+            raise_alert("backup_none", None, today, "warning",
+                        "Δεν γίνεται αυτόματο αντίγραφο ασφαλείας. Τα χτυπήματα πρέπει να φυλάσσονται για χρόνια: "
+                        "ρυθμίστε το με ./setup.sh στο μηχάνημα της Karta («Ρυθμίσεις» → «Αντίγραφα ασφαλείας»).", None, now)
+        return
+    age_h = (now - b["when"]).total_seconds() / 3600
+    if age_h > 50:
+        raise_alert("backup_old", None, today, "warning",
+                    f"Το τελευταίο αντίγραφο ασφαλείας είναι από {b['when']:%d/%m %H:%M}. Ελέγξτε ότι το μηχάνημα "
+                    "της Karta είναι ανοιχτό και ότι τρέχει το backup.sh κάθε βράδυ.", None, now)
+    failed = [n for k, n in (("local", "στο μηχάνημα"), ("usb", "στο USB"), ("cloud", "στο cloud")) if b.get(k) == "fail"]
+    if failed:
+        raise_alert("backup_failed", None, today, "warning",
+                    f"Το αντίγραφο ασφαλείας της {b['when']:%d/%m} απέτυχε {', '.join(failed)}. Δείτε «Ρυθμίσεις» → "
+                    "«Αντίγραφα ασφαλείας».", None, now)
 
 
 def _ot_notice(end: datetime, deadline: datetime, today, now: datetime) -> None:

@@ -248,3 +248,18 @@ def test_yes_no_answers(monkeypatch, answers, expected):
     replies = iter(answers)
     monkeypatch.setattr("builtins.input", lambda prompt="": next(replies))
     assert wizard.yes("Ερώτηση;") is expected
+
+
+def test_setup_asks_only_the_address_and_cloudflare(tmp_path, monkeypatch):
+    path = tmp_path / ".env"
+    path.write_text("ERGANI_USERNAME=kept\nERGANI_PASSWORD=kept-pass\n")
+    replies = iter(["karta.example.gr", "Me@Example.com", "ν"])
+    monkeypatch.setattr("builtins.input", lambda prompt="": next(replies))
+    monkeypatch.setattr(wizard, "ask_secret", lambda q, keep="": "cf-token")
+    monkeypatch.setattr(wizard, "cloudflare_auto", lambda token, host, emails, confirm=None: {
+        "CF_ACCESS_TEAM_DOMAIN": "shop.cloudflareaccess.com", "CF_ACCESS_AUD": "a" * 64, "TUNNEL_TOKEN": "tun"})
+    assert wizard.setup(str(path)) == 0
+    env = wizard.read_env(str(path))
+    assert env["PUBLIC_ORIGIN"] == "https://karta.example.gr" and env["ADMIN_EMAILS"] == "me@example.com"
+    assert env["ERGANI_MODE"] == "dry_run" and env["TUNNEL_TOKEN"] == "tun" and wizard.valid_pin_key(env["PIN_KEY"])
+    assert env["ERGANI_USERNAME"] == "kept"            # what was there before stays

@@ -23,7 +23,7 @@ os.environ.update(
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
-from app import db, main, security  # noqa: E402
+from app import appconfig, db, main, security  # noqa: E402
 
 ORIGIN = {"origin": "http://testserver"}
 DEVICE_TOKEN = "test-device-token"
@@ -63,6 +63,7 @@ def clean(client):
     with db.tx() as c:
         for t in _TABLES:
             c.execute(f"DELETE FROM {t}")
+    appconfig.load()                   # settings saved from the admin page are gone with the table
     main._enroll_fails.clear()
     main._qr_fails.clear()
     main._training_state.clear()
