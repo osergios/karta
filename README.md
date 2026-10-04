@@ -60,10 +60,15 @@
 ## Γρήγορη εκκίνηση
 
 ```bash
+curl -fsSLO https://raw.githubusercontent.com/osergios/karta/main/.env.example
 cp .env.example .env        # συμπληρώστε το· κρατήστε ERGANI_MODE=dry_run στην αρχή
-docker build -t karta .
-docker run -d --name karta --env-file .env -p 8000:8000 -v karta-data:/data karta
+docker run -d --name karta --env-file .env -p 8000:8000 -v karta-data:/data \
+  ghcr.io/osergios/karta:latest
 ```
+
+Έτοιμο image για amd64 και arm64. Οι εκδόσεις και οι αλλαγές τους είναι στις
+[Releases](https://github.com/osergios/karta/releases). Μπορείτε επίσης να χτίσετε το image
+μόνοι σας με `docker build -t karta .`.
 
 Η βάση SQLite βρίσκεται στο `/data/workcard.db` (αλλάζει με το `DB_PATH`), οπότε
 **κρατάτε αντίγραφα αυτού του volume**. Περιέχει στοιχεία των εργαζομένων σας.
@@ -163,10 +168,15 @@ See [`CHANGES.md`](CHANGES.md) for the detailed history.
 ## Quick start
 
 ```bash
+curl -fsSLO https://raw.githubusercontent.com/osergios/karta/main/.env.example
 cp .env.example .env        # then fill it in; keep ERGANI_MODE=dry_run at first
-docker build -t karta .
-docker run -d --name karta --env-file .env -p 8000:8000 -v karta-data:/data karta
+docker run -d --name karta --env-file .env -p 8000:8000 -v karta-data:/data \
+  ghcr.io/osergios/karta:latest
 ```
+
+A ready‑made image for amd64 and arm64. Versions and their changes are on the
+[Releases](https://github.com/osergios/karta/releases) page. You can also build the image
+yourself with `docker build -t karta .`.
 
 The SQLite database lives at `/data/workcard.db` (change it with `DB_PATH`), so
 **back up that volume**. It holds your employees' data.

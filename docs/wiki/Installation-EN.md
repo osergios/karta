@@ -17,11 +17,11 @@ It runs comfortably on a small VPS, a home server or a Raspberry Pi‑class mach
 - **An Ergani web‑services user** for the business. For testing, also get a user for the
   Ergani test environment (`trialv2eservices.yeka.gr`). See [Configuration](Configuration-EN).
 
-## 1. Get the code and fill in `.env`
+## 1. Prepare `.env`
 
 ```bash
-git clone https://github.com/osergios/karta.git
-cd karta
+mkdir karta && cd karta
+curl -fsSLO https://raw.githubusercontent.com/osergios/karta/main/.env.example
 cp .env.example .env
 nano .env        # fill it in; keep ERGANI_MODE=dry_run for now
 ```
@@ -32,7 +32,23 @@ Every setting is explained in [Configuration](Configuration-EN). At minimum you 
 
 ## 2. Run it
 
+With the ready‑made image from GitHub (amd64 and arm64, e.g. Raspberry Pi):
+
 ```bash
+docker run -d --name karta --restart unless-stopped \
+  --env-file .env -p 127.0.0.1:8000:8000 -v karta-data:/data \
+  ghcr.io/osergios/karta:latest
+```
+
+`latest` is always the newest version. To stay on a specific version, use e.g.
+`ghcr.io/osergios/karta:1.0.0`. All versions and their changes are on the
+[Releases](https://github.com/osergios/karta/releases) page.
+
+Or build the image yourself from the code:
+
+```bash
+git clone https://github.com/osergios/karta.git && cd karta
+cp /path/to/your/.env .env
 docker build -t karta .
 docker run -d --name karta --restart unless-stopped \
   --env-file .env -p 127.0.0.1:8000:8000 -v karta-data:/data karta
@@ -100,11 +116,15 @@ docker exec karta python -c "import sqlite3; s=sqlite3.connect('/data/workcard.d
 
 ## Updating
 
+Check what changed on the [Releases](https://github.com/osergios/karta/releases) page, then:
+
 ```bash
-git pull
-docker build -t karta .
+docker pull ghcr.io/osergios/karta:latest
 docker rm -f karta && docker run -d --name karta ... (same command as above)
 ```
+
+If you build the image yourself: `git pull`, `docker build -t karta .` and the
+`docker run` again.
 
 Database changes are applied automatically at startup. After an update, use
 **«Σήμερα» → «Οθόνη καταστήματος και αποστολή» → «Ανανέωση οθόνης»** to make the shop screen reload itself.

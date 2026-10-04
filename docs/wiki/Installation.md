@@ -20,11 +20,11 @@ Raspberry Pi.
   χρήστη για το δοκιμαστικό περιβάλλον του ΕΡΓΑΝΗ (`trialv2eservices.yeka.gr`). Δείτε
   [Ρυθμίσεις server](Configuration).
 
-## 1. Κατεβάστε τον κώδικα και συμπληρώστε το `.env`
+## 1. Ετοιμάστε το `.env`
 
 ```bash
-git clone https://github.com/osergios/karta.git
-cd karta
+mkdir karta && cd karta
+curl -fsSLO https://raw.githubusercontent.com/osergios/karta/main/.env.example
 cp .env.example .env
 nano .env        # συμπληρώστε το· κρατήστε ERGANI_MODE=dry_run προς το παρόν
 ```
@@ -36,7 +36,23 @@ nano .env        # συμπληρώστε το· κρατήστε ERGANI_MODE=dr
 
 ## 2. Εκκίνηση
 
+Με το έτοιμο image από το GitHub (amd64 και arm64, π.χ. Raspberry Pi):
+
 ```bash
+docker run -d --name karta --restart unless-stopped \
+  --env-file .env -p 127.0.0.1:8000:8000 -v karta-data:/data \
+  ghcr.io/osergios/karta:latest
+```
+
+Το `latest` είναι πάντα η τελευταία έκδοση. Για να μείνετε σε συγκεκριμένη έκδοση, γράψτε
+π.χ. `ghcr.io/osergios/karta:1.0.0`. Όλες οι εκδόσεις και οι αλλαγές τους είναι στις
+[Releases](https://github.com/osergios/karta/releases).
+
+Ή χτίστε το image μόνοι σας από τον κώδικα:
+
+```bash
+git clone https://github.com/osergios/karta.git && cd karta
+cp /path/to/your/.env .env
 docker build -t karta .
 docker run -d --name karta --restart unless-stopped \
   --env-file .env -p 127.0.0.1:8000:8000 -v karta-data:/data karta
@@ -111,11 +127,15 @@ docker exec karta python -c "import sqlite3; s=sqlite3.connect('/data/workcard.d
 
 ## Ενημέρωση σε νέα έκδοση
 
+Δείτε τι άλλαξε στις [Releases](https://github.com/osergios/karta/releases), και μετά:
+
 ```bash
-git pull
-docker build -t karta .
+docker pull ghcr.io/osergios/karta:latest
 docker rm -f karta && docker run -d --name karta ... (η ίδια εντολή όπως παραπάνω)
 ```
+
+Αν χτίζετε μόνοι σας το image: `git pull`, `docker build -t karta .` και ξανά το
+`docker run`.
 
 Οι αλλαγές στη βάση εφαρμόζονται αυτόματα στην εκκίνηση. Μετά την ενημέρωση, πατήστε
 **«Σήμερα» → «Οθόνη καταστήματος και αποστολή» → «Ανανέωση οθόνης»** για να ξαναφορτώσει
