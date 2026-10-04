@@ -1,0 +1,36 @@
+# Dependabot version updates: one grouped pull request per ecosystem, once a month.
+# Security updates are separate (Settings → Advanced Security) and arrive as soon as a fix exists.
+# Note: vendor/ergani (the vendored Ergani SDK) is not tracked here; update it by hand.
+version: 2
+
+updates:
+  # Python packages in requirements.txt
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 5
+    groups:
+      python-packages:
+        patterns: ["*"]
+    commit-message:
+      prefix: "deps"
+
+  # Base image in the Dockerfile (python:3.12-slim)
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    commit-message:
+      prefix: "docker"
+
+  # Actions used by the workflows in .github/workflows
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    groups:
+      github-actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: "ci"
