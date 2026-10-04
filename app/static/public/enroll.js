@@ -4,7 +4,7 @@
   const err = document.getElementById("err");
   const input = document.getElementById("code");
   const logo = document.getElementById("logo");
-  if (logo) logo.addEventListener("error", () => { logo.hidden = true; });
+  if (logo) { logo.addEventListener("error", () => { logo.hidden = true; }); if (logo.complete && !logo.naturalWidth) logo.hidden = true; }
   async function go() {
     err.textContent = ""; btn.disabled = true;
     try {

@@ -10,6 +10,20 @@ monthly reports.
 > με PIN ή QR στο κατάστημα, αυτόματη αποστολή στο ΕΡΓΑΝΗ ΙΙ, ειδοποιήσεις και
 > μηνιαίες αναφορές.
 
+## Screenshots
+
+*Demo shop with made-up employees, running in `dry_run` mode.*
+
+| Kiosk | Kiosk: pick your name, then enter your PIN |
+|---|---|
+| ![Kiosk start screen](docs/screenshots/kiosk.png) | ![Kiosk employee picker](docs/screenshots/kiosk-pin.png) |
+
+| Admin: today | Admin: staff |
+|---|---|
+| ![Admin page, today's overview](docs/screenshots/admin-today.png) | ![Admin page, staff list](docs/screenshots/admin-staff.png) |
+
+![Admin page, weekly schedules](docs/screenshots/admin-schedules.png)
+
 ## Features
 
 - **Kiosk** (`/`): PIN pad and camera QR scanner. It accepts the shop's own QR
@@ -71,7 +85,8 @@ This software is provided as-is, without warranty (see the license).
 ## Third-party code
 
 Karta bundles the [Ergani Python SDK](https://github.com/withlogicco/ergani-python-sdk)
-(MIT, by LOGIC), [jsQR](https://github.com/cozmo/jsQR) (Apache-2.0) and the
+(MIT, by LOGIC), [jsQR](https://github.com/cozmo/jsQR) (Apache-2.0), one
+[Tabler Icons](https://github.com/tabler/tabler-icons) icon (MIT) and the
 [Inter](https://github.com/rsms/inter) typeface (SIL OFL 1.1). Details and the
 local changes are in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
 

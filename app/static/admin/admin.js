@@ -1397,7 +1397,7 @@
   year.addEventListener("input", setYearLink); setYearLink();
 
   const logo = document.getElementById("logo");
-  if (logo) logo.addEventListener("error", () => { logo.hidden = true; });
+  if (logo) { logo.addEventListener("error", () => { logo.hidden = true; }); if (logo.complete && !logo.naturalWidth) logo.hidden = true; }
   load();
   setInterval(() => { if (!document.hidden) load(); }, 30000);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });   // back on the phone: fresh data at once

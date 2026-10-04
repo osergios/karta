@@ -21,7 +21,8 @@
   tick(); setInterval(tick, 1000);
   const logo = document.getElementById("logo");
   const brandName = document.getElementById("brandName");
-  if (logo) logo.addEventListener("error", () => { logo.hidden = true; if (brandName && brandName.textContent.trim()) brandName.hidden = false; });
+  const noLogo = () => { logo.hidden = true; if (brandName && brandName.textContent.trim()) brandName.hidden = false; };
+  if (logo) { logo.addEventListener("error", noLogo); if (logo.complete && !logo.naturalWidth) noLogo(); }   // may fail before this script runs
   const PREVIEW = new URLSearchParams(location.search).get("preview");   // admin «Προεπισκόπηση» of a closed day
   const festive = theme => { if (window.Festive) window.Festive.apply(theme || null); };
 
