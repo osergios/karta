@@ -872,6 +872,43 @@
     if (d.backup.restore_pending && panel.hidden) api("/admin/api/restore/pending").then(showRestore).catch(() => {});
   }
 
+  // ---------- version and «Ενημέρωση τώρα» (update.sh on the host does the update) ----------
+  function renderUpdate(d) {
+    const U = d.update, box = document.getElementById("updateBox");
+    const busy = U.requested || U.running;
+    if (busy && !renderUpdate.timer) {                 // follow it: the page reloads once the new version answers
+      const from = U.version;
+      renderUpdate.timer = setInterval(async () => {
+        try {
+          const r = await fetch("/admin/api/overview", { credentials: "same-origin" });
+          if (!r.ok) return;                             // restarting
+          const u = (await r.json()).update;
+          if (u.version !== from || (!u.requested && !u.running)) { clearInterval(renderUpdate.timer); location.reload(); }
+        } catch { /* restarting */ }
+      }, 5000);
+    }
+    const res = U.result;
+    const resLine = res && res.at
+      ? el("div", { class: `an-line ${res.state === "ok" ? "" : "bad"}` },
+          `Τελευταία ενημέρωση: ${dmyhm(new Date(res.at + "Z").toLocaleString("sv-SE", { timeZone: "Europe/Athens" }))} ` +
+          (res.state === "ok" ? `✓${res.version ? " (" + res.version.replace(/^v/, "") + ")" : ""}` : "✗ απέτυχε· η Karta συνεχίζει με την προηγούμενη έκδοση (δείτε το backups/update.log στο μηχάνημα)."))
+      : null;
+    const notes = U.latest_url ? el("a", { class: "link", href: U.latest_url, target: "_blank", rel: "noopener" }, "Τι αλλάζει") : null;
+    let main;
+    if (busy) main = el("div", { class: "an-line warn" }, "Η ενημέρωση γίνεται τώρα (πρώτα αντίγραφο ασφαλείας, μετά η νέα έκδοση). Η Karta θα είναι εκτός για περίπου ένα λεπτό· η σελίδα θα ξαναφορτώσει μόνη της.");
+    else if (U.available) main = el("div", { class: "an-line warn" },
+      `Υπάρχει νέα έκδοση: ${U.latest}. `, notes,
+      U.updater
+        ? el("div", { class: "backup-row" }, el("button", { class: "btn", type: "button", onclick: act(async () => {
+            if (!confirm(`Ενημέρωση στην έκδοση ${U.latest}; Η Karta θα είναι εκτός για περίπου ένα λεπτό (οι οθόνες του καταστήματος περιμένουν και συνεχίζουν). Πρώτα γίνεται αντίγραφο ασφαλείας.`)) return;
+            await api("/admin/api/update", {}); toast("Η ενημέρωση θα ξεκινήσει μέσα σε ένα λεπτό");
+          }) }, "Ενημέρωση τώρα"))
+        : el("div", { class: "small" }, "Ενημερώστε μία φορά από το μηχάνημα με ", el("code", {}, "cd ~/karta && ./setup.sh update"),
+            ": από εκεί και πέρα, εδώ θα εμφανίζεται κουμπί «Ενημέρωση τώρα»."));
+    else main = el("div", { class: "an-line muted" }, U.latest ? "Έχετε την τελευταία έκδοση ✓" : "Ο έλεγχος για νέα έκδοση γίνεται κάθε λίγες ώρες.");
+    box.replaceChildren(el("p", {}, `Έκδοση: ${U.version}`), main, ...(resLine ? [resLine] : []));
+  }
+
   // ---------- reload the shop screen from here (it usually runs unattended, as an installed app) ----------
   function renderKioskReload(d) {
     const R = d.kiosk_reload || {};
@@ -1626,6 +1663,7 @@
     renderConfig(d);
     renderNtfy(d);
     renderBackup(d);
+    renderUpdate(d);
     renderKioskReload(d);
     renderBadge(d);
     const tm = document.getElementById("testMoves");

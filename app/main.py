@@ -16,7 +16,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from . import (appconfig, archive, brand, cloud, config, db, erganiread, hours, monitor, onboarding, report, restore,
-               security, submitter)
+               security, submitter, updates)
 from .timeutil import now_local
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -869,6 +869,7 @@ def admin_overview(admin: str = Depends(security.require_admin)):
         "config_problems": config.problems(),
         "config": appconfig.view(),
         "backup": backup_info(),
+        "update": updates.info(),
         "first_steps": first_steps(),
         "admin": admin,
         "mode": config.ERGANI_MODE,
@@ -1629,6 +1630,18 @@ def admin_day_change_delete(employee_id: int, day: str, admin: str = Depends(sec
 
 
 # ------------------------------------------------------------------ restart the shop screen from here
+@app.post("/admin/api/update")
+def admin_update(admin: str = Depends(security.require_admin)):
+    """«Ενημέρωση τώρα»: leaves the request for update.sh on the host, which pulls the new version and restarts."""
+    u = updates.info()
+    if not u["updater"]:
+        raise HTTPException(status_code=409, detail="Η αυτόματη ενημέρωση δεν είναι ρυθμισμένη σε αυτό το μηχάνημα: "
+                                                    "τρέξτε μία φορά  cd ~/karta && ./setup.sh update")
+    updates.request()
+    db.audit(admin, "update_request", f"{u['version']} -> {u['latest'] or '?'}")
+    return {"ok": True}
+
+
 @app.post("/admin/api/kiosk/reload")
 def admin_kiosk_reload(admin: str = Depends(security.require_admin)):
     """The shop screen reloads itself within ~30″ (it waits if someone is in the middle of punching)."""

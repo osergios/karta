@@ -16,6 +16,10 @@ RUN pip install -r requirements.txt
 COPY vendor ./vendor
 COPY app ./app
 
+# the version shown in the admin page (set by the release workflow)
+ARG KARTA_VERSION=dev
+ENV KARTA_VERSION=${KARTA_VERSION}
+
 # The database lives in /data (DB_PATH). Create it owned by the app user, so a new Docker volume
 # mounted there inherits that owner and the app can write to it.
 RUN mkdir -p /data && chown 10001:10001 /data

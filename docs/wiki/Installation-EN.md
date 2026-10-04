@@ -125,7 +125,9 @@ docker exec karta python -c "import sqlite3; s=sqlite3.connect('/data/workcard.d
 
 ## Updating
 
-Check what changed on the [Releases](https://github.com/osergios/karta/releases) page, then:
+With `setup.sh`, just press **«Ενημέρωση τώρα»** (update now) in the admin page («Ρυθμίσεις» →
+«Έκδοση και ενημέρωση»). Otherwise, check what changed on the
+[Releases](https://github.com/osergios/karta/releases) page, then:
 
 ```bash
 docker pull ghcr.io/osergios/karta:latest
