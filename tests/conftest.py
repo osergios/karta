@@ -32,7 +32,7 @@ PIN = "482916"
 TUESDAY = datetime(2026, 10, 6, 10, 0, 0)
 
 _TABLES = ("movements", "alerts", "card_links", "leaves", "day_changes", "early_leaves", "ergani_info",
-           "schedule_versions", "schedules", "closures", "enroll_codes", "devices", "employees", "audit", "settings")
+           "schedule_versions", "closures", "enroll_codes", "devices", "employees", "audit", "settings")
 
 
 class Clock:

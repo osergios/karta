@@ -112,7 +112,7 @@
       el("img", { class: "qr-preview", src: url, alt: `Κάρτα QR ${employee.display_name}` }),
       el("div", { class: "qr-side" },
         el("strong", {}, `Κάρτα QR · ${employee.display_name}`),
-        el("p", { class: "small" }, "Στείλε την εικόνα στο κινητό του/της (π.χ. Viber) ή εκτύπωσέ την. Στο laptop: «Κάρτα QR» και δείχνει την εικόνα στην κάμερα — χωρίς PIN."),
+        el("p", { class: "small" }, "Στείλε την εικόνα στο κινητό του/της (π.χ. Viber) ή εκτύπωσέ την. Στην οθόνη του καταστήματος: «Κάρτα QR» και δείχνει την εικόνα στην κάμερα — χωρίς PIN."),
         el("p", { class: "small warn-text" }, "Όποιος έχει την εικόνα μπορεί να χτυπήσει κάρτα για λογαριασμό του/της. Αν χαθεί ή δοθεί σε άλλον, πάτα «Νέα κάρτα»: η παλιά σταματά αμέσως."),
         r.viewable === false ? el("p", { class: "small warn-text" }, "Χωρίς PIN_KEY η κάρτα δεν ξαναεμφανίζεται: κατέβασέ την τώρα.") : null,
         el("div", { class: "qr-actions" },
@@ -142,7 +142,7 @@
 
   // ---------- admin correction: punch someone out ----------
   const LATE_CODES = [
-    ["EMPLOYER_SYSTEMS_UNAVAILABLE", "002 · Πρόβλημα στα συστήματα του εργοδότη (π.χ. η κάρτα/το laptop δεν λειτουργούσε)"],
+    ["EMPLOYER_SYSTEMS_UNAVAILABLE", "002 · Πρόβλημα στα συστήματα του εργοδότη (π.χ. η συσκευή του καταστήματος δεν λειτουργούσε)"],
     ["ERGANI_SYSTEMS_UNAVAILABLE", "003 · Πρόβλημα επικοινωνίας με το ΕΡΓΑΝΗ"],
     ["POWER_OUTAGE", "001 · Διακοπή ρεύματος"],
   ];
@@ -870,12 +870,12 @@
     if (d.backup.restore_pending && panel.hidden) api("/admin/api/restore/pending").then(showRestore).catch(() => {});
   }
 
-  // ---------- restart the shop screen from here (it runs as an app from Windows startup) ----------
+  // ---------- reload the shop screen from here (it usually runs unattended, as an installed app) ----------
   function renderKioskReload(d) {
     const R = d.kiosk_reload || {};
     const when = R.at ? `${R.at.slice(8, 10)}/${R.at.slice(5, 7)} ${R.at.slice(11, 16)}` : null;
     document.getElementById("kioskReload").replaceChildren(el("div", { class: "an-line send-row" },
-      el("span", {}, "Ανανέωση οθόνης καταστήματος: ξαναφορτώνει την εφαρμογή στο laptop με την τελευταία έκδοση, χωρίς να την κλείσει κανείς. Γίνεται μέσα σε 30″· αν εκείνη τη στιγμή κάποιος χτυπά κάρτα, περιμένει να τελειώσει.",
+      el("span", {}, "Ανανέωση οθόνης καταστήματος: ξαναφορτώνει την οθόνη στη συσκευή του καταστήματος με την τελευταία έκδοση, χωρίς να την κλείσει κανείς. Γίνεται μέσα σε 30″· αν εκείνη τη στιγμή κάποιος χτυπά κάρτα, περιμένει να τελειώσει.",
         when ? el("div", { class: "small" }, R.done ? `Τελευταία: ${when} — ✓ η οθόνη ανανεώθηκε.` : `Ζητήθηκε ${when} — αναμονή για την οθόνη…`) : ""),
       el("button", { class: "btn", onclick: act(async () => {
         await api("/admin/api/kiosk/reload", {}); toast("Η οθόνη του καταστήματος θα ανανεωθεί μέσα σε 30″");

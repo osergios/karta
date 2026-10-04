@@ -44,7 +44,7 @@
     if (cleanup) { const f = cleanup; cleanup = null; try { f(); } catch { /* ignore */ } }
     onKey = null; atHome = false; wedgeOn = false; screen.replaceChildren(...nodes);
   }
-  // Physical keyboard support (laptop kiosk): each screen may set onKey.
+  // Physical keyboard support (a laptop or PC as the shop screen): each screen may set onKey.
   let onKey = null;
   // A USB QR scanner "types" the code and Enter. Read it by physical key (ev.code) so it
   // works whatever the keyboard layout (Greek layout would turn C into Ψ).
@@ -78,7 +78,7 @@
   }
   const hello = h => (h >= 4 && h < 12 ? "Καλημέρα" : "Καλησπέρα");
   function farewell(h, weekday) {
-    if (weekday === 6) return "Καλό Σαββατοκύριακο";   // the salon is closed Sunday and Monday
+    if (weekday === 6) return "Καλό Σαββατοκύριακο";   // Saturday
     if (h < 13) return "Καλή συνέχεια";
     if (h < 18) return "Καλό απόγευμα";
     if (h < 21) return "Καλό βράδυ";
@@ -174,7 +174,7 @@
     else onKey = k => { if (k === "Escape") { home(); return true; } };
   }
 
-  // ---------- QR card via the laptop camera ----------
+  // ---------- QR card via the device camera ----------
   const hasCamera = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
   let jsQRReady = null;
   function loadJsQR() {

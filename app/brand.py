@@ -6,7 +6,6 @@ from /brand.css and the logo from /brand/logo (stored in the database, so it tra
 import base64
 import html
 import json
-from pathlib import Path
 
 from . import db
 
@@ -188,19 +187,3 @@ def manifest(text: str) -> str:
     else:
         m["name"], m["description"] = "Κάρτα εργασίας", "Ψηφιακή κάρτα εργασίας"
     return json.dumps(m, ensure_ascii=False, indent=2)
-
-
-def migrate(static_dir: Path) -> None:
-    """Once: an install that already has employees keeps the logo that used to be a fixed file
-    (static/brand/logo.png). Everything else is filled in at «Στοιχεία επιχείρησης»."""
-    if db.one("SELECT 1 FROM settings WHERE key='migr_brand'"):
-        return
-    existing = db.one("SELECT 1 FROM employees LIMIT 1") is not None
-    with db.tx() as c:
-        _put(c, "migr_brand", "1")
-    old = static_dir / "brand" / "logo.png"
-    if existing and old.is_file() and logo() is None:
-        try:
-            set_logo(old.read_bytes())
-        except ValueError:
-            pass

@@ -48,31 +48,6 @@ def _prepare_db():
     appconfig.load()
     for problem in config.problems():
         log.error("Settings: %s (complete it in the admin page, «Ρυθμίσεις»)", problem)
-    hours.ensure_schedule_versions()
-    _grace_to_5()
-    _retire_old_pause()
-    brand.migrate(STATIC / "public")
-
-
-def _grace_to_5():
-    """The flexibility for phone alerts moved from 10′ to 5′ (at 10′ you are already out of bounds). A saved 10 was
-    just the old default: move it to 5 once. Any other value you chose is kept."""
-    if db.setting("migr_grace5"):
-        return
-    with db.tx() as c:
-        c.execute("UPDATE settings SET value='5' WHERE key='grace_minutes' AND CAST(value AS REAL)=10")
-        db.put_setting(c, "migr_grace5", "1")
-
-
-def _retire_old_pause():
-    """The old «Παύση αποστολής» held real punches to send later. It is replaced by the training mode,
-    so if it was left on, release what it held: those are real punches and must reach Ergani."""
-    if db.setting("ergani_paused") == "1":
-        with db.tx() as c:
-            c.execute("UPDATE settings SET value='0' WHERE key='ergani_paused'")
-            n = c.execute("UPDATE movements SET next_attempt_at=? WHERE status='pending' AND mode=?",
-                          (db.utc_now_iso(), config.ERGANI_MODE)).rowcount
-        log.warning("Old «Παύση αποστολής» was on: released %s held movement(s) for sending", n)
 
 
 # ---- training mode («Εκπαίδευση»): the kiosk works exactly as usual, but NOTHING is stored or sent.
@@ -1748,7 +1723,7 @@ def admin_delete_employee(employee_id: int, admin: str = Depends(security.requir
             "Το αρχείο χρόνου εργασίας πρέπει να διατηρείται, οπότε δεν διαγράφεται — χρησιμοποίησε «Απενεργοποίηση»."))
     with db.tx() as c:
         tests = c.execute("DELETE FROM movements WHERE employee_id=?", (employee_id,)).rowcount
-        for table in ("alerts", "schedules", "schedule_versions", "ergani_info", "card_links", "leaves", "day_changes"):
+        for table in ("alerts", "schedule_versions", "ergani_info", "card_links", "leaves", "day_changes"):
             c.execute(f"DELETE FROM {table} WHERE employee_id=?", (employee_id,))
         c.execute("DELETE FROM employees WHERE id=?", (employee_id,))
     db.audit(admin, "employee_deleted", f"name={emp['display_name']} afm=***{emp['afm'][-3:]} test_movements={tests}")
@@ -1897,12 +1872,6 @@ def admin_set_schedule(employee_id: int, body: ScheduleIn, admin: str = Depends(
         c.execute("INSERT INTO schedule_versions(employee_id, valid_from, days, created_at, created_by) VALUES (?,?,?,?,?) "
                   "ON CONFLICT(employee_id, valid_from) DO UPDATE SET days=excluded.days, created_at=excluded.created_at, "
                   "created_by=excluded.created_by", (employee_id, vf.isoformat(), days_json, db.utc_now_iso(), admin))
-        # the plain table mirrors the latest saved schedule (kept for older versions of the app)
-        c.execute("DELETE FROM schedules WHERE employee_id=?", (employee_id,))
-        for wd, sp in parsed.items():
-            segs = ",".join(f"{a}-{b}" for a, b in sp.segments) if sp.split else None
-            c.execute('INSERT INTO schedules(employee_id, weekday, start, "end", break_min, segments) '
-                      'VALUES (?,?,?,?,?,?)', (employee_id, wd, sp.start, sp.end, sp.break_min, segs))
     db.audit(admin, "schedule_set", f"employee={employee_id} days={len(parsed)} valid_from={vf}")
     return {"ok": True, "valid_from": vf.isoformat()}
 
@@ -2127,7 +2096,7 @@ def admin_restore_discard(admin: str = Depends(security.require_admin)):
 
 @app.post("/admin/api/salon-hours")
 def admin_salon_hours(body: ScheduleIn, admin: str = Depends(security.require_admin)):
-    """Opening hours of the salon: a reference/template for employee schedules (not sent to Ergani)."""
+    """Opening hours of the shop: a reference/template for employee schedules (not sent to Ergani)."""
     clean = {}
     for wd, text in body.days.items():
         if wd not in {str(i) for i in range(7)}:
