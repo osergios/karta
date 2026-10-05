@@ -94,5 +94,6 @@ GitHub**: περιέχει τον κωδικό του ΕΡΓΑΝΗ και κλε
 
 | Μεταβλητή | Τι σημαίνει |
 |---|---|
+| `COMPOSE_PROFILES` | `tunnel`: το `docker compose` ξεκινά και το tunnel μαζί με την Karta (το γράφει ο οδηγός ρύθμισης). Χωρίς αυτό ξεκινά μόνο η Karta, για [δικό σας reverse proxy](Reverse-Proxy). |
 | `TUNNEL_TOKEN` | Το token του tunnel (το γράφει ο οδηγός ρύθμισης). |
 | `TUNNEL_PROTOCOL` | Πώς συνδέεται το tunnel: `http2` για μηχάνημα στο κατάστημα ή στο σπίτι (σταθερό πίσω από router σπιτιού), `auto` σε VPS (QUIC/HTTP/3 με HTTP/2 αν χρειαστεί). Προεπιλογή `http2`. Μόνο με το `docker-compose.yml`. |

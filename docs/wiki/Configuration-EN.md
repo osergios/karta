@@ -91,5 +91,6 @@ See [Backups](Backups-EN).
 
 | Variable | Meaning |
 |---|---|
+| `COMPOSE_PROFILES` | `tunnel`: `docker compose` starts the tunnel together with Karta (the setup assistant writes it). Without it only Karta starts, for [your own reverse proxy](Reverse-Proxy-EN). |
 | `TUNNEL_TOKEN` | The tunnel's token (the setup assistant writes it). |
 | `TUNNEL_PROTOCOL` | How the tunnel connects: `http2` for a machine at the shop or at home (reliable behind a home router), `auto` on a VPS (QUIC/HTTP/3, falling back to HTTP/2). Default `http2`. Only with `docker-compose.yml`. |

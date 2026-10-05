@@ -2,10 +2,13 @@
 # server. The tunnel gives you HTTPS on your own domain without opening any port on your router.
 #
 #   1. Put this file and your .env in the same folder (see docs/wiki/Easy-Installation.md).
-#   2. In .env set TUNNEL_TOKEN (from Cloudflare Zero Trust → Networks → Tunnels).
+#   2. In .env set TUNNEL_TOKEN (from Cloudflare Zero Trust → Networks → Tunnels) and COMPOSE_PROFILES=tunnel
+#      (./setup.sh writes both).
 #   3. docker compose up -d
 #
 # In the tunnel's "Public hostname" settings, point your hostname to:  http://karta:8000
+# Your own reverse proxy instead of the tunnel: leave COMPOSE_PROFILES out and see the wiki page
+# "Behind your own reverse proxy" (docs/wiki/Reverse-Proxy.md).
 services:
   karta:
     image: ghcr.io/osergios/karta:latest
@@ -34,6 +37,7 @@ services:
 
   cloudflared:
     image: cloudflare/cloudflared:latest
+    profiles: ["tunnel"]         # started only with COMPOSE_PROFILES=tunnel in .env
     restart: unless-stopped
     # http2 for a machine at the shop or at home (home routers handle QUIC/UDP badly), auto on a VPS
     command: tunnel --no-autoupdate --protocol ${TUNNEL_PROTOCOL:-http2} run
@@ -42,7 +46,9 @@ services:
     security_opt:
       - no-new-privileges:true
     environment:
-      TUNNEL_TOKEN: ${TUNNEL_TOKEN:?Set TUNNEL_TOKEN in .env}
+      # without it cloudflared stops with an error in its log («docker compose logs cloudflared»). Not «:?»: Compose
+      # would refuse to start Karta alone too, even when this service's profile is off.
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:-}
     depends_on:
       - karta
 

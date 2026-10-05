@@ -264,6 +264,7 @@ def test_setup_asks_only_the_address_and_cloudflare(tmp_path, monkeypatch):
     assert env["ERGANI_MODE"] == "dry_run" and env["TUNNEL_TOKEN"] == "tun" and wizard.valid_pin_key(env["PIN_KEY"])
     assert env["ERGANI_USERNAME"] == "kept"            # what was there before stays
     assert env["TUNNEL_PROTOCOL"] == "http2" and env["DISCLAIMER_ACCEPTED"]
+    assert env["COMPOSE_PROFILES"] == "tunnel"         # docker compose starts cloudflared too
 
 
 def test_setup_stops_without_accepting_the_disclaimer(tmp_path, monkeypatch):
@@ -281,3 +282,16 @@ def test_tunnel_protocol_follows_where_karta_runs(monkeypatch):
     for answer, expected in (("1", "http2"), ("2", "auto")):
         monkeypatch.setattr("builtins.input", lambda prompt="": answer)
         assert wizard.tunnel_protocol() == expected
+
+
+def test_check_tunnel_or_own_proxy(tmp_path, capsys):
+    path = _good_env(tmp_path)
+    (tmp_path / "docker-compose.yml").write_text("services: {}\n")
+    assert wizard.check(path, session=FakeWeb()) == 0                  # no tunnel: your own reverse proxy
+    assert "reverse proxy" in capsys.readouterr().out
+    with open(path, "a") as f:
+        f.write("TUNNEL_TOKEN=tok\n")
+    assert wizard.check(path, session=FakeWeb()) == 1                  # a token without COMPOSE_PROFILES=tunnel
+    with open(path, "a") as f:
+        f.write("COMPOSE_PROFILES=tunnel\n")
+    assert wizard.check(path, session=FakeWeb()) == 0

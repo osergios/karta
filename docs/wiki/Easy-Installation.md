@@ -416,6 +416,7 @@ nano .env
 | `ADMIN_EMAILS=` | το email σας (το ίδιο με την policy) |
 | `PUBLIC_ORIGIN=` | `https://karta.tokatastimamou.gr` |
 | `PIN_KEY=` | το κλειδί που τύπωσε η εντολή |
+| `COMPOSE_PROFILES=` | `tunnel` (ξεκινά το tunnel μαζί με την Karta) |
 | `TUNNEL_TOKEN=` | το token από το «Cloudflare Tunnel» |
 | `TUNNEL_PROTOCOL=` | `http2` για μηχάνημα στο κατάστημα ή στο σπίτι, `auto` σε VPS |
 

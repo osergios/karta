@@ -55,6 +55,15 @@ if ! docker compose version >/dev/null 2>&1; then
   exit 1
 fi
 
+# An installation from before the "tunnel" profile: docker compose starts cloudflared only with COMPOSE_PROFILES=tunnel
+tunnel_profile() {
+  if [ -f .env ] && grep -qE '^TUNNEL_TOKEN=.' .env && ! grep -q '^COMPOSE_PROFILES=' .env; then
+    [ -z "$(tail -c1 .env)" ] || echo >> .env          # the last line may lack its newline
+    printf 'COMPOSE_PROFILES=tunnel\n' >> .env
+  fi
+}
+tunnel_profile
+
 # ---- Αντίγραφα ασφαλείας: backup.sh, USB ---------------------------------------------------------
 set_conf() {  # set_conf KEY value -> backup.conf (read by backup.sh)
   touch backup.conf
@@ -249,6 +258,7 @@ restore() {  # restore [file.db]: puts a backup back into Karta
     fi
   fi
   [ -f .env ] || { say "  ✗ Λείπει το .env: τρέξτε πρώτα  ./setup.sh"; return 1; }
+  tunnel_profile                         # a .env from an older backup
   [ -f docker-compose.yml ] || curl -fsSLO "$RAW/docker-compose.yml"
   say "  Η τωρινή βάση της Karta θα αντικατασταθεί από το $(basename "$src")."
   ask_yes "Να γίνει η επαναφορά;" || return 1
