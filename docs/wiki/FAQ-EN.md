@@ -35,6 +35,12 @@ was slow at that moment: try again in a few minutes.
 On the admin page, in **«Ρυθμίσεις»**. `./setup.sh` only sets up the address, the admin
 emails and Cloudflare. See [Settings](Admin-Settings-EN).
 
+### My server runs on UTC. Are the punch times wrong?
+
+No. Karta always works in Greek time (`Europe/Athens`), including the summer and winter
+changes, whatever timezone the server uses. Don't change the server's timezone; see
+[Configuration](Configuration-EN).
+
 ### How long do I keep punches? What if the machine breaks?
 
 At least 5 years. Karta never deletes a real punch, and it keeps a backup every night.
