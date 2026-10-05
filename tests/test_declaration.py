@@ -55,3 +55,20 @@ def test_retrospective_system_changes_the_alerts(kiosk, admin, clock, employee):
 def test_only_the_two_systems_are_accepted(client, admin):
     r = declaration(client, "sometimes")
     assert r.status_code == 400 and "απολογιστικό" in r.json()["detail"]
+
+
+def test_retro_keeps_the_break_outside_hours_and_the_flexible_arrival(kiosk, admin, clock, employee):
+    """09:00–17:00 with a 30′ break «εκτός ωραρίου» (/+30) and up to 60′ flexible arrival: arriving 10:00 moves the
+    end to 18:00, and the break to 18:30. No «έληξε» before that, in either system."""
+    assert declaration(kiosk, "retro").status_code == 200
+    set_schedule(kiosk, employee, {str(d): "09:00-17:00/+30" for d in range(6)})
+    with db.tx() as c:
+        c.execute("UPDATE employees SET flex_arrival=60 WHERE id=?", (employee,))
+    assert kiosk.post("/api/kiosk/punch", json={"employee_id": employee, "pin": PIN, "action": "ARRIVAL"}).status_code == 200
+    assert today(kiosk)["end"] == "18:30"                                  # 10:00 arrival + 8h + 30′ break
+    clock.advance(hours=8, minutes=25)                                      # 18:25: still within the day
+    monitor.check(clock())
+    assert not db.one("SELECT 1 FROM alerts WHERE kind='overdue'")
+    clock.advance(minutes=30)                                               # 18:55: past the end (and the grace)
+    monitor.check(clock())
+    assert "18:30" in db.one("SELECT message FROM alerts WHERE kind='overdue'")["message"]
