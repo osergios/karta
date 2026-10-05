@@ -259,7 +259,7 @@
     (81px on 1366×768, 114px on Full HD), the interaction column centred on wide screens, every tappable surface
     presses in slightly on touch (off with «reduce motion»), screens fade in. Reminder colours darkened so white text
     passes WCAG AA (the amber «σε λίγο» card was 2.9:1, now 5.3:1). With reminders showing, the clock steps back so
-    the side panel fits (1366×768 and 1024×600 with logo and three reminders: no scrolling). Texts: no emoji or
+    the side panel fits (1366×768 and 1024×600 with logo and three reminders: no scrolling). Texts: no pictographs or
     long dashes on the shop screen; the sound button has a minimal speaker icon (Tabler Icons «volume», MIT, same
     line style as the keypad icons). Service-worker cache v26 so the shop screen picks it up.
 54. **Festive decorations checked on every theme, size and holiday screen** (Christmas, Easter, 25/3 and 28/10

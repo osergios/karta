@@ -66,8 +66,9 @@ body:
   - type: input
     id: version
     attributes:
-      label: "Έκδοση (commit ή ημερομηνία) · Version (commit or date)"
-      description: "Π.χ. το αποτέλεσμα του `git log -1 --format=%h`. · E.g. the output of `git log -1 --format=%h`."
+      label: "Έκδοση · Version"
+      description: "Στη σελίδα διαχείρισης: «Ρυθμίσεις» → «Έκδοση και ενημέρωση», π.χ. 1.4.1. · In the admin page: «Ρυθμίσεις» → «Έκδοση και ενημέρωση», e.g. 1.4.1."
+      placeholder: "1.4.1"
     validations:
       required: false
 
