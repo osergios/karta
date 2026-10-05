@@ -7,9 +7,12 @@
 Anything saved here applies immediately (no restart) and **overrides** `.env`. A value
 that comes from `.env` is marked «από το .env».
 
-- **«Λειτουργία» (mode):** test (`dry_run`), Ergani test environment (`trial`) or live
-  (`production`). For `trial` / `production` you type the ΑΦΜ (tax number) to confirm, and
-  Karta tests the connection first. See [Going live](Going-Live-EN).
+- **«Λειτουργία» (mode):** **«Δοκιμαστική»** (test and training, nothing is sent),
+  **«Περίοδος προσαρμογής»** (onboarding period, with the mandatory date: punches are
+  recorded and sent from that day) or **«Κανονική λειτουργία»** (normal operation). From
+  «Δοκιμαστική» you type the ΑΦΜ (tax number) to confirm, and Karta tests the connection
+  first. The Ergani test environment (`trial`) is under «Για προχωρημένους» (advanced). See
+  [Going live](Going-Live-EN).
 - **«Επιχείρηση» (business):** employer ΑΦΜ (the check digit is verified), branch number
   (usually 0) and, optionally, your employer id in Ergani (the «id:» in Ergani's QR, so a
   QR from another employer is refused).
@@ -28,12 +31,13 @@ that comes from `.env` is marked «από το .env».
 
   The limits on hours, rest and overtime apply in both. This setting changes nothing in
   Ergani: it only tells Karta what you chose there. If unsure, ask your accountant.
-- **«Χρήστης web services του ΕΡΓΑΝΗ» (Ergani web‑services user):** username, password and
+- **«Χρήστης web services του ΕΡΓΑΝΗ» (Ergani web‑services user,** in the same block as
+  «Επιχείρηση»; one «Αποθήκευση» saves both**):** username, password and
   type (`01` API user, `02` branch «ΕΡΓΑΝΗ» user). **«Δοκιμή σύνδεσης»** (test connection)
   connects read‑only. The password is stored **encrypted** (with `PIN_KEY`) and is never
   shown again; to keep it unchanged, leave the box empty.
-- **«Χρήστης για το δοκιμαστικό ΕΡΓΑΝΗ»** (user for the Ergani test environment, optional):
-  for `trial` mode, if you have a separate user on `trialv2eservices.yeka.gr`.
+- **«Για προχωρημένους: δοκιμαστικό ΕΡΓΑΝΗ»** (advanced, at the end): the user for
+  `trialv2eservices.yeka.gr` (if you have a separate one) and the switch to `trial` mode.
 
 If something the current mode needs is missing, a red «Χρειάζεται συμπλήρωση» (needs
 filling in) line appears, and punches wait until it's filled in.

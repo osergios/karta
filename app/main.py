@@ -7,7 +7,7 @@ import threading
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as FutureTimeout
 from contextlib import asynccontextmanager
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
@@ -724,9 +724,9 @@ def first_steps():
          _offsite_ok() or "backup" in marked, {"tab": "settings", "target": "backupBox"}),
         ("training", "Δοκιμή με το προσωπικό", "«Λειτουργία εκπαίδευσης»: όλοι δοκιμάζουν να χτυπήσουν, χωρίς να καταγράφεται τίποτα.",
          bool(db.setting("training_used")) or "training" in marked, {"tab": "today", "target": "sendState"}),
-        ("live", "Έναρξη στο ΕΡΓΑΝΗ", "Πέρασμα σε δοκιμαστικό ΕΡΓΑΝΗ και μετά σε κανονική λειτουργία («Ρυθμίσεις» → «Επιχείρηση και σύνδεση με το ΕΡΓΑΝΗ» → «Λειτουργία»), ή περίοδος προσαρμογής.",
-         config.ERGANI_MODE == "production" or onboarding.until() is not None,
-         {"href": "https://github.com/osergios/karta/wiki/Going-Live"}),
+        ("live", "Έναρξη στο ΕΡΓΑΝΗ", "«Περίοδος προσαρμογής» μέχρι να γίνει υποχρεωτική η κάρτα, ή «Κανονική λειτουργία» "
+         "(«Ρυθμίσεις» → «Επιχείρηση και σύνδεση με το ΕΡΓΑΝΗ» → «Λειτουργία»).",
+         config.ERGANI_MODE == "production" or onboarding.until() is not None, {"tab": "settings", "target": "cfgBox"}),
     ]
     return [{"key": k, "title": t, "text": x, "done": bool(d), "manual": k in FIRST_STEPS_MANUAL, "marked": k in marked, **link}
             for k, t, x, d, link in steps]
@@ -784,7 +784,7 @@ def admin_ntfy_test(admin: str = Depends(security.require_admin)):
 
 # ---- settings changed from the admin page (business, Ergani users, mode, phone alerts)
 class ConfigIn(BaseModel):
-    group: str = Field(pattern="^(business|ergani|trial|ntfy)$")
+    group: str = Field(pattern="^(company|business|ergani|trial|ntfy)$")
     values: dict[str, str | None] = Field(max_length=10)
 
 
@@ -798,6 +798,9 @@ class LoginTestIn(BaseModel):
 class ModeIn(BaseModel):
     mode: str = Field(pattern="^(dry_run|trial|production)$")
     afm: str = Field(default="", max_length=9)
+    # production only: «Περίοδος προσαρμογής» until this date (the first mandatory day); without it, production means
+    # «Κανονική λειτουργία» and an onboarding period still running ends now
+    onboarding_until: str | None = Field(default=None, pattern=r"^\d{4}-\d{2}-\d{2}$")
 
 
 @app.get("/admin/api/config")
@@ -829,10 +832,33 @@ def admin_config_login_test(body: LoginTestIn, admin: str = Depends(security.req
 
 @app.post("/admin/api/mode")
 def admin_mode(body: ModeIn, admin: str = Depends(security.require_admin)):
+    """«Λειτουργία»: Δοκιμαστική (dry_run), Περίοδος προσαρμογής (production + a date), Κανονική λειτουργία
+    (production), or, for the advanced, δοκιμαστικό ΕΡΓΑΝΗ (trial)."""
+    today = now_local().date()
+    until = None
+    if body.onboarding_until:
+        if body.mode != "production":
+            raise HTTPException(status_code=400, detail="Η περίοδος προσαρμογής είναι μέρος της κανονικής λειτουργίας.")
+        until = _onboarding_date(body.onboarding_until, today)
+    before = (db.setting("onboarding_until"), db.setting("onboarding_since"))
+    if until:      # the period starts BEFORE the switch: not a single punch reaches Ergani in between
+        onboarding.set_period(onboarding.since() if onboarding.active(today) else today, until)
     try:
         appconfig.set_mode(body.mode, body.afm, admin)
     except appconfig.ConfigError as e:
+        if until:  # the switch failed: the period goes back to what it was
+            with db.tx() as c:
+                for k, v in zip(("onboarding_until", "onboarding_since"), before):
+                    if v is None:
+                        c.execute("DELETE FROM settings WHERE key=?", (k,))
+                    else:
+                        db.put_setting(c, k, v)
         raise HTTPException(status_code=400, detail=str(e))
+    if until:
+        db.audit(admin, "onboarding_set", f"until={until}")
+    elif onboarding.active(today):      # «Κανονική» or «Δοκιμαστική»: the onboarding period ends now
+        onboarding.set_period(None, None)
+        db.audit(admin, "onboarding_end", today.isoformat())
     return appconfig.view()
 
 
@@ -1071,6 +1097,18 @@ def onboarding_review():
     return onboarding.progress()
 
 
+def _onboarding_date(raw: str, today) -> date:
+    try:
+        until = datetime.fromisoformat(raw).date()
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Μη έγκυρη ημερομηνία.")
+    if until <= today:
+        raise HTTPException(status_code=400, detail="Η ημερομηνία υποχρεωτικής χρήσης πρέπει να είναι από αύριο και μετά.")
+    if until > today + timedelta(days=366):
+        raise HTTPException(status_code=400, detail="Έως ένα έτος από σήμερα.")
+    return until
+
+
 class OnboardingIn(BaseModel):
     until: str | None = Field(default=None, pattern=r"^\d{4}-\d{2}-\d{2}$")   # first mandatory day; None = end now
 
@@ -1086,14 +1124,7 @@ def admin_onboarding(body: OnboardingIn, admin: str = Depends(security.require_a
         onboarding.set_period(None, None)
         db.audit(admin, "onboarding_end", today.isoformat())
         return {"ok": True, "onboarding": onboarding.info(today)}
-    try:
-        until = datetime.fromisoformat(body.until).date()
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Μη έγκυρη ημερομηνία.")
-    if until <= today:
-        raise HTTPException(status_code=400, detail="Η ημερομηνία υποχρεωτικής χρήσης πρέπει να είναι από αύριο και μετά.")
-    if until > today + timedelta(days=366):
-        raise HTTPException(status_code=400, detail="Έως ένα έτος από σήμερα.")
+    until = _onboarding_date(body.until, today)
     start = onboarding.since() if onboarding.active(today) else today   # moving the date keeps the start
     onboarding.set_period(start, until)
     db.audit(admin, "onboarding_set", f"since={start} until={until}")
