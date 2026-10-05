@@ -73,7 +73,7 @@ ENV_LAYOUT = [
     ("Εφαρμογή", ["PUBLIC_ORIGIN", "LATE_THRESHOLD_SECONDS", "DEBOUNCE_SECONDS", "PIN_KEY",
                    "DISCLAIMER_ACCEPTED"]),
     ("Ειδοποιήσεις στο κινητό (ntfy)", ["NTFY_URL", "NTFY_TOPIC", "NTFY_TOKEN"]),
-    ("Cloudflare Tunnel (docker-compose.yml)", ["TUNNEL_TOKEN", "TUNNEL_PROTOCOL"]),
+    ("Cloudflare Tunnel (docker-compose.yml)", ["COMPOSE_PROFILES", "TUNNEL_TOKEN", "TUNNEL_PROTOCOL"]),
 ]
 
 
@@ -380,6 +380,8 @@ def setup(path: str = ".env") -> int:
 
     if not valid_pin_key(env.get("PIN_KEY", "")):
         env["PIN_KEY"] = new_pin_key()
+    if env.get("TUNNEL_TOKEN"):
+        env["COMPOSE_PROFILES"] = "tunnel"           # docker compose starts cloudflared with Karta
     backup = write_env(path, env)
     title("Έτοιμο")
     ok(f"Γράφτηκε το {path}" + (f" (το παλιό κρατήθηκε ως {backup})" if backup else ""))
@@ -445,10 +447,16 @@ def check(path: str = ".env", session=None) -> int:
     (ok if valid_pin_key(env.get("PIN_KEY", "")) else warn)("PIN_KEY" + ("" if valid_pin_key(env.get("PIN_KEY", "")) else
                                                               ": λείπει ή δεν είναι έγκυρο (τα PIN δεν θα μπορούν να εμφανιστούν)"))
     if os.path.exists(os.path.join(os.path.dirname(os.path.abspath(path)), "docker-compose.yml")):
-        (ok if env.get("TUNNEL_TOKEN") else fail)("TUNNEL_TOKEN" + ("" if env.get("TUNNEL_TOKEN") else ": λείπει"))
-        proto = env.get("TUNNEL_PROTOCOL") or "http2"
-        (ok if proto in ("http2", "auto", "quic") else fail)(
-            f"TUNNEL_PROTOCOL={proto}" + {"http2": " (μηχάνημα στο κατάστημα/σπίτι)", "auto": " (VPS)", "quic": " (VPS)"}.get(proto, ": http2 ή auto"))
+        if "tunnel" in env.get("COMPOSE_PROFILES", "").split(",") or env.get("TUNNEL_TOKEN"):
+            (ok if env.get("TUNNEL_TOKEN") else fail)("TUNNEL_TOKEN" + ("" if env.get("TUNNEL_TOKEN") else ": λείπει"))
+            (ok if "tunnel" in env.get("COMPOSE_PROFILES", "").split(",") else fail)(
+                "COMPOSE_PROFILES=tunnel" + ("" if "tunnel" in env.get("COMPOSE_PROFILES", "").split(",")
+                                             else ": λείπει (χωρίς αυτό δεν ξεκινά το tunnel)"))
+            proto = env.get("TUNNEL_PROTOCOL") or "http2"
+            (ok if proto in ("http2", "auto", "quic") else fail)(
+                f"TUNNEL_PROTOCOL={proto}" + {"http2": " (μηχάνημα στο κατάστημα/σπίτι)", "auto": " (VPS)", "quic": " (VPS)"}.get(proto, ": http2 ή auto"))
+        else:
+            ok("Χωρίς Cloudflare Tunnel (δικός σας reverse proxy)")
 
     title("ΕΡΓΑΝΗ")
     if mode == "trial" and env.get("ERGANI_TRIAL_USERNAME"):

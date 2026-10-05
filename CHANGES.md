@@ -374,3 +374,8 @@
     with no Linux capabilities, `no-new-privileges`, 512 MB memory and 128 processes at most, and a healthcheck on
     `/healthz` (`docker ps` shows «healthy»). cloudflared is read-only too, without capabilities. Checked with the
     whole stack: healthy at ~50 MB, cloud backup and restore (restic writes only to `/data/.cache`), and `backup.sh`.
+74. **Karta without the tunnel, behind your own reverse proxy.** cloudflared is now in the `tunnel` Compose profile:
+    `docker compose up -d` without `TUNNEL_TOKEN` starts Karta alone. `./setup.sh` writes `COMPOSE_PROFILES=tunnel`
+    next to `TUNNEL_TOKEN` (and adds it to an existing `.env` that has a token), so tunnel installations, `backup.sh`
+    and `update.sh` work as before. `./setup.sh check` doesn't ask for a tunnel without one. New wiki page «Πίσω από
+    δικό σας reverse proxy»: Caddy and nginx, Cloudflare Access for `/admin`, and `X-Real-IP`.

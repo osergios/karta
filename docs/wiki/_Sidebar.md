@@ -6,6 +6,7 @@
 - [Εύκολη εγκατάσταση](Easy-Installation)
 - [Εγκατάσταση](Installation)
 - [Ρυθμίσεις server](Configuration)
+- [Δικός σας reverse proxy](Reverse-Proxy)
 - [Έναρξη λειτουργίας](Going-Live)
 - [Αντίγραφα ασφαλείας](Backups)
 
@@ -35,6 +36,7 @@
 [Easy installation](Easy-Installation-EN) ·
 [Installation](Installation-EN) ·
 [Configuration](Configuration-EN) ·
+[Reverse proxy](Reverse-Proxy-EN) ·
 [Going live](Going-Live-EN) ·
 [Backups](Backups-EN) ·
 [Shop screen](Kiosk-EN) ·

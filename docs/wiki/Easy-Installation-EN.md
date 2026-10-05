@@ -405,6 +405,7 @@ the arrow keys):
 | `ADMIN_EMAILS=` | your email (the same as in the policy) |
 | `PUBLIC_ORIGIN=` | `https://karta.yourshop.gr` |
 | `PIN_KEY=` | the key the command printed |
+| `COMPOSE_PROFILES=` | `tunnel` (starts the tunnel together with Karta) |
 | `TUNNEL_TOKEN=` | the token from "Create the Cloudflare Tunnel" |
 | `TUNNEL_PROTOCOL=` | `http2` for a machine at the shop or at home, `auto` on a VPS |
 

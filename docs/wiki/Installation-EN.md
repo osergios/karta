@@ -76,7 +76,8 @@ Any reverse proxy works (Caddy, nginx, Traefik), and so does **Cloudflare Tunnel
 (`cloudflared`), which needs no open ports. Point your domain at `http://127.0.0.1:8000`.
 
 If your proxy sets the client address, pass it as the `X-Real-IP` header. Karta records
-the IP of each punch.
+the IP of each punch. Examples for Caddy and nginx:
+[Behind your own reverse proxy](Reverse-Proxy-EN).
 
 ## 4. Protect `/admin` with Cloudflare Access
 
