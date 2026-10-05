@@ -422,3 +422,6 @@
 84. **Docs: Karta always uses Greek time.** Configuration and FAQ (Greek and English): all times are in
     `Europe/Athens`, summer and winter changes included, whatever the server's timezone; `TZ` in `docker-compose.yml`
     only affects log timestamps.
+85. **Release notes end with «Αναβάθμιση / Upgrading».** What users do to update, whether the database changes
+    (and to which schema version), and whether going back is safe. Template in `docs/releases/TEMPLATE.md`, pointed to
+    from `CONTRIBUTING.md`; the note for the next release (`docs/releases/v1.5.0.md`) already has it.
