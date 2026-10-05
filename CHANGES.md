@@ -404,3 +404,6 @@
     folder, backups locked by an interrupted job, wrong encryption password, the cloud is full, access expired
     (401 / 403 / `invalid_grant`); anything else shows its last 2–3 lines (up to 300 characters). The full output is
     logged at WARNING.
+80. **A cloud backup cut off half-way no longer blocks the next ones.** Each backup starts with `restic unlock`
+    (without `--remove-all`: only stale locks, of a process that no longer exists or older than 30 minutes, never a
+    running backup), and a failing unlock no longer stops the backup: the backup itself reports any real problem.
