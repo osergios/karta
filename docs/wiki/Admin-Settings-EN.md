@@ -1,4 +1,4 @@
-🇬🇷 [Ελληνικά](Admin-Settings) · 🇬🇧 **English**
+[Ελληνικά](Admin-Settings) · **English**
 
 # Admin: «Ρυθμίσεις» (Settings)
 

@@ -1,6 +1,6 @@
 # Πολιτική ασφαλείας
 
-🇬🇷 **Ελληνικά** · 🇬🇧 [English](#security-policy)
+**Ελληνικά** · [English](#security-policy)
 
 ## Αναφορά προβλήματος ασφαλείας
 
@@ -46,7 +46,7 @@ PIN, αρχεία `.env` ή βάσεις δεδομένων). Χρησιμοπο
 
 <a id="security-policy"></a>
 
-# 🇬🇧 Security policy
+# Security policy
 
 ## Reporting a security problem
 

@@ -1,4 +1,4 @@
-🇬🇷 [Ελληνικά](Ergani-Submissions) · 🇬🇧 **English**
+[Ελληνικά](Ergani-Submissions) · **English**
 
 # How punches reach Ergani
 

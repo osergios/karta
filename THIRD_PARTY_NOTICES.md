@@ -47,3 +47,11 @@ Many thanks to their authors.
 The packages listed in `requirements.txt` (FastAPI, Uvicorn, Requests, argon2-cffi,
 PyJWT, tzdata, openpyxl, segno) are **not** included in this repository. `pip`
 downloads them at install time, and each package is covered by its own license.
+
+## restic and rclone (in the Docker image)
+
+The Docker image installs [restic](https://restic.net) (BSD-2-Clause) and
+[rclone](https://rclone.org) (MIT) from the Debian package archive, for the encrypted cloud
+backups. They are **not** included in this repository; each keeps its own license, which
+the Debian packages carry in `/usr/share/doc/restic/copyright` and
+`/usr/share/doc/rclone/copyright` inside the image.

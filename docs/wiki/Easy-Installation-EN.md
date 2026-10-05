@@ -1,4 +1,4 @@
-🇬🇷 [Ελληνικά](Easy-Installation) · 🇬🇧 **English**
+[Ελληνικά](Easy-Installation) · **English**
 
 # Easy installation, step by step
 

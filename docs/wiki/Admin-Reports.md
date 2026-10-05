@@ -1,4 +1,4 @@
-🇬🇷 **Ελληνικά** · 🇬🇧 [English](Admin-Reports-EN)
+**Ελληνικά** · [English](Admin-Reports-EN)
 
 # Διαχείριση: «Αναφορές»
 

@@ -1,4 +1,4 @@
-🇬🇷 [Ελληνικά](Alerts-and-Reminders) · 🇬🇧 **English**
+[Ελληνικά](Alerts-and-Reminders) · **English**
 
 # Alerts and reminders
 

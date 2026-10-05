@@ -1,6 +1,6 @@
 # Κώδικας δεοντολογίας
 
-🇬🇷 **Ελληνικά** · 🇬🇧 [English](#code-of-conduct)
+**Ελληνικά** · [English](#code-of-conduct)
 
 ## Η δέσμευσή μας
 
@@ -71,7 +71,7 @@
 
 <a id="code-of-conduct"></a>
 
-# 🇬🇧 Code of conduct
+# Code of conduct
 
 ## Our pledge
 

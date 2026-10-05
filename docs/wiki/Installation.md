@@ -1,4 +1,4 @@
-🇬🇷 **Ελληνικά** · 🇬🇧 [English](Installation-EN)
+**Ελληνικά** · [English](Installation-EN)
 
 # Εγκατάσταση
 
@@ -48,7 +48,7 @@ docker run -d --name karta --restart unless-stopped \
 ```
 
 Το `latest` είναι πάντα η τελευταία έκδοση. Για να μείνετε σε συγκεκριμένη έκδοση, γράψτε
-π.χ. `ghcr.io/osergios/karta:1.0.0`. Όλες οι εκδόσεις και οι αλλαγές τους είναι στις
+π.χ. `ghcr.io/osergios/karta:1.4`. Όλες οι εκδόσεις και οι αλλαγές τους είναι στις
 [Releases](https://github.com/osergios/karta/releases).
 
 Ή χτίστε το image μόνοι σας από τον κώδικα:

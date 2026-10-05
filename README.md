@@ -1,6 +1,6 @@
 # Karta: ψηφιακή κάρτα εργασίας για το ΕΡΓΑΝΗ
 
-🇬🇷 **Ελληνικά** · 🇬🇧 [English](#english)
+**Ελληνικά** · [English](#english)
 
 Η **Karta** είναι ψηφιακή κάρτα εργασίας για μικρές επιχειρήσεις, που την εγκαθιστάτε στον
 δικό σας server. Οι εργαζόμενοι χτυπούν κάρτα στην οθόνη του καταστήματος με PIN ή με
@@ -8,11 +8,11 @@
 Εργασίας, και δίνει στον ιδιοκτήτη μια σελίδα διαχείρισης με ωράρια, ειδοποιήσεις και
 μηνιαίες αναφορές.
 
-📖 **Πλήρης οδηγός χρήσης στο [wiki](https://github.com/osergios/karta/wiki)**:
+**Πλήρης οδηγός χρήσης στο [wiki](https://github.com/osergios/karta/wiki)**:
 εγκατάσταση, κάθε καρτέλα της διαχείρισης, η οθόνη του καταστήματος, πώς φτάνουν τα
 χτυπήματα στο ΕΡΓΑΝΗ, ειδοποιήσεις και συχνές ερωτήσεις.
 
-💬 **Ερωτήσεις και ιδέες** στις [Συζητήσεις](https://github.com/osergios/karta/discussions).
+**Ερωτήσεις και ιδέες** στις [Συζητήσεις](https://github.com/osergios/karta/discussions).
 
 ## Στιγμιότυπα
 
@@ -57,12 +57,15 @@
   χτυπημάτων» κάθε έτους σε Excel.
 - **Χρώματα:** έτοιμα θέματα, δικά σας χρώματα (φόντο, κείμενο, κουμπιά) και σκούρο θέμα,
   για την οθόνη του καταστήματος και τη σελίδα διαχείρισης.
+- **Ενημέρωση με ένα κουμπί** από τη σελίδα διαχείρισης, με αντίγραφο ασφαλείας πρώτα.
 
 Το αναλυτικό ιστορικό αλλαγών είναι στο [`CHANGES.md`](CHANGES.md).
 
 ## Τι χρειάζεστε
 
-- Docker, ή Python 3.12
+- Ένα μηχάνημα με Docker (Raspberry Pi, παλιό PC ή VPS), ή Python 3.12
+- Ένα όνομα (domain) σε δωρεάν λογαριασμό [Cloudflare](https://www.cloudflare.com): δίνει
+  HTTPS και το tunnel, χωρίς ανοιχτές θύρες στο router
 - Χρήστη web services του ΕΡΓΑΝΗ για την επιχείρησή σας (ή δοκιμαστικό χρήστη από το
   `trialv2eservices.yeka.gr`)
 - Μια εφαρμογή [Cloudflare Access](https://www.cloudflare.com/zero-trust/products/access/)
@@ -70,7 +73,7 @@
 
 ## Γρήγορη εκκίνηση
 
-👉 **Δεν είστε προγραμματιστής;** Ακολουθήστε την [εύκολη εγκατάσταση, βήμα προς βήμα](https://github.com/osergios/karta/wiki/Easy-Installation) σε Raspberry Pi, παλιό PC ή δωρεάν cloud. Ο οδηγός ρύθμισης κάνει τα περισσότερα:
+**Δεν είστε προγραμματιστής;** Ακολουθήστε την [εύκολη εγκατάσταση, βήμα προς βήμα](https://github.com/osergios/karta/wiki/Easy-Installation) σε Raspberry Pi, παλιό PC ή δωρεάν cloud. Ο οδηγός ρύθμισης κάνει τα περισσότερα:
 
 ```bash
 mkdir ~/karta && cd ~/karta
@@ -78,16 +81,23 @@ curl -fsSLO https://raw.githubusercontent.com/osergios/karta/main/setup.sh && ch
 ./setup.sh          # διεύθυνση και Cloudflare → .env, εκκίνηση, αντίγραφα ασφαλείας
 ./setup.sh check    # έλεγχος ότι όλα δουλεύουν
 ./setup.sh usb      # αντίγραφα και σε USB (το cloud ρυθμίζεται στη σελίδα διαχείρισης)
+./setup.sh update   # ενημέρωση (ή «Ενημέρωση τώρα» στη σελίδα διαχείρισης)
 ```
+
+Μετά, στη σελίδα διαχείρισης, τα «Πρώτα βήματα» σας οδηγούν: ΑΦΜ και χρήστης ΕΡΓΑΝΗ,
+προσωπικό, ωράρια, οθόνη καταστήματος, αντίγραφα ασφαλείας.
 
 Ή με το χέρι:
 
 ```bash
 curl -fsSLO https://raw.githubusercontent.com/osergios/karta/main/.env.example
 cp .env.example .env        # συμπληρώστε το· κρατήστε ERGANI_MODE=dry_run στην αρχή
-docker run -d --name karta --env-file .env -p 8000:8000 -v karta-data:/data \
+docker run -d --name karta --env-file .env -p 127.0.0.1:8000:8000 -v karta-data:/data \
   ghcr.io/osergios/karta:latest
 ```
+
+Μετά βάλτε την πίσω από HTTPS (π.χ. Cloudflare Tunnel) και το `/admin` πίσω από το
+Cloudflare Access: δείτε την [Εγκατάσταση](https://github.com/osergios/karta/wiki/Installation).
 
 Έτοιμο image για amd64 και arm64. Οι εκδόσεις και οι αλλαγές τους είναι στις
 [Releases](https://github.com/osergios/karta/releases). Μπορείτε επίσης να χτίσετε το image
@@ -102,8 +112,11 @@ docker run -d --name karta --env-file .env -p 8000:8000 -v karta-data:/data \
 
 ```bash
 pip install -r requirements.txt
-PYTHONPATH=vendor uvicorn app.main:app --host 0.0.0.0 --port 8000
+PYTHONPATH=vendor uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
+
+(Για το αντίγραφο στο cloud χρειάζονται και τα `restic` και `rclone` στο μηχάνημα· το image
+της Karta τα έχει ήδη.)
 
 Όλες οι ρυθμίσεις εξηγούνται στο [`.env.example`](.env.example) και στο
 [wiki](https://github.com/osergios/karta/wiki/Configuration). **Μην ανεβάσετε ποτέ το
@@ -124,8 +137,10 @@ PYTHONPATH=vendor uvicorn app.main:app --host 0.0.0.0 --port 8000
 Η Karta περιλαμβάνει το [Ergani Python SDK](https://github.com/withlogicco/ergani-python-sdk)
 (MIT, της LOGIC), το [jsQR](https://github.com/cozmo/jsQR) (Apache-2.0), ένα εικονίδιο
 από τα [Tabler Icons](https://github.com/tabler/tabler-icons) (MIT) και τη γραμματοσειρά
-[Inter](https://github.com/rsms/inter) (SIL OFL 1.1). Λεπτομέρειες και οι τοπικές αλλαγές
-στο [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+[Inter](https://github.com/rsms/inter) (SIL OFL 1.1). Το Docker image περιέχει επίσης τα
+[restic](https://restic.net) (BSD-2-Clause) και [rclone](https://rclone.org) (MIT) για τα
+αντίγραφα στο cloud. Λεπτομέρειες και οι τοπικές αλλαγές στο
+[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
 
 ## Άδεια χρήσης
 
@@ -147,7 +162,7 @@ Copyright © 2026 osergios. Ο κώδικας της Karta διατίθεται 
 
 <a id="english"></a>
 
-# 🇬🇧 English
+# English
 
 **Karta** is a self-hosted *ψηφιακή κάρτα εργασίας* (digital work card) for small
 Greek businesses. Employees clock in and out on a shop kiosk with a PIN or a QR
@@ -155,11 +170,11 @@ code. Karta sends each arrival and departure to the Ministry of Labour's
 **Ergani II** system and gives the owner an admin page with schedules, alerts and
 monthly reports. The app's screens are in Greek.
 
-📖 **Full documentation is in the [wiki](https://github.com/osergios/karta/wiki/Home-EN)**:
+**Full documentation is in the [wiki](https://github.com/osergios/karta/wiki/Home-EN)**:
 installation, every admin tab, the shop screen, how punches reach Ergani, alerts, and an
 FAQ. The wiki pages live in [`docs/wiki/`](docs/wiki/) and are published automatically.
 
-💬 **Questions and ideas** go to [Discussions](https://github.com/osergios/karta/discussions).
+**Questions and ideas** go to [Discussions](https://github.com/osergios/karta/discussions).
 
 See the screenshots above.
 
@@ -189,12 +204,15 @@ See the screenshots above.
   in Excel.
 - **Colours:** ready themes, your own colours (background, text, buttons) and a dark theme,
   for the shop screen and the admin page.
+- **One-button updates** from the admin page, with a backup first.
 
 See [`CHANGES.md`](CHANGES.md) for the detailed history.
 
 ## Requirements
 
-- Docker, or Python 3.12
+- A machine with Docker (Raspberry Pi, old PC or VPS), or Python 3.12
+- A domain on a free [Cloudflare](https://www.cloudflare.com) account: it provides HTTPS
+  and the tunnel, with no open ports on your router
 - An Ergani web-services user for your business (or a test user from
   `trialv2eservices.yeka.gr`)
 - A [Cloudflare Access](https://www.cloudflare.com/zero-trust/products/access/)
@@ -202,7 +220,7 @@ See [`CHANGES.md`](CHANGES.md) for the detailed history.
 
 ## Quick start
 
-👉 **Not a programmer?** Follow the [easy step‑by‑step installation](https://github.com/osergios/karta/wiki/Easy-Installation-EN) on a Raspberry Pi, an old PC or a free cloud machine. The setup assistant does most of it:
+**Not a programmer?** Follow the [easy step‑by‑step installation](https://github.com/osergios/karta/wiki/Easy-Installation-EN) on a Raspberry Pi, an old PC or a free cloud machine. The setup assistant does most of it:
 
 ```bash
 mkdir ~/karta && cd ~/karta
@@ -210,16 +228,23 @@ curl -fsSLO https://raw.githubusercontent.com/osergios/karta/main/setup.sh && ch
 ./setup.sh          # address and Cloudflare (in Greek) → .env, start, backups
 ./setup.sh check    # checks that everything works
 ./setup.sh usb      # backups to a USB stick too (the cloud is set up in the admin page)
+./setup.sh update   # update (or «Ενημέρωση τώρα» in the admin page)
 ```
+
+Then, in the admin page, «Πρώτα βήματα» (first steps) walks you through the rest: ΑΦΜ and
+Ergani user, staff, schedules, the shop screen, backups.
 
 Or by hand:
 
 ```bash
 curl -fsSLO https://raw.githubusercontent.com/osergios/karta/main/.env.example
 cp .env.example .env        # then fill it in; keep ERGANI_MODE=dry_run at first
-docker run -d --name karta --env-file .env -p 8000:8000 -v karta-data:/data \
+docker run -d --name karta --env-file .env -p 127.0.0.1:8000:8000 -v karta-data:/data \
   ghcr.io/osergios/karta:latest
 ```
+
+Then put it behind HTTPS (e.g. Cloudflare Tunnel) and `/admin` behind Cloudflare Access:
+see [Installation](https://github.com/osergios/karta/wiki/Installation-EN).
 
 A ready‑made image for amd64 and arm64. Versions and their changes are on the
 [Releases](https://github.com/osergios/karta/releases) page. You can also build the image
@@ -233,8 +258,11 @@ Without Docker:
 
 ```bash
 pip install -r requirements.txt
-PYTHONPATH=vendor uvicorn app.main:app --host 0.0.0.0 --port 8000
+PYTHONPATH=vendor uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
+
+(Cloud backups also need `restic` and `rclone` on the machine; the Karta image already has
+them.)
 
 All settings are documented in [`.env.example`](.env.example) and in the
 [wiki](https://github.com/osergios/karta/wiki/Configuration-EN). **Never commit
@@ -255,8 +283,10 @@ This software is provided as-is, without warranty (see the license).
 Karta bundles the [Ergani Python SDK](https://github.com/withlogicco/ergani-python-sdk)
 (MIT, by LOGIC), [jsQR](https://github.com/cozmo/jsQR) (Apache-2.0), one
 [Tabler Icons](https://github.com/tabler/tabler-icons) icon (MIT) and the
-[Inter](https://github.com/rsms/inter) typeface (SIL OFL 1.1). Details and the
-local changes are in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+[Inter](https://github.com/rsms/inter) typeface (SIL OFL 1.1). The Docker image also
+contains [restic](https://restic.net) (BSD-2-Clause) and [rclone](https://rclone.org) (MIT)
+for cloud backups. Details and the local changes are in
+[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
 
 ## License
 

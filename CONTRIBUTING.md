@@ -1,6 +1,6 @@
 # Συνεισφορά στην Karta
 
-🇬🇷 **Ελληνικά** · 🇬🇧 [English](#contributing-to-karta)
+**Ελληνικά** · [English](#contributing-to-karta)
 
 Ευχαριστούμε που θέλετε να βοηθήσετε! Κάθε συνεισφορά μετράει: αναφορά σφάλματος,
 διόρθωση στον οδηγό χρήσης, μετάφραση ή κώδικας.
@@ -121,7 +121,7 @@ python -m pytest
 
 <a id="contributing-to-karta"></a>
 
-# 🇬🇧 Contributing to Karta
+# Contributing to Karta
 
 Thank you for wanting to help! Every contribution counts: a bug report, a fix to the
 user guide, a translation, or code.

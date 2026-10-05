@@ -1,4 +1,4 @@
-🇬🇷 [Ελληνικά](Kiosk) · 🇬🇧 **English**
+[Ελληνικά](Kiosk) · **English**
 
 # Shop screen (kiosk)
 

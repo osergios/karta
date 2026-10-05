@@ -6,10 +6,10 @@ body:
       value: |
         Ρωτήστε ό,τι θέλετε για την εγκατάσταση ή τη χρήση της Karta. · Ask anything about installing or using Karta.
 
-        📖 Δείτε πρώτα τις [Συχνές ερωτήσεις](https://github.com/osergios/karta/wiki/FAQ) και την [Εύκολη εγκατάσταση](https://github.com/osergios/karta/wiki/Easy-Installation).
-        📖 First check the [FAQ](https://github.com/osergios/karta/wiki/FAQ-EN) and the [Easy installation](https://github.com/osergios/karta/wiki/Easy-Installation-EN) guide.
+        Δείτε πρώτα τις [Συχνές ερωτήσεις](https://github.com/osergios/karta/wiki/FAQ) και την [Εύκολη εγκατάσταση](https://github.com/osergios/karta/wiki/Easy-Installation).
+        First check the [FAQ](https://github.com/osergios/karta/wiki/FAQ-EN) and the [Easy installation](https://github.com/osergios/karta/wiki/Easy-Installation-EN) guide.
 
-        ⚠️ **Μη γράφετε πραγματικά προσωπικά δεδομένα** (ονόματα εργαζομένων, ΑΦΜ, κωδικούς ΕΡΓΑΝΗ, PIN, `.env`). · **Don't post real personal data.**
+        **Μη γράφετε πραγματικά προσωπικά δεδομένα** (ονόματα εργαζομένων, ΑΦΜ, κωδικούς ΕΡΓΑΝΗ, PIN, `.env`). · **Don't post real personal data.**
 
   - type: dropdown
     id: topic

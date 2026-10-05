@@ -1,4 +1,4 @@
-🇬🇷 **Ελληνικά** · 🇬🇧 [English](Configuration-EN)
+**Ελληνικά** · [English](Configuration-EN)
 
 # Ρυθμίσεις server (`.env`)
 

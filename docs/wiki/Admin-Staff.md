@@ -1,4 +1,4 @@
-🇬🇷 **Ελληνικά** · 🇬🇧 [English](Admin-Staff-EN)
+**Ελληνικά** · [English](Admin-Staff-EN)
 
 # Διαχείριση: «Προσωπικό»
 

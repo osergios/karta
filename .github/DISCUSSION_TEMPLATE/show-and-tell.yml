@@ -5,7 +5,7 @@ body:
       value: |
         Χρησιμοποιείτε την Karta; Πείτε μας πώς! Βοηθά και άλλες επιχειρήσεις να αποφασίσουν. · Using Karta? Tell us how! It helps other businesses decide.
 
-        ⚠️ Στιγμιότυπα μόνο χωρίς πραγματικά στοιχεία εργαζομένων. · Screenshots only without real staff details.
+        Στιγμιότυπα μόνο χωρίς πραγματικά στοιχεία εργαζομένων. · Screenshots only without real staff details.
 
   - type: input
     id: business

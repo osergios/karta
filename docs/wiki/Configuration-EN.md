@@ -1,4 +1,4 @@
-🇬🇷 [Ελληνικά](Configuration) · 🇬🇧 **English**
+[Ελληνικά](Configuration) · **English**
 
 # Configuration (`.env`)
 

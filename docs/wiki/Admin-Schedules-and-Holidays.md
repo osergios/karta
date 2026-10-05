@@ -1,4 +1,4 @@
-🇬🇷 **Ελληνικά** · 🇬🇧 [English](Admin-Schedules-and-Holidays-EN)
+**Ελληνικά** · [English](Admin-Schedules-and-Holidays-EN)
 
 # Διαχείριση: «Ωράρια & αργίες»
 

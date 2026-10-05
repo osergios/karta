@@ -1,4 +1,4 @@
-🇬🇷 [Ελληνικά](Admin-Staff) · 🇬🇧 **English**
+[Ελληνικά](Admin-Staff) · **English**
 
 # Admin: «Προσωπικό» (Staff)
 

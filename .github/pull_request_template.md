@@ -2,8 +2,8 @@
 Ευχαριστούμε για τη συνεισφορά! Συμπληρώστε τα παρακάτω (στα ελληνικά ή στα αγγλικά).
 Thanks for contributing! Fill in the sections below (in Greek or English).
 
-⚠️ Μη βάζετε πραγματικά προσωπικά δεδομένα (ονόματα, ΑΦΜ, κωδικούς, PIN, .env) σε κείμενο ή στιγμιότυπα.
-⚠️ Don't include real personal data (names, ΑΦΜ, credentials, PINs, .env) in text or screenshots.
+Μη βάζετε πραγματικά προσωπικά δεδομένα (ονόματα, ΑΦΜ, κωδικούς, PIN, .env) σε κείμενο ή στιγμιότυπα.
+Don't include real personal data (names, ΑΦΜ, credentials, PINs, .env) in text or screenshots.
 -->
 
 ## Τι αλλάζει · What changes

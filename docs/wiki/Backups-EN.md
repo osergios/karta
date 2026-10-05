@@ -1,4 +1,4 @@
-🇬🇷 [Ελληνικά](Backups) · 🇬🇧 **English**
+[Ελληνικά](Backups) · **English**
 
 # Backups and restore
 

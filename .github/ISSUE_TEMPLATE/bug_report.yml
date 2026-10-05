@@ -1,4 +1,4 @@
-name: "🐞 Αναφορά σφάλματος / Bug report"
+name: "Αναφορά σφάλματος / Bug report"
 description: "Κάτι δεν λειτουργεί όπως πρέπει · Something doesn't work as it should"
 labels: ["σφάλμα"]
 body:
@@ -7,10 +7,10 @@ body:
       value: |
         Ευχαριστούμε για την αναφορά! · Thanks for the report!
 
-        ⚠️ **Μη γράφετε πραγματικά προσωπικά δεδομένα**: ονόματα εργαζομένων, ΑΦΜ, κωδικούς ΕΡΓΑΝΗ, PIN, το `.env` ή στιγμιότυπα με πραγματικά στοιχεία. Χρησιμοποιήστε φανταστικά στοιχεία.
+        **Μη γράφετε πραγματικά προσωπικά δεδομένα**: ονόματα εργαζομένων, ΑΦΜ, κωδικούς ΕΡΓΑΝΗ, PIN, το `.env` ή στιγμιότυπα με πραγματικά στοιχεία. Χρησιμοποιήστε φανταστικά στοιχεία.
         **Don't include real personal data**: employee names, ΑΦΜ, Ergani credentials, PINs, your `.env`, or screenshots with real details. Use made-up data.
 
-        🔒 Για **πρόβλημα ασφαλείας**, μην ανοίξετε issue: χρησιμοποιήστε την [ιδιωτική αναφορά](https://github.com/osergios/karta/security/advisories/new). · For a **security problem**, don't open an issue: use [private reporting](https://github.com/osergios/karta/security/advisories/new).
+        Για **πρόβλημα ασφαλείας**, μην ανοίξετε issue: χρησιμοποιήστε την [ιδιωτική αναφορά](https://github.com/osergios/karta/security/advisories/new). · For a **security problem**, don't open an issue: use [private reporting](https://github.com/osergios/karta/security/advisories/new).
 
   - type: dropdown
     id: area

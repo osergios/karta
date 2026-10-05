@@ -1,4 +1,4 @@
-🇬🇷 **Ελληνικά** · 🇬🇧 [English](Home-EN)
+**Ελληνικά** · [English](Home-EN)
 
 # Karta: οδηγός χρήσης
 

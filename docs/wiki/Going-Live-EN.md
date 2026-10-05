@@ -1,4 +1,4 @@
-🇬🇷 [Ελληνικά](Going-Live) · 🇬🇧 **English**
+[Ελληνικά](Going-Live) · **English**
 
 # Going live
 

@@ -1,4 +1,4 @@
-🇬🇷 **Ελληνικά** · 🇬🇧 [English](Security-and-Privacy-EN)
+**Ελληνικά** · [English](Security-and-Privacy-EN)
 
 # Ασφάλεια και προσωπικά δεδομένα
 

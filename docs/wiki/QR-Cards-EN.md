@@ -1,4 +1,4 @@
-🇬🇷 [Ελληνικά](QR-Cards) · 🇬🇧 **English**
+[Ελληνικά](QR-Cards) · **English**
 
 # QR cards and the phone card
 

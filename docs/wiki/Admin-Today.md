@@ -1,4 +1,4 @@
-🇬🇷 **Ελληνικά** · 🇬🇧 [English](Admin-Today-EN)
+**Ελληνικά** · [English](Admin-Today-EN)
 
 # Διαχείριση: «Σήμερα»
 

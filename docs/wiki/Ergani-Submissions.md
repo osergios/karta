@@ -1,4 +1,4 @@
-🇬🇷 **Ελληνικά** · 🇬🇧 [English](Ergani-Submissions-EN)
+**Ελληνικά** · [English](Ergani-Submissions-EN)
 
 # Πώς φτάνουν τα χτυπήματα στο ΕΡΓΑΝΗ
 

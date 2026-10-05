@@ -1,4 +1,4 @@
-🇬🇷 [Ελληνικά](Home) · 🇬🇧 **English**
+[Ελληνικά](Home) · **English**
 
 # Karta wiki
 

@@ -1,4 +1,4 @@
-🇬🇷 [Ελληνικά](Admin-Today) · 🇬🇧 **English**
+[Ελληνικά](Admin-Today) · **English**
 
 # Admin: «Σήμερα» (Today)
 

@@ -1,4 +1,4 @@
-### 🇬🇷 Ελληνικά
+### Ελληνικά
 
 **[Αρχική](Home)**
 
@@ -28,7 +28,7 @@
 
 ---
 
-### 🇬🇧 English
+### English
 
 [Home](Home-EN) ·
 [Easy installation](Easy-Installation-EN) ·

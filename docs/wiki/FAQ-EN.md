@@ -1,4 +1,4 @@
-🇬🇷 [Ελληνικά](FAQ) · 🇬🇧 **English**
+[Ελληνικά](FAQ) · **English**
 
 # FAQ and troubleshooting
 
