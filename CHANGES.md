@@ -486,3 +486,7 @@
     keep it on paper outside the shop or in a password manager; it has a «Αντιγραφή» button, and «Τον σημείωσα» works
     only after the admin types its last 4 characters back. The connect form warns before it is shown. Backups,
     Settings and Easy installation (GR/EN) say the same, with a warning box.
+97. **«Εμφάνιση κωδικού κρυπτογράφησης».** While the machine works, «Ρυθμίσεις» → «Αντίγραφα ασφαλείας» shows the
+    cloud encryption password again (`POST /admin/api/cloud/password`, audited as `cloud_password_viewed`), in the
+    same panel with the same warning and the same 4-character check. Not a new exposure: an admin can already
+    download the whole database; the password matters when the machine is gone.

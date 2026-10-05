@@ -791,7 +791,7 @@
   const dmyhm = iso => `${iso.slice(8, 10)}/${iso.slice(5, 7)} ${iso.slice(11, 16)}`;
   // The only way into the cloud backups if this machine is lost: it can't be recovered by anyone, so the panel stays
   // until the admin types its last 4 characters back.
-  function showCloudPassword(pw) {
+  function showCloudPassword(pw, again = false) {
     const box = document.getElementById("cloudPass");
     const tail = pw.slice(-4);
     const check = el("input", { type: "text", maxlength: "4", autocomplete: "off", spellcheck: "false", class: "pass-check",
@@ -808,7 +808,8 @@
         "ούτε κανείς άλλος. Αν χαλάσει ή χαθεί αυτό το μηχάνημα, είναι ο μόνος τρόπος να πάρετε πίσω το αρχείο χτυπημάτων, " +
         "που πρέπει να φυλάσσεται για χρόνια."),
       el("p", {}, el("strong", {}, "Γράψτε τον τώρα σε χαρτί (φυλάξτε το εκτός καταστήματος) ή σε διαχειριστή κωδικών."),
-        " Εμφανίζεται μόνο αυτή τη φορά."),
+        again ? " Από εδώ φαίνεται μόνο όσο δουλεύει αυτό το μηχάνημα· όταν χαλάσει, μένει μόνο ό,τι έχετε γράψει."
+              : " Εμφανίζεται μόνο αυτή τη φορά (μετά, μόνο όσο δουλεύει αυτό το μηχάνημα: «Εμφάνιση κωδικού κρυπτογράφησης»)."),
       el("div", { class: "backup-row" },
         el("button", { class: "btn ghost", type: "button", onclick: async () => {
           try { await navigator.clipboard.writeText(pw); toast("Ο κωδικός αντιγράφηκε"); } catch { toast("Επιλέξτε τον κωδικό και αντιγράψτε τον", true); }
@@ -931,6 +932,9 @@
                 await api("/admin/api/cloud/run", {}); toast("Το ανέβασμα ξεκίνησε· το αποτέλεσμα φαίνεται εδώ σε λίγο.");
                 setTimeout(load, 15000); setTimeout(load, 45000);
               }) }, "Ανέβασμα τώρα"),
+              el("button", { class: "link", type: "button", onclick: act(async () => {
+                showCloudPassword((await api("/admin/api/cloud/password", {})).password, true);
+              }) }, "Εμφάνιση κωδικού κρυπτογράφησης"),
               el("button", { class: "link danger", type: "button", onclick: act(async () => {
                 if (!confirm("Να σταματήσουν τα ανεβάσματα στο cloud; Όσα έχουν ήδη ανέβει μένουν εκεί.")) return;
                 await api("/admin/api/cloud/disconnect", {});

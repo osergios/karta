@@ -108,7 +108,8 @@ notifications. See [Alerts and reminders](Alerts-and-Reminders-EN#setting-up-ntf
 - **Cloud:** connect to Google Drive, Dropbox or Backblaze B2 («Σύνδεση και πρώτο
   ανέβασμα», connect and first upload, with an encryption password shown once that **can't be recovered in any way**:
   write it down, type its last 4 characters back and press **«Τον σημείωσα»**, I've noted it),
-  **«Ανέβασμα τώρα»** (upload now), **«Αποσύνδεση cloud»** (disconnect cloud), and
+  **«Ανέβασμα τώρα»** (upload now), **«Εμφάνιση κωδικού κρυπτογράφησης»** (show the
+  encryption password, while the machine works; who viewed it is logged), **«Αποσύνδεση cloud»** (disconnect cloud), and
   **«Έχω ήδη αντίγραφα στο cloud»** (I already have backups in the cloud) for a new
   machine.
 - **«Λήψη αντιγράφου τώρα»** (download a backup now): the whole database in one file.

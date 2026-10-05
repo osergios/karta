@@ -1965,6 +1965,17 @@ def admin_cloud_connect(body: CloudIn, admin: str = Depends(security.require_adm
     return {"ok": True, "password": pw, "first_backup": st.get("state"), "error": st.get("error", "")}
 
 
+@app.post("/admin/api/cloud/password")
+def admin_cloud_password(admin: str = Depends(security.require_admin)):
+    """Shows the encryption password again while this machine works. Not a new risk: an admin can already download
+    the whole database; the cloud copy is what protects it when the machine is gone."""
+    pw = cloud.password()
+    if pw is None:
+        raise HTTPException(status_code=409, detail="Το cloud δεν έχει ρυθμιστεί.")
+    db.audit(admin, "cloud_password_viewed")
+    return {"password": pw}
+
+
 @app.post("/admin/api/cloud/disconnect")
 def admin_cloud_disconnect(admin: str = Depends(security.require_admin)):
     cloud.disconnect()

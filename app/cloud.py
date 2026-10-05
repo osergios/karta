@@ -229,6 +229,14 @@ def _connect(provider: str, *, token: str, account: str, key: str, bucket: str, 
     return password if created else None
 
 
+def password() -> str | None:
+    """The encryption password kept on this machine (for «Εμφάνιση κωδικού κρυπτογράφησης»), or None."""
+    if not connected():
+        return None
+    with open(_pw_path(), encoding="utf-8") as f:
+        return f.read().strip() or None
+
+
 def disconnect() -> None:
     """Stops the uploads on this machine. What is already in the cloud stays there."""
     _forget()

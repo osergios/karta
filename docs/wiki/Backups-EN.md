@@ -72,7 +72,9 @@ In **«Ρυθμίσεις» → «Αντίγραφα ασφαλείας»**:
 > recover it. While the machine works the password is stored on it; you need it **exactly
 > when the machine breaks or is lost**, and then without it the punch records (which must be
 > kept for years) are gone. Keep it on paper **outside the shop** or in a password manager,
-> and tell someone you trust where it is. (The copies on the machine and on USB aren't
+> and tell someone you trust where it is. While the machine works, **«Εμφάνιση κωδικού
+> κρυπτογράφησης»** (show the encryption password, next to «Ανέβασμα τώρα») shows it again,
+> if you didn't write it down. (The copies on the machine and on USB aren't
 > encrypted and don't need it.)
 
 On Google Drive the files go into the `Karta-backups` folder (encrypted pieces that don't
