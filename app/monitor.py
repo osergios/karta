@@ -28,6 +28,7 @@ DEFAULTS = {
     "ot_notice_minutes": 0.0,     # phone reminder this long before that deadline, for whoever is at work (0 = off)
     "festive": 1.0,             # 1 = festive decorations on the shop screen (Christmas, Easter, national days...)
 }
+RETRO_LATE_MINUTES = 10       # retrospective system: the «έληξε» phone alert this long after the end of the day
 LEVEL_PRIORITY = {"info": 3, "warning": 4, "urgent": 5}
 _lock = threading.Lock()
 
@@ -178,7 +179,8 @@ def check(now: datetime | None = None) -> None:
                 what = "η βάρδια" if not sched.split else ("το πρωινό σκέλος" if i == 0 else
                                                            "το απογευματινό σκέλος" if last_part else f"το {i + 1}ο σκέλος")
                 back = "" if last_part else f" Επιστροφή στις {sched.segments[i + 1][0]:%H:%M}."
-                over = end + timedelta(minutes=s["grace_minutes"])
+                # retrospective system: staying on is declared afterwards, so one note 10′ after the end is enough
+                over = end + timedelta(minutes=RETRO_LATE_MINUTES if config.RETRO else s["grace_minutes"])
                 if now >= over:
                     raise_alert("overdue" + sfx, eid, today, "warning",
                                 f"{name} είναι ακόμα μέσα. {what[0].upper() + what[1:]} έληξε {end:%H:%M}: " + (
@@ -189,9 +191,8 @@ def check(now: datetime | None = None) -> None:
                                     "αποχώρηση ΤΩΡΑ, με την πραγματική ώρα") +
                                 f" — ποτέ αποχώρηση και μετά συνέχεια της δουλειάς.{back}",
                                 None, now)   # the shop screen shows the repeating reminder instead
-                # the reminder comes before the deadline to declare overtime; retrospective system: before the end
-                dl = sched.leave_by - timedelta(minutes=0 if config.RETRO else s["ot_deadline_minutes"])
-                if (last_part and s["ot_notice_minutes"] > 0
+                dl = sched.leave_by - timedelta(minutes=s["ot_deadline_minutes"])
+                if (last_part and s["ot_notice_minutes"] > 0 and not config.RETRO   # retro: no deadline to remind of
                         and dl - timedelta(minutes=s["ot_notice_minutes"]) <= now < dl):
                     _ot_notice(sched.leave_by, dl, today, now)
                 if now >= over + timedelta(minutes=s["escalate_minutes"]):
@@ -291,8 +292,7 @@ def _check_backup(now: datetime) -> None:
 
 
 def _ot_notice(end: datetime, deadline: datetime, today, now: datetime) -> None:
-    """One phone reminder per end time: who is at work and until when overtime can still be declared in Ergani
-    (retrospective system: that extra hours are declared afterwards)."""
+    """One phone reminder per end time: who is at work and until when overtime can still be declared in Ergani."""
     names = []
     for e in db.all_rows("SELECT id, display_name FROM employees WHERE active=1"):
         last = hours.last_movement(e["id"])
@@ -303,11 +303,8 @@ def _ot_notice(end: datetime, deadline: datetime, today, now: datetime) -> None:
             names.append(e["display_name"])
     if names:
         raise_alert(f"ot_notice@{end:%H%M}", None, today, "info",
-                    f"Λήξη {end:%H:%M}: {', '.join(names)}. Αν χρειαστεί να μείνει κάποιος παραπάνω, " + (
-                        "οι επιπλέον ώρες δηλώνονται απολογιστικά στο ΕΡΓΑΝΗ έως το τέλος του επόμενου μήνα (και "
-                        "«Υπερωρία / αλλαγή ημέρας…» στη διαχείριση)." if config.RETRO else
-                        f"η υπερωρία δηλώνεται στο ΕΡΓΑΝΗ έως τις {deadline:%H:%M} (και μετά «Υπερωρία / αλλαγή ημέρας…» "
-                        "στη διαχείριση)."),
+                    f"Λήξη {end:%H:%M}: {', '.join(names)}. Αν χρειαστεί να μείνει κάποιος παραπάνω, η υπερωρία "
+                    f"δηλώνεται στο ΕΡΓΑΝΗ έως τις {deadline:%H:%M} (και μετά «Υπερωρία / αλλαγή ημέρας…» στη διαχείριση).",
                     None, now)
 
 

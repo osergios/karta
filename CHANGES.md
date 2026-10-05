@@ -432,7 +432,7 @@
 87. **Προαναγγελία or απολογιστικό σύστημα.** New setting in «Ρυθμίσεις» → «Επιχείρηση» (`TIME_DECLARATION`, `advance` by
     default or `retro`): how the business declares schedule changes and overtime in Ergani. With the retrospective
     system (businesses on the digital card, since 1/7/2024: declared from the punches by the end of the next month)
-    Karta shows no overtime deadline, the phone reminder comes before the end of the shift (instead of before the
-    deadline), and the alerts («έληξε», over the daily limit, punch on a closed day) and the monthly report say the
-    hours are declared retrospectively instead of «μη δηλωμένη υπερωρία». The shop screen's reminders with sound and
-    the alerts when someone stays after the end are the same; so are the limits on hours and rest.
+    Karta shows no overtime deadline and sends no phone reminder before the end of the shift; the «έληξε» phone alert
+    comes 10′ after the end (instead of after the 5′ grace) to say someone stayed late. That alert, the daily-limit
+    ones, a punch on a closed day and the monthly report say the hours are declared retrospectively instead of «μη
+    δηλωμένη υπερωρία». The shop screen's reminders with sound and the limits on hours and rest are the same.

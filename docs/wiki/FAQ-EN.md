@@ -85,8 +85,8 @@ use the «Κλείσιμο DD/MM…» button on the [Today](Admin-Today-EN) tab.
 ### We declare overtime retrospectively. What changes?
 
 In «Ρυθμίσεις» → «Επιχείρηση», choose «Απολογιστικό» under «Δήλωση αλλαγών ωραρίου και
-υπερωριών». Karta then shows no overtime deadline (the reminders and alerts at the end of
-the shift stay the same), the
+υπερωριών». Karta then shows no overtime deadline, your phone gets one alert 10′ after the
+end if someone stayed (no reminder before), the
 alerts say the extra hours are declared by the end of the next month, and you'll find them in
 the monthly report's «Απολογιστικές δηλώσεις» sheet. See [Settings](Admin-Settings-EN).
 

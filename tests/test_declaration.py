@@ -63,28 +63,32 @@ def test_retro_keeps_the_break_outside_hours_and_the_flexible_arrival(kiosk, adm
         c.execute("UPDATE employees SET flex_arrival=60 WHERE id=?", (employee,))
     assert kiosk.post("/api/kiosk/punch", json={"employee_id": employee, "pin": PIN, "action": "ARRIVAL"}).status_code == 200
     assert today(kiosk)["end"] == "18:30"                                  # 10:00 arrival + 8h + 30′ break
-    clock.advance(hours=8, minutes=25)                                      # 18:25: still within the day
+    clock.advance(hours=8, minutes=35)                                      # 18:35: within the 10′ after the end
     monitor.check(clock())
     assert not db.one("SELECT 1 FROM alerts WHERE kind='overdue'")
-    clock.advance(minutes=30)                                               # 18:55: past the end (and the grace)
+    clock.advance(minutes=20)                                               # 18:55: 25′ after the end
     monitor.check(clock())
     assert "18:30" in db.one("SELECT message FROM alerts WHERE kind='overdue'")["message"]
 
 
-def test_retro_still_alerts_the_phone_and_the_shop_screen(kiosk, admin, clock, employee, monkeypatch):
-    """Retrospective system: the same reminders and alerts at the end of the schedule, only the wording differs."""
+def test_retro_alerts_the_phone_10_minutes_after_the_end(kiosk, admin, clock, employee, monkeypatch):
+    """Retrospective system: nothing on the phone before the end; the shop screen reminds at the end as always; one
+    phone alert when someone is still inside 10′ after the end."""
     pushed = []
     monkeypatch.setattr(monitor, "_ntfy", lambda title, message, level: pushed.append((level, message)))
     assert declaration(kiosk, "retro").status_code == 200
     set_schedule(kiosk, employee, WORKDAYS)
     with db.tx() as c:
-        db.put_setting(c, "ot_notice_minutes", "15")
+        db.put_setting(c, "ot_notice_minutes", "15")                      # a προαναγγελία setting: not used here
     assert kiosk.post("/api/kiosk/punch", json={"employee_id": employee, "pin": PIN, "action": "ARRIVAL"}).status_code == 200
-    clock.advance(hours=6, minutes=50)                                      # 16:50: 10′ before the end
+    clock.advance(hours=6, minutes=50)                                      # 16:50
     monitor.check(clock())
-    assert any("Λήξη 17:00: Μαρία" in m and "απολογιστικά" in m for _, m in pushed)   # phone, before the end
+    assert pushed == []                                                     # no reminder before the end
     clock.advance(minutes=10)                                               # 17:00: the shop screen reminds
     assert [r["kind"] for r in kiosk.get("/api/kiosk/reminders").json()["reminders"]] == ["out"]
-    clock.advance(minutes=10)                                               # 17:10: still inside → phone alert
+    clock.advance(minutes=6)                                                # 17:06: past the 5′ grace, not yet 10′
     monitor.check(clock())
-    assert any(level == "warning" and "έληξε 17:00" in m for level, m in pushed)
+    assert pushed == []
+    clock.advance(minutes=4)                                                # 17:10: still inside → the phone is told
+    monitor.check(clock())
+    assert len(pushed) == 1 and pushed[0][0] == "warning" and "έληξε 17:00" in pushed[0][1]

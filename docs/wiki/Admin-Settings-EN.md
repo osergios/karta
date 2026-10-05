@@ -22,9 +22,9 @@ that comes from `.env` is marked «από το .env».
     1/7/2024). Schedule changes, the organisation of working time and overtime are declared
     **afterwards**, from the punches, by the **end of the next month**. Karta shows no overtime
     deadline; the alerts say «δηλώνεται απολογιστικά» (declared retrospectively), and the
-    monthly report's «Απολογιστικές δηλώσεις» sheet has the hours to declare. The shop
-    screen's reminders with sound, the phone reminder before the end and the alerts when
-    someone stays after the end all stay the same.
+    monthly report's «Απολογιστικές δηλώσεις» sheet has the hours to declare. No phone
+    reminder comes before the end; if someone is still inside **10′ after the end**, one alert
+    says they stayed late. The shop screen's reminders with sound stay the same.
 
   The limits on hours, rest and overtime apply in both. This setting changes nothing in
   Ergani: it only tells Karta what you chose there. If unsure, ask your accountant.
