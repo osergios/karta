@@ -370,3 +370,7 @@
 72. **Docs.** "Free cloud" now says what it is (your own VPS, reached over SSH). Wiki pages brought up to date:
     `PIN_KEY` is required, festive decorations live in «Ωράρια & αργίες», backup alerts, the full path to
     «Λειτουργία», what `./setup.sh check` tests, keeping `.env` safe when the only copy is in the cloud.
+73. **Hardened container.** `docker-compose.yml` runs Karta read-only (only `/data` and a 16 MB `/tmp` are writable),
+    with no Linux capabilities, `no-new-privileges`, 512 MB memory and 128 processes at most, and a healthcheck on
+    `/healthz` (`docker ps` shows «healthy»). cloudflared is read-only too, without capabilities. Checked with the
+    whole stack: healthy at ~50 MB, cloud backup and restore (restic writes only to `/data/.cache`), and `backup.sh`.
