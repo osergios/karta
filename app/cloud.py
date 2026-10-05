@@ -7,6 +7,8 @@ password shown to the admin once, compresses it, and stores only what changed si
 database and restores on its own.
 
 On this machine, next to the database: rclone.conf (access to the cloud), cloud-password and cloud.json (mode 600).
+A new connection is tried in a folder of its own (.cloud-new) and takes their place only once it works, so a failed
+reconnect never loses the working setup, nor the password of the backups already in the cloud.
 """
 import json
 import logging
@@ -28,6 +30,9 @@ RUN_AT = (23, 40)                         # nightly snapshot, local time
 KEEP = ("--keep-daily", "30", "--keep-monthly", "24", "--keep-yearly", "1000")
 SNAPSHOT_ID = re.compile(r"^[0-9a-f]{8,64}$")
 FILE_IN_SNAPSHOT = "/karta.db"
+STAGE = ".cloud-new"                      # a connection being tried (see _connect)
+NO_REPO = "Δεν βρέθηκαν αντίγραφα σε αυτόν τον φάκελο του cloud"
+WRONG_PASSWORD = "λάθος κωδικός κρυπτογράφησης"
 _running = threading.Lock()
 
 
@@ -39,39 +44,46 @@ def data_dir() -> str:
     return os.path.dirname(os.path.abspath(config.DB_PATH))
 
 
+def _paths(base: str | None = None) -> tuple[str, str, str]:
+    """rclone.conf, cloud-password and cloud.json: the ones in use, or those of a connection being tried (base)."""
+    d = base or data_dir()
+    return os.path.join(d, "rclone.conf"), os.path.join(d, "cloud-password"), os.path.join(d, "cloud.json")
+
+
 def conf_path() -> str:
-    return os.path.join(data_dir(), "rclone.conf")
+    return _paths()[0]
 
 
 def _pw_path() -> str:
-    return os.path.join(data_dir(), "cloud-password")
+    return _paths()[1]
 
 
 def _info_path() -> str:
-    return os.path.join(data_dir(), "cloud.json")
+    return _paths()[2]
 
 
 def available() -> bool:
     return shutil.which("rclone") is not None and shutil.which("restic") is not None
 
 
-def _env() -> dict:
+def _env(base: str | None = None) -> dict:
+    conf, pw, _ = _paths(base)
     cache = os.path.join(data_dir(), ".cache")          # the app user has no home folder in the image
-    env = {**os.environ, "RCLONE_CONFIG": conf_path(), "RCLONE_CACHE_DIR": os.path.join(cache, "rclone"),
+    env = {**os.environ, "RCLONE_CONFIG": conf, "RCLONE_CACHE_DIR": os.path.join(cache, "rclone"),
            "XDG_CACHE_HOME": cache, "RESTIC_CACHE_DIR": os.path.join(cache, "restic"),
-           "RESTIC_PASSWORD_FILE": _pw_path(), "HOME": data_dir()}
-    info = _info()
+           "RESTIC_PASSWORD_FILE": pw, "HOME": data_dir()}
+    info = _info(base)
     if info:
         env["RESTIC_REPOSITORY"] = info["repo"]
     return env
 
 
-def _run(tool: str, *args: str, timeout: int = 900, cwd: str | None = None, stdout=None) -> str:
+def _run(tool: str, *args: str, timeout: int = 900, cwd: str | None = None, stdout=None, base: str | None = None) -> str:
     if not available():
         raise CloudError("Το rclone / restic δεν υπάρχει σε αυτή την εγκατάσταση (χρειάζεται νεότερο image της Karta).")
     try:
         r = subprocess.run([tool, *args], stdout=stdout if stdout is not None else subprocess.PIPE,
-                           stderr=subprocess.PIPE, text=stdout is None, timeout=timeout, env=_env(), cwd=cwd)
+                           stderr=subprocess.PIPE, text=stdout is None, timeout=timeout, env=_env(base), cwd=cwd)
     except subprocess.TimeoutExpired:
         raise CloudError("Το cloud δεν απάντησε εγκαίρως.")
     if r.returncode != 0:
@@ -83,11 +95,10 @@ def _run(tool: str, *args: str, timeout: int = 900, cwd: str | None = None, stdo
 
 # what restic / rclone say -> what the admin reads (the first match wins)
 _KNOWN = [
-    (re.compile(r"Is there a repository|unable to open config file", re.I),
-     "Δεν βρέθηκαν αντίγραφα σε αυτόν τον φάκελο του cloud"),
+    (re.compile(r"Is there a repository|unable to open config file", re.I), NO_REPO),
     (re.compile(r"repository is already locked", re.I),
      "Τα αντίγραφα είναι κλειδωμένα από προηγούμενη εργασία που διακόπηκε"),
-    (re.compile(r"wrong password", re.I), "λάθος κωδικός κρυπτογράφησης"),
+    (re.compile(r"wrong password", re.I), WRONG_PASSWORD),
     (re.compile(r"quota", re.I), "Ο χώρος στο cloud γέμισε"),               # also a 403: before the next line
     (re.compile(r"\b40[13]\b|invalid_grant|token expired|expired_access_token", re.I),
      "Η πρόσβαση στο cloud έληξε — συνδέστε ξανά"),
@@ -103,9 +114,9 @@ def explain(err: str, tool: str = "restic", code: int = 1) -> str:
     return " · ".join(lines[-3:])[-300:] if lines else f"{tool}: κωδικός {code}"
 
 
-def _info() -> dict | None:
+def _info(base: str | None = None) -> dict | None:
     try:
-        with open(_info_path(), encoding="utf-8") as f:
+        with open(_paths(base)[2], encoding="utf-8") as f:
             return json.load(f)
     except (OSError, ValueError):
         return None
@@ -163,32 +174,59 @@ def _connect(provider: str, *, token: str, account: str, key: str, bucket: str, 
     else:
         raise CloudError("Άγνωστος πάροχος.")
     new = password is None
-    password = password or "".join(secrets.choice("ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789")
-                                   for _ in range(24))
-    _forget()
+    # Reconnecting (an expired token, another account) keeps the password of the backups made from this machine:
+    # the admin wrote it down once and the backups already in the cloud open only with it.
+    known = None
+    if new:
+        try:
+            with open(_pw_path(), encoding="utf-8") as f:
+                known = f.read().strip() or None
+        except OSError:
+            pass
+    password = password or known or "".join(secrets.choice("ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789")
+                                            for _ in range(24))
+    # Everything is tried in a folder of its own; the working setup is replaced only when the new one works.
+    stage = os.path.join(data_dir(), STAGE)
+    shutil.rmtree(stage, ignore_errors=True)            # left over by a restart in the middle of a connect
+    os.makedirs(stage, mode=0o700)
+    created = False
     try:
-        _run("rclone", "config", "create", "karta-store", *store, "--non-interactive")
-        os.chmod(conf_path(), 0o600)
-        _write_private(_pw_path(), password)
-        _write_private(_info_path(), json.dumps({"provider": provider, "repo": "rclone:" + base}))
-        if new:
+        conf, pw, info = _paths(stage)
+        _run("rclone", "config", "create", "karta-store", *store, "--non-interactive", base=stage)
+        os.chmod(conf, 0o600)
+        _write_private(pw, password)
+        _write_private(info, json.dumps({"provider": provider, "repo": "rclone:" + base}))
+        found = False
+        if not new or known:            # backups that should be there already: this password must open them
             try:
-                _run("restic", "init", timeout=300)
+                found = bool(list_backups(stage)) or new    # a known password: even an empty repository is ours
+            except CloudError as e:
+                if str(e) == WRONG_PASSWORD and known:
+                    raise CloudError("Τα αντίγραφα σε αυτόν τον λογαριασμό έχουν άλλον κωδικό κρυπτογράφησης από "
+                                     "αυτόν του μηχανήματος: χρησιμοποιήστε «Έχω ήδη αντίγραφα στο cloud» με τον "
+                                     "κωδικό τους.")
+                if str(e) != NO_REPO:
+                    raise
+            if not new and not found:
+                raise CloudError("Δεν βρέθηκαν αντίγραφα της Karta σε αυτόν τον λογαριασμό.")
+        if new and not found:
+            try:
+                _run("restic", "init", timeout=300, base=stage)
+                created = True
             except CloudError as e:
                 if "already" in str(e).lower() or "exist" in str(e).lower():
                     raise CloudError("Υπάρχουν ήδη αντίγραφα της Karta σε αυτόν τον λογαριασμό: χρησιμοποιήστε "
                                      "«Έχω ήδη αντίγραφα στο cloud» με τον κωδικό τους.")
                 raise
-        elif not list_backups():
-            raise CloudError("Δεν βρέθηκαν αντίγραφα της Karta σε αυτόν τον λογαριασμό.")
-    except Exception:
-        _forget()
-        raise
+        for staged, live in zip((conf, pw, info), _paths()):     # cloud.json last: connected() looks for it
+            os.replace(staged, live)
+    finally:
+        shutil.rmtree(stage, ignore_errors=True)
     try:
         _backup()                      # the first snapshot; a failure is recorded and shown, the connection stays
     except Exception:
         pass
-    return password if new else None
+    return password if created else None
 
 
 def disconnect() -> None:
@@ -264,9 +302,9 @@ def _backup() -> None:
         shutil.rmtree(folder, ignore_errors=True)
 
 
-def list_backups() -> list[dict]:
+def list_backups(base: str | None = None) -> list[dict]:
     """The snapshots in the cloud, newest first: [{id, time (local, ISO), kind}]."""
-    raw = _run("restic", "snapshots", "--json", "--host", "karta", timeout=300)
+    raw = _run("restic", "snapshots", "--json", "--host", "karta", timeout=300, base=base)
     out = []
     for s in json.loads(raw or "[]") or []:
         try:

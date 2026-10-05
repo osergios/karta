@@ -189,3 +189,48 @@ def test_a_failing_unlock_does_not_stop_the_backup(client, admin, store, monkeyp
     monkeypatch.setattr(cloud, "connected", lambda: True)
     cloud.run_backup()
     assert calls[:2] == ["unlock", "backup"] and cloud.status()["state"] == "ok"
+
+
+def _setup_files():
+    out = []
+    for p in (cloud.conf_path(), cloud._pw_path(), cloud._info_path()):
+        with open(p, encoding="utf-8") as f:
+            out.append(f.read())
+    return out
+
+
+@needs_rclone
+def test_reconnecting_without_the_password_keeps_it(client, admin, employee, store):
+    """An expired token, then «Σύνδεση» as if new: the backups and their password stay (it used to wipe both)."""
+    password = cloud.connect("local", local_path=str(store))
+    assert cloud.connect("local", local_path=str(store)) is None          # nothing new to write down
+    with open(cloud._pw_path(), encoding="utf-8") as f:
+        assert f.read() == password
+    assert len(cloud.list_backups()) == 2                                  # same backups, one more snapshot
+    assert not os.path.exists(os.path.join(cloud.data_dir(), cloud.STAGE))
+
+
+@needs_rclone
+def test_a_failed_reconnect_leaves_the_working_setup(client, admin, employee, store, tmp_path):
+    cloud.connect("local", local_path=str(store))
+    before = _setup_files()
+    with pytest.raises(cloud.CloudError):
+        cloud.connect("local", local_path="/proc/karta-nowhere")         # the cloud can't be written
+    assert _setup_files() == before and cloud.connected()
+    assert len(cloud.list_backups()) == 1                                  # still works
+    other = tmp_path / "other"                                             # backups made with another password
+    subprocess.run(["restic", "init", "--repo", str(other)], check=True, capture_output=True,
+                   env={**os.environ, "RESTIC_PASSWORD": "another-password-456", "RESTIC_CACHE_DIR": str(tmp_path / "c")})
+    with pytest.raises(cloud.CloudError, match="άλλον κωδικό"):
+        cloud.connect("local", local_path=str(other))
+    with pytest.raises(cloud.CloudError):
+        cloud.connect("local", local_path=str(store), password="wrong-password-123")
+    assert _setup_files() == before
+    assert not os.path.exists(os.path.join(cloud.data_dir(), cloud.STAGE))
+
+
+@needs_rclone
+def test_a_reconnect_to_an_empty_place_keeps_the_password(client, admin, employee, store, tmp_path):
+    password = cloud.connect("local", local_path=str(store))
+    assert cloud.connect("local", local_path=str(tmp_path / "new-place")) == password   # shown again: a new repository
+    assert len(cloud.list_backups()) == 1

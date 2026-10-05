@@ -78,7 +78,7 @@ def test_backup_alerts_close_when_the_problem_is_gone(monkeypatch):
     noon = datetime.now(config.TZ).replace(tzinfo=None, hour=12, minute=0, second=0, microsecond=0)
     for kind in ("backup_none", "backup_cloud_old"):
         monitor.raise_alert(kind, None, noon.date(), "warning", kind, None, noon, push=False)
-    mark(local="fail", usb="fail", hours_ago=60)
+    mark(local="fail", usb="fail", hours_ago=80)               # > 50 h before noon at any time of day
     monitor._check_backup(noon)                               # backups exist now: «none» closes, the others open
     assert open_alerts() == {"backup_old", "backup_failed", "backup_cloud_old"}
     mark()                                                    # tonight's backup worked

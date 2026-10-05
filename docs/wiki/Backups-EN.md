@@ -71,6 +71,11 @@ open with a double click; Karta can only see the files it creates itself). **«�
 backup straight away; **«Αποσύνδεση cloud»** (disconnect cloud) stops the uploads (what's
 already uploaded stays).
 
+**«Η πρόσβαση στο cloud έληξε — συνδέστε ξανά»** (cloud access expired, connect again): repeat
+steps 2–3 with a new access code. Karta keeps the **same encryption password** and carries on
+with the same backups; you don't need to type it. If the new connection fails, the previous
+setup stays as it was (Karta tries the new one separately and keeps it only if it works).
+
 ### To a USB stick: `./setup.sh usb`
 
 For a Raspberry Pi or PC in the shop or at home. Connecting a USB stick needs administrator
