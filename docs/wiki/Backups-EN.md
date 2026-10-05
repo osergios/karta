@@ -63,8 +63,19 @@ In **«Ρυθμίσεις» → «Αντίγραφα ασφαλείας»**:
 3. Press **«Σύνδεση και πρώτο ανέβασμα»** (connect and first upload). Connecting takes a
    moment: at the end the first backup is uploaded straight away, and the page says whether it
    worked. Karta shows an
-   **encryption password** once. **Write it on paper or in a password manager.** Without
-   it, if the machine breaks, the backups in the cloud **can't be opened**.
+   **encryption password** once. **Write it on paper or in a password manager.** To close
+   the box you type its last 4 characters and press «Τον σημείωσα» (I've noted it).
+
+> **⚠ The encryption password can't be recovered in any way.** The backups are encrypted on
+> the machine before they're uploaded, and only this password opens them. There's no
+> "forgot my password": neither Karta, nor Google, Dropbox or Backblaze, nor anyone else can
+> recover it. While the machine works the password is stored on it; you need it **exactly
+> when the machine breaks or is lost**, and then without it the punch records (which must be
+> kept for years) are gone. Keep it on paper **outside the shop** or in a password manager,
+> and tell someone you trust where it is. While the machine works, **«Εμφάνιση κωδικού
+> κρυπτογράφησης»** (show the encryption password, next to «Ανέβασμα τώρα») shows it again,
+> if you didn't write it down. (The copies on the machine and on USB aren't
+> encrypted and don't need it.)
 
 On Google Drive the files go into the `Karta-backups` folder (encrypted pieces that don't
 open with a double click; Karta can only see the files it creates itself). **«Ανέβασμα τώρα»** (upload now) uploads a

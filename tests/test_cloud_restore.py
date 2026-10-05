@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 import pytest
 from conftest import add_employee
 
-from app import cloud, config, db, restore, security
+from app import cloud, config, db, main, restore, security
 
 needs_rclone = pytest.mark.skipif(not cloud.available(), reason="rclone / restic are not installed")
 
@@ -206,6 +206,7 @@ def test_reconnecting_without_the_password_keeps_it(client, admin, employee, sto
     assert cloud.connect("local", local_path=str(store)) is None          # nothing new to write down
     with open(cloud._pw_path(), encoding="utf-8") as f:
         assert f.read() == password
+    assert cloud.password() == password                                    # «Εμφάνιση κωδικού κρυπτογράφησης»
     assert len(cloud.list_backups()) == 2                                  # same backups, one more snapshot
     assert not os.path.exists(os.path.join(cloud.data_dir(), cloud.STAGE))
 
@@ -234,3 +235,13 @@ def test_a_reconnect_to_an_empty_place_keeps_the_password(client, admin, employe
     password = cloud.connect("local", local_path=str(store))
     assert cloud.connect("local", local_path=str(tmp_path / "new-place")) == password   # shown again: a new repository
     assert len(cloud.list_backups()) == 1
+
+
+def test_the_encryption_password_can_be_shown_again(client, admin, monkeypatch):
+    assert client.post("/admin/api/cloud/password").status_code == 409            # no cloud
+    monkeypatch.setattr(cloud, "password", lambda: "Kq7mZp2xRt9bWn4cHs8vYd3F")
+    r = client.post("/admin/api/cloud/password")
+    assert r.json() == {"password": "Kq7mZp2xRt9bWn4cHs8vYd3F"}
+    assert db.one("SELECT action FROM audit ORDER BY id DESC LIMIT 1")["action"] == "cloud_password_viewed"
+    main.app.dependency_overrides.clear()
+    assert client.post("/admin/api/cloud/password").status_code in (401, 403)     # admins only
