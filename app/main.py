@@ -95,7 +95,11 @@ async def guard(request: Request, call_next):
 
 
 def client_ip(request: Request) -> str:
-    return request.headers.get("x-real-ip") or (request.client.host if request.client else "")
+    """The device's address, kept with each punch. Cloudflare (always in front: Access protects /admin) writes
+    CF-Connecting-IP itself and overwrites whatever the browser sent; X-Real-IP passes the tunnel unchanged, so it is
+    only a fallback for a reverse proxy that sets it without Cloudflare."""
+    h = request.headers
+    return h.get("cf-connecting-ip") or h.get("x-real-ip") or (request.client.host if request.client else "")
 
 
 def utc_plus(minutes: int) -> str:

@@ -73,19 +73,16 @@ So with your own proxy too:
 Your proxy must pass the `Cf-Access-Jwt-Assertion` header through unchanged. Caddy and
 nginx do that without any setting.
 
-## 5. The IP of each punch: `X-Real-IP`
+## 5. The IP of each punch
 
-With every punch, Karta records the device's IP address from the **`X-Real-IP`** header.
-When it's missing, Karta records the proxy's address.
+With every punch, Karta records the device's IP address. It takes it from the
+**`CF-Connecting-IP`** header, which Cloudflare itself writes (the domain always goes
+through Cloudflare, step 4), replacing whatever the browser sent. Only when that header is
+missing does it use your proxy's `X-Real-IP`, and otherwise the proxy's own address.
 
-- The proxy must **set** the header itself, to the address it sees, and must not keep an
-  `X-Real-IP` sent by the browser. The examples above do that.
-- Because Karta trusts this header, **only** the proxy may reach Karta (step 1).
-- Since the domain goes through Cloudflare (step 4), the address your proxy sees is
-  Cloudflare's. For the device's real address, take it from the `CF-Connecting-IP`
-  header, but only for requests that come from
-  [Cloudflare's addresses](https://www.cloudflare.com/ips/):
-  - **Caddy:** in the global options `servers { trusted_proxies static <Cloudflare ranges>
-    ; client_ip_headers CF-Connecting-IP }`, and `header_up X-Real-IP {client_ip}`;
-  - **nginx:** `set_real_ip_from <each Cloudflare range>;` and
-    `real_ip_header CF-Connecting-IP;`. Then `$remote_addr` is the real address.
+- Your proxy passes `CF-Connecting-IP` through unchanged. Caddy and nginx do that without
+  any setting.
+- **Only** Cloudflare may reach the proxy: in the server's firewall, allow ports 80 and 443
+  only from [Cloudflare's addresses](https://www.cloudflare.com/ips/). Otherwise anyone who
+  goes to the server directly can write that header themselves. Karta itself must not be
+  reachable directly either (step 1).
