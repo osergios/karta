@@ -394,3 +394,8 @@
     the database's `PRAGMA user_version` at start-up, in one transaction. Step 1 is empty: it marks today's schema as
     version 1. Steps only add (`ALTER TABLE … ADD COLUMN` guarded by `PRAGMA table_info`), so going back to an older
     version stays safe; a database made by a newer version is left alone. The old unused `schedules` table stays.
+78. **The first cloud backup runs at the end of connecting.** `cloud.connect()` holds the same lock as the nightly
+    worker from the start, and takes the first snapshot itself once the repository exists (new or existing backups),
+    so the worker can no longer start a backup before `restic init` has finished (it did, and the first backup failed
+    with an alert although nothing was wrong). The admin page says «το πρώτο αντίγραφο ανέβηκε ✓» or shows the reason
+    it failed; the connection (and the password shown once) stays either way.

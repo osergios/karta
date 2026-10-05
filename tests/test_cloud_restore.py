@@ -125,3 +125,32 @@ def test_cloud_backup_is_encrypted_deduplicated_and_can_be_restored(client, admi
     assert db.one("SELECT COUNT(*) n FROM employees")["n"] == 1
     os.remove(os.path.join(os.path.dirname(config.DB_PATH), r.json()["kept"]))
     assert client.post("/admin/api/restore/cloud", json={"id": "../etc/passwd"}).status_code == 400
+
+
+@needs_rclone
+def test_connecting_takes_the_first_backup_right_away(client, admin, employee, store):
+    password = cloud.connect("local", local_path=str(store))
+    assert password and len(cloud.list_backups()) == 1                 # no race with the nightly worker
+    assert cloud.status()["state"] == "ok" and not cloud.due(datetime.now())
+    cloud._forget()
+    assert cloud.connect("local", local_path=str(store), password=password) is None
+    assert len(cloud.list_backups()) == 2                               # existing backups: one more snapshot
+
+
+def test_no_backup_while_connecting(store):
+    assert cloud._running.acquire(blocking=False)                      # connect() holds it until its first snapshot
+    try:
+        with pytest.raises(cloud.CloudError):
+            cloud.run_backup()
+        with pytest.raises(cloud.CloudError):
+            cloud.connect("local", local_path=str(store))
+    finally:
+        cloud._running.release()
+
+
+def test_connect_reports_the_first_backup(client, admin, monkeypatch):
+    monkeypatch.setattr(cloud, "connect", lambda *a, **k: "secret-password-1234")
+    monkeypatch.setattr(cloud, "status", lambda: {"state": "fail", "error": "δεν απαντά το cloud"})
+    r = client.post("/admin/api/cloud/connect", json={"provider": "drive", "token": "{}"})
+    assert r.json() == {"ok": True, "password": "secret-password-1234", "first_backup": "fail",
+                        "error": "δεν απαντά το cloud"}
