@@ -74,7 +74,9 @@ If phone alerts aren't configured, a note says so here (they're set up in «Ρυ
 - **«Υπενθυμίσεις στο κατάστημα»:** shop‑screen reminders on or off. (Festive
   decorations are under [«Ωράρια & αργίες»](Admin-Schedules-and-Holidays-EN#festive-decorations).)
 - **«Λειτουργία εκπαίδευσης»:** training mode (see [Going live](Going-Live-EN)).
-- **Onboarding period** («Υποχρεωτική από … → Έναρξη»), see [Going live](Going-Live-EN).
+- **Onboarding period:** while it runs, shows the days left and the «Πώς τα πάνε» (how it's
+  going) table. Started and changed in «Ρυθμίσεις» → «Λειτουργία»; see
+  [Going live](Going-Live-EN).
 - **«Ανανέωση οθόνης»:** make the shop screen reload itself. Only needed after an update
   made on the machine; after «Ενημέρωση τώρα» the screen reloads by itself.
 - The state of the sending queue: anything pending, failed or waiting for your check.

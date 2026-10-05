@@ -9,7 +9,7 @@ Rules
   * A DEPARTURE follows the arrival it closes: if that arrival was 'onboarding', so is the departure (even if the
     period ended in between); if the arrival was sent, the departure is sent. Ergani therefore never receives a
     departure without its arrival, whatever the timing of the switch.
-  * The period ends by itself on the «mandatory from» date (or with «Τέλος τώρα» in admin).
+  * The period ends by itself on the «mandatory from» date (or with «Τέλος περιόδου τώρα» in «Λειτουργία»).
 Settings: 'onboarding_until' = first mandatory day (ISO date, exclusive end), 'onboarding_since' = start day.
 """
 from datetime import date, timedelta
@@ -93,7 +93,7 @@ def check_alerts(now) -> None:
                                if real else f"θα στελνόταν στο ΕΡΓΑΝΗ — αλλά η εφαρμογή είναι σε λειτουργία "
                                             f"{config.ERGANI_MODE}, οπότε τίποτα δεν θα πάει στο πραγματικό ΕΡΓΑΝΗ "
                                             "(«Ρυθμίσεις» → «Επιχείρηση και σύνδεση με το ΕΡΓΑΝΗ» → «Λειτουργία» → "
-                                            "«Έναρξη κανονικής λειτουργίας»)."),
+                                            "«Κανονική λειτουργία»)."),
                             None, now)
     elif today == u:
         monitor.raise_alert("onboarding_ended", None, today, "info" if real else "urgent",
@@ -101,7 +101,7 @@ def check_alerts(now) -> None:
                             if real else f"Η περίοδος προσαρμογής τελείωσε, αλλά η εφαρμογή είναι σε λειτουργία "
                                          f"{config.ERGANI_MODE}: τίποτα δεν πάει στο πραγματικό ΕΡΓΑΝΗ. «Ρυθμίσεις» → "
                                          "«Επιχείρηση και σύνδεση με το ΕΡΓΑΝΗ» → «Λειτουργία» → "
-                                         "«Έναρξη κανονικής λειτουργίας».", None, now)
+                                         "«Κανονική λειτουργία».", None, now)
 
 
 def progress() -> list[dict]:

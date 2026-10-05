@@ -418,3 +418,11 @@ button:disabled { cursor: default; }
 @keyframes flash { 0%, 40% { box-shadow: 0 0 0 4px var(--accent-pale); } 100% { box-shadow: 0 0 0 0 transparent; } }
 @media (prefers-reduced-motion: reduce) { .flash { animation: none; } }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* «Λειτουργία»: one row per mode, the current one marked */
+.mode-opt { display: flex; flex-wrap: wrap; gap: .6rem 1rem; align-items: center; justify-content: space-between; padding: .7rem .9rem; margin-top: .5rem; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+.mode-opt.current { border-color: var(--accent); background: var(--accent-pale); }
+.mode-opt .mode-text { flex: 1 1 24rem; }
+.mode-now { color: var(--accent); font-weight: 600; }
+.mode-date { display: flex; gap: .4rem; align-items: center; margin-top: .4rem; font-size: .9rem; }
+.mode-date input[type=date] { font: inherit; padding: .35rem .5rem; border: 1px solid var(--line); border-radius: 6px; }

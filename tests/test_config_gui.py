@@ -104,3 +104,25 @@ def test_queue_waits_while_the_ergani_user_is_missing(client, admin, monkeypatch
     row = submitter.process(mid, force=True)
     assert row["status"] == "pending" and row["attempts"] == 0
     assert client.get("/admin/api/overview").json()["config_problems"]
+
+
+def test_one_mode_control_with_the_onboarding_period(client, admin, pin_key, logins, clock):
+    """«Λειτουργία»: Δοκιμαστική, Περίοδος προσαρμογής (production + date), Κανονική λειτουργία."""
+    from app import onboarding
+    mode = lambda m, afm="", until=None: client.post("/admin/api/mode", json={   # noqa: E731
+        "mode": m, "afm": afm, "onboarding_until": until})
+    save(client, "ergani", ERGANI_USERNAME="user1", ERGANI_PASSWORD="wrong", ERGANI_USER_TYPE="01")
+    assert mode("production", "123456789", "2026-10-12").status_code == 400      # the login fails...
+    assert config.ERGANI_MODE == "dry_run" and onboarding.until() is None          # ...and the period is undone
+    assert mode("dry_run", until="2026-10-12").status_code == 400                  # a period belongs to production
+    assert mode("production", "123456789", "2026-10-06").status_code == 400        # from tomorrow on
+    save(client, "ergani", ERGANI_USERNAME="user1", ERGANI_PASSWORD="good", ERGANI_USER_TYPE="01")
+    assert mode("production", "123456789", "2026-10-12").status_code == 200       # Περίοδος προσαρμογής
+    assert config.ERGANI_MODE == "production" and onboarding.active() and str(onboarding.until()) == "2026-10-12"
+    assert mode("production", until="2026-10-19").status_code == 200              # a new date: no ΑΦΜ needed
+    assert str(onboarding.until()) == "2026-10-19" and str(onboarding.since()) == "2026-10-06"
+    assert mode("production").status_code == 200                                  # Κανονική λειτουργία
+    assert config.ERGANI_MODE == "production" and not onboarding.active()
+    assert mode("production", until="2026-10-12").status_code == 200              # back to a period (not yet mandatory)
+    assert mode("dry_run").status_code == 200                                      # Δοκιμαστική: the period ends
+    assert config.ERGANI_MODE == "dry_run" and not onboarding.active()

@@ -2,16 +2,20 @@
 
 # Going live
 
-Karta has three **modes** and two **practice features** on the
-admin page. Use them in this order, so you never send a wrong declaration to Ergani.
+Karta has three **modes** and one **practice feature** (training
+mode) on the admin page. Use them in this order, so you never send a wrong declaration to Ergani.
 
 ## The three modes
 
 | Mode | What happens to punches | Use it for |
 |---|---|---|
-| `dry_run` | **Nothing is sent.** Karta stores the exact payload it *would* send, so you can inspect it («Τι θα στελνόταν»). | First setup; checking schedules, PINs and the shop screen. |
-| `trial` | Sent to the **Ergani test environment** (`trialv2eservices.yeka.gr`). Submissions there are stamped «ΑΚΥΡΟ» and have no legal effect. | Checking that sending really works with your credentials. |
-| `production` | Sent to the **real Ergani**. | Normal use. |
+| «Δοκιμαστική» (`dry_run`) | **Nothing is sent.** Karta stores the exact payload it *would* send, so you can inspect it («Τι θα στελνόταν»). | First setup, testing, training; checking schedules, PINs and the shop screen. |
+| «Περίοδος προσαρμογής» (onboarding period, `production` with a date) | Recorded as usual, but **not sent** until the mandatory day; from then on they're sent by themselves. | While the card isn't mandatory for the business yet. |
+| «Κανονική λειτουργία» (normal operation, `production`) | Sent to the **real Ergani**. | Normal use. |
+
+For the advanced there's also the **Ergani test environment** (`trial`): punches are sent to
+Ergani's test environment (`trialv2eservices.yeka.gr`), where they're stamped «ΑΚΥΡΟ» and
+have no legal effect.
 
 The header of the admin page always shows the current mode, and the shop screen shows a
 small «Δοκιμαστική λειτουργία» label when not in production.
@@ -28,27 +32,34 @@ When you've finished testing, «Ρυθμίσεις» → «Κινήσεις» �
 
 ## Recommended path
 
-1. **`dry_run`.** Import staff, set schedules, register the shop screen, and let everyone
-   try punching. Check the stored payloads on the admin page.
-2. **`trial`.** In «Ρυθμίσεις» → «Επιχείρηση και σύνδεση με το ΕΡΓΑΝΗ», fill in the
-   **«Χρήστης για το δοκιμαστικό ΕΡΓΑΝΗ»** (user for the Ergani test environment; if you
-   leave it empty, the normal user is used) and press **«Πέρασμα σε δοκιμαστικό ΕΡΓΑΝΗ»**
-   (switch to the Ergani test environment). Make a few punches and confirm they appear in
-   the Ergani test environment.
-3. **`production`.** Press **«Έναρξη κανονικής λειτουργίας»** (go live). From now on every
-   punch is a legal declaration.
+Everything happens in one place: **«Ρυθμίσεις» → «Επιχείρηση και σύνδεση με το ΕΡΓΑΝΗ» →
+«Λειτουργία»** (mode), with no restart. The current mode is marked «· τώρα» (now).
+
+1. **«Δοκιμαστική»** (test, `dry_run`): for testing and training. Import staff, set
+   schedules, register the shop screen, and let everyone try punching. Nothing is sent to
+   Ergani.
+2. **«Περίοδος προσαρμογής»** (onboarding period): if the card isn't mandatory for the
+   business yet. Pick the **«Υποχρεωτική από»** (mandatory from) date and press
+   **«Έναρξη»** (start). Staff use the card as usual, but nothing is sent until that day;
+   then sending starts by itself. See [below](#onboarding-period-περίοδος-προσαρμογής).
+3. **«Κανονική λειτουργία»** (normal operation, `production`): every punch is a legal
+   declaration to Ergani.
 
 ### How to change the mode
 
-From the admin page, **«Ρυθμίσεις» → «Επιχείρηση και σύνδεση με το ΕΡΓΑΝΗ» →
-«Λειτουργία»** (mode), with no restart:
-
-- For `trial` or `production` you're asked to type **the business's ΑΦΜ** (tax number) to
-  confirm, and Karta **tests the connection first** to the matching Ergani. If the
-  connection fails, the mode doesn't change.
-- Going back to `dry_run` («Επιστροφή σε δοκιμαστική λειτουργία», back to test mode) just
-  needs an «ΟΚ».
+- For the onboarding period or normal operation from «Δοκιμαστική», you're asked to type
+  **the business's ΑΦΜ** (tax number) to confirm, and Karta **tests the connection** to
+  Ergani first. If it fails, nothing changes.
+- During the onboarding period, **«Αλλαγή ημερομηνίας»** (change date) moves the mandatory
+  day, and **«Τέλος περιόδου τώρα»** (end the period now) on «Κανονική λειτουργία» starts
+  sending right away.
+- Going back to «Δοκιμαστική» just needs an «ΟΚ» (and ends an onboarding period).
 - Every change is logged (who, when, from what to what).
+
+**For the advanced: the Ergani test environment** (`trial`). Under «Λειτουργία», it sends
+punches to Ergani's test environment, with no legal effect, to try the connection before
+normal operation. Fill in the **«Χρήστης για το δοκιμαστικό ΕΡΓΑΝΗ»** (user for the Ergani
+test environment; if empty, the normal user is used). It isn't a required step.
 
 If something the mode needs is missing (e.g. the Ergani password), the page says so in
 red, and punches **wait** without being lost until you fill it in. The mode can also be set
@@ -70,9 +81,9 @@ For showing staff how the shop screen works. Turn it on from «Σήμερα» �
 ## Onboarding period («Περίοδος προσαρμογής»)
 
 For a business that has time before the digital card becomes mandatory for it. Start it
-**after you switch to production**. Punches made during the period in `dry_run` or
-`trial` don't count in production, and «Διαγραφή δοκιμαστικών κινήσεων» removes them.
-Start it from «Σήμερα» → «Οθόνη καταστήματος και αποστολή» → «Υποχρεωτική από [date]» → «Έναρξη».
+from «Λειτουργία» → «Περίοδος προσαρμογής» → «Υποχρεωτική από [date]» → «Έναρξη» (it's
+part of normal operation: punches made in «Δοκιμαστική» don't count, and «Διαγραφή
+δοκιμαστικών κινήσεων» removes them). «Σήμερα» (today) shows how many days are left.
 
 Until that date:
 
@@ -87,7 +98,7 @@ Until that date:
   correctly, corrections you had to make, and days without punches.
 
 On the mandatory date, sending starts by itself. You can end it earlier with «Τέλος
-τώρα», or move the date with «Αλλαγή». A departure always follows its arrival: a shift
+περιόδου τώρα», or move the date with «Αλλαγή ημερομηνίας». A departure always follows its arrival: a shift
 that started during the period is closed in Karta only, so Ergani never receives a
 departure without its arrival.
 

@@ -441,3 +441,9 @@
     period, «Λειτουργία» no longer says «κάθε χτύπημα δηλώνεται στο πραγματικό ΕΡΓΑΝΗ»: it says the punches are
     recorded and sent from the first mandatory day, as «Σήμερα» does. With the retrospective system, the shop
     reminders box says the phone alert at the end of the day comes after 10′.
+89. **One place for the mode: «Δοκιμαστική», «Περίοδος προσαρμογής», «Κανονική λειτουργία».** «Ρυθμίσεις» → «Λειτουργία»
+    shows the three as rows, the current one marked; the onboarding period (with its «Υποχρεωτική από» date, «Αλλαγή
+    ημερομηνίας» and «Τέλος περιόδου τώρα») moved there from «Σήμερα», which now only shows its status and the «Πώς τα
+    πάνε» table. `POST /admin/api/mode` takes `onboarding_until`: the period is set before the switch to production
+    (not a punch can reach Ergani in between) and undone if the Ergani login test fails; «Κανονική λειτουργία» or
+    «Δοκιμαστική» end a running period. The Ergani test environment (`trial`) is under «Για προχωρημένους».

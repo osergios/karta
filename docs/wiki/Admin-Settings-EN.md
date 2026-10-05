@@ -7,9 +7,12 @@
 Anything saved here applies immediately (no restart) and **overrides** `.env`. A value
 that comes from `.env` is marked «από το .env».
 
-- **«Λειτουργία» (mode):** test (`dry_run`), Ergani test environment (`trial`) or live
-  (`production`). For `trial` / `production` you type the ΑΦΜ (tax number) to confirm, and
-  Karta tests the connection first. See [Going live](Going-Live-EN).
+- **«Λειτουργία» (mode):** **«Δοκιμαστική»** (test and training, nothing is sent),
+  **«Περίοδος προσαρμογής»** (onboarding period, with the mandatory date: punches are
+  recorded and sent from that day) or **«Κανονική λειτουργία»** (normal operation). From
+  «Δοκιμαστική» you type the ΑΦΜ (tax number) to confirm, and Karta tests the connection
+  first. The Ergani test environment (`trial`) is under «Για προχωρημένους» (advanced). See
+  [Going live](Going-Live-EN).
 - **«Επιχείρηση» (business):** employer ΑΦΜ (the check digit is verified), branch number
   (usually 0) and, optionally, your employer id in Ergani (the «id:» in Ergani's QR, so a
   QR from another employer is refused).

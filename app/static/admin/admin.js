@@ -589,11 +589,6 @@
     trial: "Δοκιμαστικό ΕΡΓΑΝΗ: τα χτυπήματα στέλνονται στο περιβάλλον δοκιμών του ΕΡΓΑΝΗ, χωρίς νομική ισχύ.",
     production: "Κανονική λειτουργία: κάθε χτύπημα δηλώνεται στο πραγματικό ΕΡΓΑΝΗ.",
   };
-  const MODE_SWITCH = {
-    dry_run: ["Επιστροφή σε δοκιμαστική λειτουργία", "Επιστροφή σε δοκιμαστική λειτουργία; Τα νέα χτυπήματα δεν θα στέλνονται στο ΕΡΓΑΝΗ."],
-    trial: ["Πέρασμα σε δοκιμαστικό ΕΡΓΑΝΗ", "Τα χτυπήματα θα στέλνονται στο περιβάλλον δοκιμών του ΕΡΓΑΝΗ (χωρίς νομική ισχύ). Πρώτα γίνεται δοκιμή σύνδεσης."],
-    production: ["Έναρξη κανονικής λειτουργίας", "ΠΡΟΣΟΧΗ: από εδώ και πέρα κάθε χτύπημα δηλώνεται στο πραγματικό ΕΡΓΑΝΗ και έχει νομική ισχύ. Πρώτα γίνεται δοκιμή σύνδεσης."],
-  };
   function field(label, input, src, help) {
     return el("label", {}, label, input, src ? el("span", { class: "cfg-src" }, SRC[src] ? SRC[src].trim() : "") : null,
       help ? el("span", { class: "cfg-src" }, help) : null);
@@ -646,29 +641,83 @@
     decl.value = B.TIME_DECLARATION.value || "advance";
     const mode = C.mode.value;
     const onboard = d.onboarding && d.onboarding.active ? d.onboarding : null;   // nothing is sent until its end
-    const switches = Object.keys(MODE_SWITCH).filter(m => m !== mode).map(m => el("button", {
-      class: m === "production" ? "btn" : "btn ghost", type: "button", onclick: act(async () => {
-        const [, warning] = MODE_SWITCH[m];
-        let typed = "";
-        if (m === "dry_run") { if (!confirm(warning)) return; }
-        else {
-          typed = prompt(`${warning}\n\nΓια επιβεβαίωση γράψε το ΑΦΜ της επιχείρησης:`);
-          if (typed === null) return;
+    // «Λειτουργία»: Δοκιμαστική · Περίοδος προσαρμογής (production with a date) · Κανονική λειτουργία; trial for the advanced
+    const cur = mode === "production" ? (onboard ? "onboarding" : "production") : mode;
+    const today = todayAthens();
+    const until = el("input", { type: "date", min: isoPlus(today, 1), max: isoPlus(today, 366), value: onboard ? onboard.until : "",
+                                "aria-label": "Υποχρεωτική χρήση από" });
+    const askAfm = text => { const t = prompt(`${text}\n\nΓια επιβεβαίωση γράψε το ΑΦΜ της επιχείρησης:`); return t === null ? null : t.trim(); };
+    const setMode = async (m, afm, onboarding_until, done) => { await api("/admin/api/mode", { mode: m, afm, onboarding_until }); toast(done); };
+    const choose = {
+      dry_run: async () => {
+        if (!confirm("Δοκιμαστική λειτουργία; Τα νέα χτυπήματα καταγράφονται μόνο στην Karta και δεν στέλνονται στο ΕΡΓΑΝΗ." +
+            (onboard ? "\n\nΗ περίοδος προσαρμογής τελειώνει." : ""))) return;
+        await setMode("dry_run", "", null, "Δοκιμαστική λειτουργία");
+      },
+      onboarding: async () => {
+        if (!until.value) { toast("Διάλεξε την ημερομηνία που η κάρτα γίνεται υποχρεωτική", true); return; }
+        if (onboard) {          // only a new date
+          if (until.value === onboard.until) { toast("Διάλεξε νέα ημερομηνία", true); return; }
+          await api("/admin/api/onboarding", { until: until.value }); toast(`Η κάρτα γίνεται υποχρεωτική ${fmtDayLong(until.value)}`);
+          return;
         }
-        await api("/admin/api/mode", { mode: m, afm: typed.trim() });
-        toast(`Λειτουργία: ${MODE[m]}`);
-      }) }, MODE_SWITCH[m][0]));
+        const text = `Περίοδος προσαρμογής έως και ${fmtDayLong(isoPlus(until.value, -1))};\n\nΤα χτυπήματα καταγράφονται κανονικά αλλά ΔΕΝ στέλνονται ` +
+          `στο ΕΡΓΑΝΗ. Από ${fmtDayLong(until.value)} στέλνονται μόνα τους, χωρίς να κάνεις τίποτα.\n\nΜόνο αν η κάρτα δεν είναι ακόμα υποχρεωτική για την επιχείρηση.`;
+        let afm = "";
+        if (mode === "production") { if (!confirm(text)) return; }
+        else { afm = askAfm(`${text} Πρώτα γίνεται δοκιμή σύνδεσης στο ΕΡΓΑΝΗ.`); if (afm === null) return; }
+        await setMode("production", afm, until.value, `Περίοδος προσαρμογής: υποχρεωτική ${fmtDayLong(until.value)}`);
+      },
+      production: async () => {
+        let afm = "";
+        if (mode === "production") {    // in the onboarding period: it ends now
+          const inside = d.employees.filter(e => e.inside && e.last_status === "onboarding").map(e => e.display_name);
+          if (!confirm("Τέλος της περιόδου προσαρμογής τώρα;\n\nΑπό αυτή τη στιγμή κάθε νέα προσέλευση στέλνεται στο ΕΡΓΑΝΗ." +
+              (inside.length ? `\n\n${inside.join(", ")}: είναι ήδη μέσα — η αποχώρησή τους μένει μόνο στην κάρτα (όπως η προσέλευση), ώστε να μη σταλεί αποχώρηση χωρίς προσέλευση.` : ""))) return;
+        } else {
+          afm = askAfm("ΠΡΟΣΟΧΗ: από εδώ και πέρα κάθε χτύπημα δηλώνεται στο πραγματικό ΕΡΓΑΝΗ και έχει νομική ισχύ. Πρώτα γίνεται δοκιμή σύνδεσης.");
+          if (afm === null) return;
+        }
+        await setMode("production", afm, null, "Κανονική λειτουργία: τα χτυπήματα στέλνονται στο ΕΡΓΑΝΗ");
+      },
+      trial: async () => {
+        const afm = askAfm("Τα χτυπήματα θα στέλνονται στο περιβάλλον δοκιμών του ΕΡΓΑΝΗ (χωρίς νομική ισχύ). Πρώτα γίνεται δοκιμή σύνδεσης.");
+        if (afm === null) return;
+        await setMode("trial", afm, null, "Δοκιμαστικό ΕΡΓΑΝΗ");
+      },
+    };
+    const days = n => n === 1 ? "αύριο" : `σε ${n} ημέρες`;
+    const MODES = [
+      ["dry_run", "Δοκιμαστική", "Για δοκιμές και εκπαίδευση: τα χτυπήματα καταγράφονται μόνο στην Karta, τίποτα δεν στέλνεται στο ΕΡΓΑΝΗ."],
+      ...(cur === "trial" ? [["trial", "Δοκιμαστικό ΕΡΓΑΝΗ", MODE_TEXT.trial]] : []),
+      ["onboarding", "Περίοδος προσαρμογής", onboard
+        ? `Από ${fmtDayLong(onboard.since)}: το προσωπικό χτυπά κανονικά (υπενθυμίσεις, ειδοποιήσεις, αναφορές), αλλά τίποτα δεν στέλνεται στο ΕΡΓΑΝΗ. ` +
+          `Η κάρτα γίνεται υποχρεωτική ${fmtDayLong(onboard.until)} (${days(onboard.days_left)}) και τότε η αποστολή ξεκινά μόνη της.`
+        : "Για όσο η κάρτα δεν είναι ακόμα υποχρεωτική: το προσωπικό τη χρησιμοποιεί κανονικά (υπενθυμίσεις, ειδοποιήσεις, αναφορές), αλλά τίποτα " +
+          "δεν στέλνεται στο ΕΡΓΑΝΗ μέχρι την ημερομηνία που ορίζεις· από εκείνη τη μέρα η αποστολή ξεκινά μόνη της."],
+      ["production", "Κανονική λειτουργία", "Κάθε χτύπημα δηλώνεται στο πραγματικό ΕΡΓΑΝΗ και έχει νομική ισχύ."],
+    ];
+    const label = k => k === cur ? "Αλλαγή ημερομηνίας" : k === "onboarding" ? "Έναρξη"
+      : k === "production" && cur === "onboarding" ? "Τέλος περιόδου τώρα" : "Επιλογή";
+    const modeRows = MODES.map(([k, title, text]) => el("div", { class: `mode-opt${k === cur ? " current" : ""}` },
+      el("div", { class: "mode-text" },
+        el("strong", {}, title), k === cur ? el("span", { class: "mode-now" }, " · τώρα") : null,
+        k === cur && C.mode.source === "env" ? el("span", { class: "cfg-src" }, " (από το .env)") : null,
+        el("div", { class: "small" }, text),
+        k === "onboarding" ? el("label", { class: "mode-date" }, "Υποχρεωτική από ", until) : null),
+      k === cur && k !== "onboarding" ? null
+        : el("button", { class: k === "production" && cur === "onboarding" ? "btn danger" : k === "production" ? "btn" : "btn ghost",
+                         type: "button", onclick: act(choose[k]) }, label(k))));
+    const advanced = cur === "trial" ? null : el("details", { class: "help" },
+      el("summary", {}, "Για προχωρημένους: δοκιμαστικό ΕΡΓΑΝΗ"),
+      el("p", { class: "small" }, "Στέλνει τα χτυπήματα στο περιβάλλον δοκιμών του ΕΡΓΑΝΗ (trialv2eservices.yeka.gr), χωρίς νομική ισχύ: " +
+        "για να δοκιμάσετε τη σύνδεση πριν την κανονική λειτουργία. Χρειάζεται χρήστη του δοκιμαστικού ΕΡΓΑΝΗ (παρακάτω)."),
+      el("button", { class: "btn ghost", type: "button", onclick: act(choose.trial) }, "Πέρασμα σε δοκιμαστικό ΕΡΓΑΝΗ"));
     box.replaceChildren(
       ...(C.problems.length ? [el("div", { class: "an-line bad" }, el("strong", {}, "Χρειάζεται συμπλήρωση: "), C.problems.join(" · "),
         mode !== "dry_run" ? " — μέχρι τότε τα χτυπήματα περιμένουν και δεν στέλνονται." : "")] : []),
       el("div", { class: "cfg-group" },
-        el("h3", {}, "Λειτουργία"),
-        el("div", { class: `an-line ${mode === "production" ? (onboard ? "warn" : "ok") : "muted"}` },
-          mode === "production" && onboard
-            ? `Κανονική λειτουργία, σε περίοδο προσαρμογής: τα χτυπήματα καταγράφονται, αλλά στο πραγματικό ΕΡΓΑΝΗ στέλνονται από ${dmy(onboard.until)}/${onboard.until.slice(0, 4)} (υποχρεωτική χρήση). Δείτε «Σήμερα».`
-            : MODE_TEXT[mode],
-          C.mode.source === "env" ? el("span", { class: "cfg-src" }, " (από το .env)") : null),
-        el("div", { class: "mode-actions" }, ...switches)),
+        el("h3", {}, "Λειτουργία"), ...modeRows, advanced),
       el("div", { class: "cfg-group" },
         el("h3", {}, "Επιχείρηση"),
         el("div", { class: "brand-form" },
@@ -965,46 +1014,21 @@
     if (!box || editing(box)) return;
     const ob = d.onboarding && d.onboarding.active ? d.onboarding : null;
     const today = todayAthens();
-    const date = el("input", { type: "date", min: isoPlus(today, 1), max: isoPlus(today, 366), value: ob ? ob.until : "",
-                               "aria-label": "Υποχρεωτική χρήση από" });
     const notReal = d.mode !== "production"
       ? el("div", { class: "an-line muted" }, `Η εφαρμογή είναι σε λειτουργία ${d.mode === "dry_run" ? "dry run" : "δοκιμαστικού ΕΡΓΑΝΗ"}: ` +
           "και μετά το τέλος της περιόδου δεν θα σταλεί τίποτα στο πραγματικό ΕΡΓΑΝΗ μέχρι να περάσεις σε κανονική λειτουργία («Ρυθμίσεις» → «Επιχείρηση και σύνδεση με το ΕΡΓΑΝΗ» → «Λειτουργία»).") : null;
+    const toSettings = el("button", { class: "link", type: "button", onclick: () => goTo("settings", "cfgBox") }, "Αλλαγή στις «Ρυθμίσεις»");
     const kids = [];
     if (ob) {
       kids.push(el("div", { class: "an-line ok onb-line" },
         el("span", {}, el("strong", {}, "ΠΕΡΙΟΔΟΣ ΠΡΟΣΑΡΜΟΓΗΣ "),
           `από ${fmtDayLong(ob.since)}. Η κάρτα γίνεται υποχρεωτική ${fmtDayLong(ob.until)} ` +
           `(${ob.days_left === 1 ? "αύριο" : `σε ${ob.days_left} ημέρες`}). Το προσωπικό χτυπά κανονικά — υπενθυμίσεις, ειδοποιήσεις ` +
-          "και αναφορές λειτουργούν — αλλά τίποτα δεν στέλνεται στο ΕΡΓΑΝΗ. Η οθόνη του καταστήματος δεν δείχνει τίποτα διαφορετικό (μόνο ένα αχνό «✓ καταγράφηκε» κάτω δεξιά μετά από κάθε χτύπημα), ώστε το προσωπικό να το παίρνει στα σοβαρά."),
-        el("span", { class: "onb-actions" },
-          el("label", {}, "Υποχρεωτική από ", date),
-          el("button", { class: "btn ghost", onclick: act(async () => {
-            if (!date.value || date.value === ob.until) { toast("Διάλεξε νέα ημερομηνία", true); return; }
-            await api("/admin/api/onboarding", { until: date.value }); toast(`Η κάρτα γίνεται υποχρεωτική ${fmtDayLong(date.value)}`);
-          }) }, "Αλλαγή"),
-          el("button", { class: "btn danger", onclick: act(async () => {
-            const inside = d.employees.filter(e => e.inside && e.last_status === "onboarding").map(e => e.display_name);
-            if (!confirm("Τέλος της περιόδου προσαρμογής τώρα;\n\nΑπό αυτή τη στιγμή κάθε νέα προσέλευση στέλνεται στο ΕΡΓΑΝΗ." +
-                (inside.length ? `\n\n${inside.join(", ")}: είναι ήδη μέσα — η αποχώρησή τους μένει μόνο στην κάρτα (όπως η προσέλευση), ώστε να μη σταλεί αποχώρηση χωρίς προσέλευση.` : ""))) return;
-            await api("/admin/api/onboarding", { until: null }); toast("Η κάρτα είναι πλέον υποχρεωτική — οι νέες κινήσεις στέλνονται");
-          }) }, "Τέλος τώρα"))));
+          "και αναφορές λειτουργούν — αλλά τίποτα δεν στέλνεται στο ΕΡΓΑΝΗ. Η οθόνη του καταστήματος δεν δείχνει τίποτα διαφορετικό (μόνο ένα αχνό «✓ καταγράφηκε» κάτω δεξιά μετά από κάθε χτύπημα), ώστε το προσωπικό να το παίρνει στα σοβαρά. "),
+        el("span", { class: "onb-actions" }, toSettings)));
       if (notReal) kids.push(notReal);
-    } else {
-      const ended = d.onboarding_until && d.onboarding_until <= today ? d.onboarding_until : null;
-      kids.push(el("div", { class: "an-line muted onb-line" },
-        el("span", {}, ended ? `Η περίοδος προσαρμογής τελείωσε: η κάρτα είναι υποχρεωτική από ${fmtDayLong(ended)}. `
-                             : "",
-          "Περίοδος προσαρμογής: για όσο η κάρτα δεν είναι ακόμα υποχρεωτική. Το προσωπικό τη χρησιμοποιεί κανονικά και βλέπεις πώς τα πάει, " +
-          "αλλά καμία κίνηση δεν στέλνεται στο ΕΡΓΑΝΗ μέχρι την ημερομηνία που ορίζεις· από εκείνη τη μέρα η αποστολή ξεκινά μόνη της."),
-        el("span", { class: "onb-actions" },
-          el("label", {}, "Υποχρεωτική από ", date),
-          el("button", { class: "btn ghost", onclick: act(async () => {
-            if (!date.value) { toast("Διάλεξε την ημερομηνία που η κάρτα γίνεται υποχρεωτική", true); return; }
-            if (!confirm(`Περίοδος προσαρμογής έως και ${fmtDayLong(isoPlus(date.value, -1))};\n\nΑπό τώρα οι νέες κινήσεις καταγράφονται στην κάρτα αλλά ΔΕΝ στέλνονται στο ΕΡΓΑΝΗ. ` +
-                `Από ${fmtDayLong(date.value)} στέλνονται κανονικά, χωρίς να κάνεις τίποτα.\n\nΧρησιμοποίησέ το μόνο αν η κάρτα δεν είναι ακόμα υποχρεωτική για την επιχείρηση.`)) return;
-            await api("/admin/api/onboarding", { until: date.value }); toast("Ξεκίνησε η περίοδος προσαρμογής");
-          }) }, "Έναρξη"))));
+    } else if (d.onboarding_until && d.onboarding_until <= today) {
+      kids.push(el("div", { class: "an-line muted" }, `Η περίοδος προσαρμογής τελείωσε: η κάρτα είναι υποχρεωτική από ${fmtDayLong(d.onboarding_until)}.`));
     }
     const P = d.onboarding_progress;
     if (P && P.length) {
