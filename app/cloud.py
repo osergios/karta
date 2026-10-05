@@ -76,12 +76,31 @@ def _run(tool: str, *args: str, timeout: int = 900, cwd: str | None = None, stdo
         raise CloudError("Το cloud δεν απάντησε εγκαίρως.")
     if r.returncode != 0:
         err = r.stderr if isinstance(r.stderr, str) else r.stderr.decode("utf-8", "replace")
-        lines = [x for x in err.strip().splitlines() if x.strip()]
-        msg = lines[-1][-300:] if lines else f"{tool}: κωδικός {r.returncode}"
-        if "wrong password" in msg:
-            msg = "λάθος κωδικός κρυπτογράφησης"
-        raise CloudError(msg)
+        log.warning("%s %s failed (%s): %s", tool, args[0] if args else "", r.returncode, err.strip())
+        raise CloudError(explain(err, tool, r.returncode))
     return r.stdout if stdout is None else ""
+
+
+# what restic / rclone say -> what the admin reads (the first match wins)
+_KNOWN = [
+    (re.compile(r"Is there a repository|unable to open config file", re.I),
+     "Δεν βρέθηκαν αντίγραφα σε αυτόν τον φάκελο του cloud"),
+    (re.compile(r"repository is already locked", re.I),
+     "Τα αντίγραφα είναι κλειδωμένα από προηγούμενη εργασία που διακόπηκε"),
+    (re.compile(r"wrong password", re.I), "λάθος κωδικός κρυπτογράφησης"),
+    (re.compile(r"quota", re.I), "Ο χώρος στο cloud γέμισε"),               # also a 403: before the next line
+    (re.compile(r"\b40[13]\b|invalid_grant|token expired|expired_access_token", re.I),
+     "Η πρόσβαση στο cloud έληξε — συνδέστε ξανά"),
+]
+
+
+def explain(err: str, tool: str = "restic", code: int = 1) -> str:
+    """A tool's error output as one short message: a known case in Greek, otherwise its last lines."""
+    for pattern, message in _KNOWN:
+        if pattern.search(err):
+            return message
+    lines = [x.strip() for x in err.strip().splitlines() if x.strip()]
+    return " · ".join(lines[-3:])[-300:] if lines else f"{tool}: κωδικός {code}"
 
 
 def _info() -> dict | None:
