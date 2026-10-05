@@ -473,3 +473,11 @@
 94. **Shop hours with the retrospective system.** The «Ωράριο καταστήματος» analysis said overtime «πρέπει να
     δηλώνεται στο ΕΡΓΑΝΗ πριν γίνει» even with «Απολογιστικό» selected; it now says it is declared retrospectively,
     by the end of the next month (like the employee schedules and the limits already did).
+95. **A failed cloud reconnect no longer loses the backup password.** `cloud._connect` deleted rclone.conf,
+    cloud-password and cloud.json before trying the new settings, and again when they failed: an expired token, then
+    «Σύνδεση» as if new, ended with `restic init` refusing the existing repository and no password left on the machine
+    (the backups then opened only with the copy the admin wrote down). The new connection is now tried in
+    `/data/.cloud-new` and moved into place with `os.replace` only after `restic init` / `snapshots` succeed, so a
+    failure leaves the working setup untouched. Reconnecting without a password reuses the one on the machine: it
+    carries on with the same backups (or starts a new repository with it, and shows it again); backups made with a
+    different password get a clear message. Also: a backup-alert test failed after 22:00 Athens time (fixed).
