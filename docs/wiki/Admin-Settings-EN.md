@@ -123,8 +123,8 @@ from here.
 
 ## «Έκδοση και ενημέρωση» (version and update)
 
-The running version, and whether a newer one is out (checked every few hours), with a
-«Τι αλλάζει» (what's new) link. **«Ενημέρωση τώρα»** (update now) leaves a request for
+The running version, and whether a newer one is out (checked every few hours; **«Έλεγχος
+τώρα»** (check now) asks right away), with a «Τι αλλάζει» (what's new) link. **«Ενημέρωση τώρα»** (update now) leaves a request for
 `update.sh` on the machine, which within two minutes keeps a backup, downloads the new version
 and restarts Karta; the page and the shop screen reload by themselves. If the button is
 missing, run `cd ~/karta && ./setup.sh update` once on the machine (it updates and installs

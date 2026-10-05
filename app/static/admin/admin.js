@@ -645,6 +645,7 @@
       el("option", { value: "retro" }, "Απολογιστικό: δηλώνονται μετά, έως το τέλος του επόμενου μήνα"));
     decl.value = B.TIME_DECLARATION.value || "advance";
     const mode = C.mode.value;
+    const onboard = d.onboarding && d.onboarding.active ? d.onboarding : null;   // nothing is sent until its end
     const switches = Object.keys(MODE_SWITCH).filter(m => m !== mode).map(m => el("button", {
       class: m === "production" ? "btn" : "btn ghost", type: "button", onclick: act(async () => {
         const [, warning] = MODE_SWITCH[m];
@@ -662,7 +663,10 @@
         mode !== "dry_run" ? " — μέχρι τότε τα χτυπήματα περιμένουν και δεν στέλνονται." : "")] : []),
       el("div", { class: "cfg-group" },
         el("h3", {}, "Λειτουργία"),
-        el("div", { class: `an-line ${mode === "production" ? "ok" : "muted"}` }, MODE_TEXT[mode],
+        el("div", { class: `an-line ${mode === "production" ? (onboard ? "warn" : "ok") : "muted"}` },
+          mode === "production" && onboard
+            ? `Κανονική λειτουργία, σε περίοδο προσαρμογής: τα χτυπήματα καταγράφονται, αλλά στο πραγματικό ΕΡΓΑΝΗ στέλνονται από ${dmy(onboard.until)}/${onboard.until.slice(0, 4)} (υποχρεωτική χρήση). Δείτε «Σήμερα».`
+            : MODE_TEXT[mode],
           C.mode.source === "env" ? el("span", { class: "cfg-src" }, " (από το .env)") : null),
         el("div", { class: "mode-actions" }, ...switches)),
       el("div", { class: "cfg-group" },
@@ -918,7 +922,11 @@
           }) }, "Ενημέρωση τώρα"))
         : el("div", { class: "small" }, "Ενημερώστε μία φορά από το μηχάνημα με ", el("code", {}, "cd ~/karta && ./setup.sh update"),
             ": από εκεί και πέρα, εδώ θα εμφανίζεται κουμπί «Ενημέρωση τώρα»."));
-    else main = el("div", { class: "an-line muted" }, U.latest ? "Έχετε την τελευταία έκδοση ✓" : "Ο έλεγχος για νέα έκδοση γίνεται κάθε λίγες ώρες.");
+    else main = el("div", { class: "an-line muted" }, U.latest ? "Έχετε την τελευταία έκδοση ✓ " : "Ο έλεγχος για νέα έκδοση γίνεται κάθε λίγες ώρες. ",
+      el("button", { class: "link", type: "button", onclick: act(async () => {
+        const u = await api("/admin/api/update/check", {});
+        toast(u.available ? `Υπάρχει νέα έκδοση: ${u.latest}` : u.latest ? "Έχετε την τελευταία έκδοση" : "Το GitHub δεν απάντησε· δοκιμάστε σε λίγο", !u.latest);
+      }) }, "Έλεγχος τώρα"));
     box.replaceChildren(el("p", {}, `Έκδοση: ${U.version}`), main, ...(resLine ? [resLine] : []));
   }
 
@@ -939,7 +947,7 @@
     const on = !!d.settings.kiosk_reminders;
     document.getElementById("remState").replaceChildren(el("div", { class: `an-line ${on ? "ok" : "muted"} send-row` },
       el("span", {}, on
-        ? `Υπενθυμίσεις στο κατάστημα: ενεργές — όποιος δεν έχει χτυπήσει προσέλευση/αποχώρηση στην ώρα του βλέπει και ακούει υπενθύμιση κάθε 30″. Μετά από ${d.settings.grace_minutes}′ ειδοποίηση στο κινητό σου.`
+        ? `Υπενθυμίσεις στο κατάστημα: ενεργές — όποιος δεν έχει χτυπήσει προσέλευση/αποχώρηση στην ώρα του βλέπει και ακούει υπενθύμιση κάθε 30″. Μετά από ${d.settings.grace_minutes}′ ειδοποίηση στο κινητό σου${d.retro ? " (στη λήξη της ημέρας μετά από 10′, απολογιστικό σύστημα)" : ""}.`
         : "Υπενθυμίσεις στο κατάστημα: απενεργοποιημένες (οι ειδοποιήσεις στο κινητό σου συνεχίζουν)."),
       el("button", { class: on ? "btn ghost" : "btn", onclick: act(async () => {
         await api("/admin/api/settings", { values: { kiosk_reminders: on ? 0 : 1 } });
