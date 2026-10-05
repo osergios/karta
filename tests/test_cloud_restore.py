@@ -93,16 +93,16 @@ def test_cloud_connect_checks_the_code(client, admin):
 
 @needs_rclone
 def test_cloud_backup_is_encrypted_deduplicated_and_can_be_restored(client, admin, employee, store):
-    with db.tx() as c:          # about 1 MB of history, so the data outweighs restic's own bookkeeping
+    with db.tx() as c:          # ~4 MB of history (~2 MB compressed): restic cuts files into ~1 MB pieces and re-uploads only changed ones
         c.executemany("INSERT INTO audit(at, actor, action, detail) VALUES (?,?,?,?)",
-                      [(db.utc_now_iso(), "admin", "test", os.urandom(250).hex()) for _ in range(2000)])
+                      [(db.utc_now_iso(), "admin", "test", os.urandom(250).hex()) for _ in range(8000)])
     password = cloud.connect("local", local_path=str(store))
     assert password and len(password) == 24 and cloud.connected()
     cloud.run_backup(datetime(2026, 10, 6, 23, 40))
     size1 = sum(p.stat().st_size for p in store.rglob("*") if p.is_file())
     cloud.run_backup(datetime(2026, 10, 7, 23, 40))
     size2 = sum(p.stat().st_size for p in store.rglob("*") if p.is_file())
-    assert size1 > 500_000 and size2 - size1 < size1 / 10                # the second snapshot stores only changes
+    assert size1 > 1_500_000 and size2 - size1 < size1 / 2               # the second snapshot stores only changes
     raw = b"".join(p.read_bytes() for p in store.rglob("*") if p.is_file())
     assert "Παπαδοπούλου".encode() not in raw and b"SQLite format" not in raw   # encrypted
     snaps = cloud.list_backups()

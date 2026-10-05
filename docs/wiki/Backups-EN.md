@@ -35,9 +35,11 @@ there's no USB. Backups are encrypted on your machine before they're uploaded (w
 read them.
 
 **They take very little space:** each snapshot is the whole database and restores on its
-own, but the cloud only stores what changed since the previous one, compressed. So the 30
-daily, 24 monthly and yearly snapshots take little more than a single copy: a few MB a year
-for a small shop. A free Google Drive account is enough for good.
+own, but the cloud only stores what changed since the previous one, compressed. Example: a
+shop with 8 people and 2.5 years of history (a database of about 6 MB) → about 1 MB a day,
+20–25 MB for the 30 daily snapshots, and about 1 MB for each monthly one: around 50 MB after
+two years, instead of half a GB with whole copies every night. A free Google Drive account
+(15 GB) is plenty.
 
 In **«Ρυθμίσεις» → «Αντίγραφα ασφαλείας»**:
 
