@@ -107,7 +107,9 @@ def on_arrival(employee_id: int, name: str, when: datetime) -> None:
     elif off:
         raise_alert("closed_punch", employee_id, day, "warning",
                     f"{name} χτύπησε προσέλευση {when:%H:%M} ενώ σήμερα {off['label'][0].lower() + off['label'][1:]}. "
-                    f"Αν δουλεύει, δήλωσε ωράριο για σήμερα στο ΕΡΓΑΝΗ και πέρασέ το στη διαχείριση («Υπερωρία / αλλαγή ημέρας…»).",
+                    + ("Αν δουλεύει, η ημέρα δηλώνεται απολογιστικά στο ΕΡΓΑΝΗ έως το τέλος του επόμενου μήνα· πέρασέ τη και "
+                       "στη διαχείριση («Υπερωρία / αλλαγή ημέρας…»)." if config.RETRO else
+                       "Αν δουλεύει, δήλωσε ωράριο για σήμερα στο ΕΡΓΑΝΗ και πέρασέ το στη διαχείριση («Υπερωρία / αλλαγή ημέρας…»)."),
                     None, when)
     elif sched is None:
         raise_alert("unscheduled", employee_id, day, "warning",
@@ -179,12 +181,16 @@ def check(now: datetime | None = None) -> None:
                 over = end + timedelta(minutes=s["grace_minutes"])
                 if now >= over:
                     raise_alert("overdue" + sfx, eid, today, "warning",
-                                f"{name} είναι ακόμα μέσα. {what[0].upper() + what[1:]} έληξε {end:%H:%M}: ό,τι περισσότερο "
-                                f"είναι εκτός δηλωμένου ωραρίου (μη δηλωμένη υπερωρία). Να χτυπήσει αποχώρηση ΤΩΡΑ, με την "
-                                f"πραγματική ώρα — ποτέ αποχώρηση και μετά συνέχεια της δουλειάς.{back}",
+                                f"{name} είναι ακόμα μέσα. {what[0].upper() + what[1:]} έληξε {end:%H:%M}: " + (
+                                    "αν δουλεύει, οι επιπλέον ώρες δηλώνονται απολογιστικά στο ΕΡΓΑΝΗ έως το τέλος του "
+                                    "επόμενου μήνα (η μηνιαία αναφορά τις δείχνει). Αν έφυγε, να χτυπήσει αποχώρηση ΤΩΡΑ, "
+                                    "με την πραγματική ώρα" if config.RETRO else
+                                    "ό,τι περισσότερο είναι εκτός δηλωμένου ωραρίου (μη δηλωμένη υπερωρία). Να χτυπήσει "
+                                    "αποχώρηση ΤΩΡΑ, με την πραγματική ώρα") +
+                                f" — ποτέ αποχώρηση και μετά συνέχεια της δουλειάς.{back}",
                                 None, now)   # the shop screen shows the repeating reminder instead
                 dl = sched.leave_by - timedelta(minutes=s["ot_deadline_minutes"])
-                if (last_part and s["ot_notice_minutes"] > 0
+                if (last_part and s["ot_notice_minutes"] > 0 and not config.RETRO     # retro: no deadline before
                         and dl - timedelta(minutes=s["ot_notice_minutes"]) <= now < dl):
                     _ot_notice(sched.leave_by, dl, today, now)
                 if now >= over + timedelta(minutes=s["escalate_minutes"]):
@@ -198,12 +204,16 @@ def check(now: datetime | None = None) -> None:
             if daily - 15 * 60 <= worked < daily:
                 raise_alert("daily_near", eid, today, "warning",
                             f"{name}: {hours.hm(worked)} καθαρή εργασία σήμερα. Σε 15′ συμπληρώνει "
-                            f"{s['daily_max_hours']:g} ώρες και ό,τι ακολουθεί είναι υπερωρία (δήλωση στο ΕΡΓΑΝΗ πριν ξεκινήσει).",
+                            f"{s['daily_max_hours']:g} ώρες και ό,τι ακολουθεί είναι υπερωρία ("
+                            + ("απολογιστική δήλωση στο ΕΡΓΑΝΗ έως το τέλος του επόμενου μήνα" if config.RETRO else
+                               "δήλωση στο ΕΡΓΑΝΗ πριν ξεκινήσει") + ").",
                             None, now)
             if worked >= daily:
                 raise_alert("daily_max", eid, today, "urgent",
                             f"{name}: {hours.hm(worked)} καθαρή εργασία σήμερα — πέρασε τις {s['daily_max_hours']:g} ώρες. "
-                            f"Από εδώ είναι υπερωρία: μόνο αν έχει δηλωθεί στο ΕΡΓΑΝΗ.",
+                            + ("Από εδώ είναι υπερωρία: δηλώνεται απολογιστικά στο ΕΡΓΑΝΗ έως το τέλος του επόμενου μήνα, "
+                               "μέσα στα νόμιμα όρια." if config.RETRO else
+                               "Από εδώ είναι υπερωρία: μόνο αν έχει δηλωθεί στο ΕΡΓΑΝΗ."),
                             None, now)   # your call (declare or send home): phone/admin only, not the shop screen
 
             week = hours.week_seconds(eid, today, now)
