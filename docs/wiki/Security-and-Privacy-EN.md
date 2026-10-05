@@ -53,6 +53,11 @@ sites are refused.
 - The Docker image runs as an **unprivileged user**, without server or access‑log
   banners.
 
+## Where the image comes from
+
+Karta's image is built only by the project's GitHub Actions, with signed build provenance
+and an SBOM. To check: `gh attestation verify oci://ghcr.io/osergios/karta:<version> --owner osergios`.
+
 ## Audit trail
 
 Admin actions (new PIN, QR issued, schedule changes, leave, departures entered by hand,

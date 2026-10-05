@@ -26,7 +26,16 @@ updates:
     commit-message:
       prefix: "docker"
 
-  # Actions used by the workflows in .github/workflows
+  # cloudflared in docker-compose.yml (the "docker" entry above only reads the Dockerfile)
+  - package-ecosystem: "docker-compose"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    labels: ["εξαρτήσεις"]
+    commit-message:
+      prefix: "docker"
+
+  # Actions used by the workflows in .github/workflows (pinned to commit SHAs; Dependabot updates SHA and comment)
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

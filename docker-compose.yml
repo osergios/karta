@@ -37,7 +37,7 @@ services:
       start_period: 15s
 
   cloudflared:
-    image: cloudflare/cloudflared:latest
+    image: cloudflare/cloudflared:2026.9.3     # pinned; Dependabot offers new versions
     profiles: ["tunnel"]         # started only with COMPOSE_PROFILES=tunnel in .env
     restart: unless-stopped
     # http2 for a machine at the shop or at home (home routers handle QUIC/UDP badly), auto on a VPS
