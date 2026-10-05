@@ -1841,7 +1841,7 @@
   }
   document.getElementById("erganiCheck").addEventListener("click", erganiCheck);
   document.getElementById("alertsClear").addEventListener("click", act(async () => {
-    if (!confirm("Εκκαθάριση της λίστας ειδοποιήσεων;\n\nΟι ανοιχτές σημειώνονται «Εντάξει» (φεύγουν και από την οθόνη του καταστήματος). Η μηνιαία αναφορά συνεχίζει να τις μετρά.")) return;
+    if (!confirm("Εκκαθάριση της λίστας ειδοποιήσεων;\n\nΟι ανοιχτές σημειώνονται «Εντάξει». Η μηνιαία αναφορά συνεχίζει να τις μετρά.")) return;
     const r = await api("/admin/api/alerts/clear", {}); toast(`Καθαρίστηκαν ${r.cleared} ειδοποιήσεις`);
   }));
   document.getElementById("erganiRefresh").addEventListener("click", act(async () => {

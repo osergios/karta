@@ -38,13 +38,31 @@ bottom sheet.
 | Action | What it does |
 |---|---|
 | **«Ευέλικτη προσέλευση…»** | Flexible arrival window in minutes (0–120), as shown in the employee's «Ψηφιακή Οργάνωση Χρόνου Εργασίας» in Ergani. See below. |
-| **«Κάρτα QR»** | Issue, show or cancel their QR card. See [QR cards](QR-Cards-EN). |
-| **«Σύνδεσμος για το κινητό»** | A 24‑hour link that delivers the QR card to their phone. |
-| **«Νέο PIN»** | Generate a new random PIN. You can also set one yourself («Ορισμός PIN»): exactly 6 digits, and easy ones like `123456` or `111111` are refused. |
-| **PIN view** | Show the current PIN. Only works with `PIN_KEY` set in `.env`. |
+| **«Έκδοση QR»** / **«Κάρτα QR»** | «Έκδοση QR» (issue QR) when they have no card: creates it. «Κάρτα QR» when they have one: shows the same card (no new code). From there you download, print, send the **phone link**, make a «Νέα κάρτα» (new card) or cancel. See [QR cards](QR-Cards-EN). |
+| **«Νέο PIN»** | Generate a new random PIN (this also unlocks a locked PIN). |
+| **«Εμφάνιση PIN»** | Show the current PIN for 20 seconds. Only there with `PIN_KEY` set in `.env`. |
+| **«Ορισμός PIN»** | Set a PIN yourself: exactly 6 digits; easy ones like `123456` or `111111` are refused. |
 | **«Μετονομασία»** | Change the display name on the shop screen. |
-| **«Απενεργοποίηση»** | Hide them from the shop screen (e.g. left the job) while keeping their history. |
+| **«Απενεργοποίηση»** / **«Ενεργοποίηση»** | Hide them from the shop screen (e.g. left the job) while keeping their history. «Ενεργοποίηση» (activate) brings them back. |
 | **«Διαγραφή»** | Remove the employee completely. Only allowed when they have **no real (production) punches**, e.g. test entries or someone imported by mistake. Real punches are legal working‑time records and must be kept; use «Απενεργοποίηση» instead. |
+
+## What the employee card shows
+
+Under the name: today's schedule (and whether it's declared overtime or a day change),
+«φεύγει έως» (leaves by), leave and future day changes, and notes such as «Θα αργήσει»
+(will be late), «Επιτρέπεται νωρίτερη προσέλευση σήμερα» (early arrival allowed today),
+«Ευέλικτη προσέλευση N′» and «Χωρίς αποχώρηση: …» (no departure).
+
+**«Κλειδωμένο PIN»** (PIN locked): after 5 wrong PINs in a row the PIN is locked for 5
+minutes (protection against guessing). It unlocks by itself, or at once with «Νέο PIN» /
+«Ορισμός PIN». The QR card keeps working meanwhile.
+
+## Cancelling leave, a day change or a note
+
+The «Άδεια…», «Υπερωρία / αλλαγή ημέρας…» and «Έφυγε νωρίτερα…» windows list what's
+already recorded underneath. **«Ακύρωση»** (cancel: leave, day changes) or **«Διαγραφή»**
+(delete: early‑leave reason) removes it. Nothing is sent to Ergani; if you had declared it
+there, change it in Ergani too.
 
 ## Flexible arrival («Ευέλικτη προσέλευση»)
 

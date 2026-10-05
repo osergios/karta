@@ -48,6 +48,38 @@ successful punch, a result screen confirms it. The «Επόμενο χτύπημ
 Esc / space) goes straight back to the start for the next person; otherwise the screen
 returns there by itself after a few seconds.
 
+The result screen says what happened with Ergani:
+
+| Message | Meaning |
+|---|---|
+| «Καταχωρήθηκε στο ΕΡΓΑΝΗ. Πρωτόκολλο …» | Sent, with a protocol number. |
+| «Καταγράφηκε. Θα σταλεί στο ΕΡΓΑΝΗ μόλις αποκατασταθεί η σύνδεση.» | No connection; Karta sends it by itself as soon as it can. |
+| «Καταγράφηκε. Η διαχείριση θα επιβεβαιώσει την αποστολή στο ΕΡΓΑΝΗ.» | Not sure it arrived; you decide in «Κινήσεις» ([How punches reach Ergani](Ergani-Submissions-EN)). |
+| «Δοκιμαστική λειτουργία: δεν στάλθηκε στο ΕΡΓΑΝΗ.» | «Δοκιμαστική» (test) mode. |
+| «Δοκιμαστικό ΕΡΓΑΝΗ (ΑΚΥΡΟ, χωρίς ισχύ)» | Ergani test environment. |
+| only a faint «✓ καταγράφηκε» line | Onboarding period. |
+
+If no departure was punched last time, the screen says so before the punch («Δεν
+καταγράφηκε αποχώρηση την προηγούμενη φορά. Ενημέρωσε τη διαχείριση.»).
+
+### Scanning a QR
+
+«Δείξε την κάρτα QR» opens the camera for 30 seconds, then goes back to the start. If
+nothing is read within 9″ it shows a tip («Κράτα το QR ίσια, 15-25 εκ. από την κάμερα. Αν
+η εικόνα είναι μαύρη, άνοιξε το καπάκι της κάμερας.»: hold it straight, 15–25 cm away; if
+the picture is black, open the camera cover). A QR that is neither a shop card nor an
+Ergani QR is ignored with a message. A card that isn't accepted (cancelled, another
+employer's…) shows «Η κάρτα δεν αναγνωρίστηκε» with «Ξανά» (again), «Με PIN» or «Άκυρο».
+
+If the device **has no camera**, the start screen goes straight to the names (PIN).
+
+### Keyboard and USB scanner
+
+On a laptop or PC: **Q**, **Enter** or **space** opens the QR scan; **P** or a digit opens
+the names; **Esc** goes back. On the PIN screen you can type the digits. A **USB QR
+scanner** (one that "types" the code) works on the start screen, for the shop's own QR
+cards.
+
 ### Ergani's personal QR
 
 The camera also accepts the employee QR that Ergani and myErgani show
@@ -67,8 +99,9 @@ QR cards don't have that weakness.
 | Wrong PIN 5 times | That person is locked out for 5 minutes. |
 | Many invalid QR cards in a row | QR is paused for a few minutes («χρησιμοποιήστε PIN»). |
 | Two punches by the same person within 60 seconds | The second is ignored (`DEBOUNCE_SECONDS`). |
-| Arrival **before** the declared start | Refused: «Είναι νωρίς: το ωράριό σου ξεκινά στις 10:30». You get a phone alert (once a day per person). Ergani allows no early arrival unless you declared it, so if you have, use «Νωρίτερη προσέλευση σήμερα» on the admin page. The allowed margin is «Προσέλευση πριν το ωράριο» in [Settings](Admin-Settings-EN) (default 0). |
-| Someone tries to punch **in** when their shift is ending or over | The screen asks first: «Φεύγω — ενημέρωσε τη διαχείριση» (records nothing, you get a phone alert) or «Έρχομαι τώρα» (a normal arrival). |
+| Arrival **before** the declared start | Refused: «Είναι νωρίς, [name]» and «Το ωράριό σου ξεκινά στις 10:30». You get a phone alert (once a day per person). Ergani allows no early arrival unless you declared it, so if you have, use «Νωρίτερη προσέλευση σήμερα» on the admin page. The allowed margin is «Προσέλευση πριν το ωράριο» in [Settings](Admin-Settings-EN) (default 0). |
+| Someone tries to punch **in** when their shift is ending or over | The screen asks first: «Φεύγω, ενημέρωσε τη διαχείριση» (records nothing, you get a phone alert) or «Έρχομαι τώρα (προσέλευση)» (a normal arrival). |
+| The device isn't registered (or was revoked) | «Η συσκευή δεν είναι εγγεγραμμένη», with an «Εγγραφή συσκευής» button that opens `/enroll`. |
 | Holiday or shop closure | No QR or PIN. The screen shows a greeting for the day («Καλά Χριστούγεννα!», «Σήμερα είμαστε κλειστά · Ανακαίνιση»…) and when the shop reopens. Someone with declared hours that day still gets the normal screen. |
 
 ## Reminders on the shop screen
@@ -94,9 +127,12 @@ Tapping a reminder card opens that person's PIN pad. Someone on leave, muted for
 - **Festive decorations** (on by default; switch them off in «Ωράρια & αργίες» →
   [«Αργίες και κλειστό κατάστημα»](Admin-Schedules-and-Holidays-EN#festive-decorations)).
   They follow the calendar: Christmas, Easter, 25 March and 28 October flags, Clean Monday
-  kites, and May Day flowers. The preview buttons there show each one.
+  kites, and a May Day wreath. The preview buttons there show each one.
 - Respects the Windows setting "reduce animations": all motion stops.
 - Scales from 1024×600 up to 4K, and fits a phone if needed.
+- Under the clock it says «Σήμερα κλειστά · …» on a holiday or closure.
+- If it stays open for days, it reloads itself every 6 hours (only while on the start
+  screen), to pick up a new version.
 - Works briefly offline: if the internet drops, the page still loads and tells staff to
   use the Ergani app instead.
 
