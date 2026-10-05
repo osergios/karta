@@ -360,7 +360,9 @@
         }
       }
       const t = e.today;
-      if (day.value === today && t && kind.value !== "off") {
+      if (day.value === today && t && kind.value !== "off" && !t.ot_by) {
+        kids.push(el("div", { class: "an-line" }, "Απολογιστικό σύστημα: πέρασέ την εδώ· στο ΕΡΓΑΝΗ δηλώνεται έως το τέλος του επόμενου μήνα (φύλλο «Απολογιστικές δηλώσεις» της μηνιαίας αναφοράς)."));
+      } else if (day.value === today && t && kind.value !== "off") {
         kids.push(el("div", { class: `an-line ${t.ot_passed ? "bad" : "warn"}` }, t.ot_passed
           ? `Η προθεσμία για σήμερα ήταν ${t.ot_by} (${d.settings.ot_deadline_minutes}′ πριν τη λήξη ${t.end}). Αν η υπερωρία δεν δηλώθηκε εγκαίρως στο ΕΡΓΑΝΗ, ΜΗΝ την περάσεις: ${e.display_name} φεύγει έως ${t.end}.`
           : `Δήλωσε πρώτα την υπερωρία στο ΕΡΓΑΝΗ — προθεσμία σήμερα έως ${t.ot_by} (${d.settings.ot_deadline_minutes}′ πριν τη λήξη ${t.end}). Μετά πέρασέ την εδώ.`));
@@ -638,6 +640,10 @@
     const afm = input(B.EMPLOYER_AFM.value, { maxlength: "9", inputmode: "numeric", autocomplete: "off" });
     const branch = input(B.BRANCH_NUMBER.value || "0", { maxlength: "4", inputmode: "numeric" });
     const empId = input(B.ERGANI_EMPLOYER_ID.value, { maxlength: "40", placeholder: "προαιρετικά" });
+    const decl = el("select", {},
+      el("option", { value: "advance" }, "Προαναγγελία: αλλαγές και υπερωρίες δηλώνονται πριν"),
+      el("option", { value: "retro" }, "Απολογιστικό: δηλώνονται μετά, έως το τέλος του επόμενου μήνα"));
+    decl.value = B.TIME_DECLARATION.value || "advance";
     const mode = C.mode.value;
     const switches = Object.keys(MODE_SWITCH).filter(m => m !== mode).map(m => el("button", {
       class: m === "production" ? "btn" : "btn ghost", type: "button", onclick: act(async () => {
@@ -665,9 +671,14 @@
           field("ΑΦΜ εργοδότη", afm, B.EMPLOYER_AFM.source),
           field("Αριθμός παραρτήματος", branch, B.BRANCH_NUMBER.source, "Συνήθως 0 (η έδρα)."),
           field("Κωδικός εργοδότη στο ΕΡΓΑΝΗ", empId, B.ERGANI_EMPLOYER_ID.source, "Προαιρετικά: το «id:» στο QR του ΕΡΓΑΝΗ."),
+          field("Δήλωση αλλαγών ωραρίου και υπερωριών", decl, B.TIME_DECLARATION.source,
+            "Ό,τι έχει επιλέξει η επιχείρηση στο ΕΡΓΑΝΗ (ρωτήστε τον λογιστή). Το απολογιστικό σύστημα υπάρχει για " +
+            "επιχειρήσεις με ψηφιακή κάρτα: οι αλλαγές και οι υπερωρίες δηλώνονται από τα χτυπήματα, έως το τέλος του " +
+            "επόμενου μήνα. Τα όρια ωρών και ανάπαυσης ισχύουν και στα δύο. Αλλάζει τις ειδοποιήσεις της Karta."),
           el("button", { class: "btn", type: "button", onclick: act(async () => {
             await api("/admin/api/config", { group: "business", values: {
-              EMPLOYER_AFM: afm.value.trim(), BRANCH_NUMBER: branch.value.trim(), ERGANI_EMPLOYER_ID: empId.value.trim() } });
+              EMPLOYER_AFM: afm.value.trim(), BRANCH_NUMBER: branch.value.trim(), ERGANI_EMPLOYER_ID: empId.value.trim(),
+              TIME_DECLARATION: decl.value } });
             toast("Τα στοιχεία της επιχείρησης αποθηκεύτηκαν");
           }) }, "Αποθήκευση"))),
       el("div", { class: "cfg-group" },
@@ -1075,7 +1086,10 @@
     ["weekly_legal_hours", "Νόμιμη εβδομάδα, μετά υπερωρία (ώρες)"],
     ["min_rest_hours", "Ελάχιστη ανάπαυση (ώρες)"],
   ];
-  let editorsFor = null;   // active employee ids the editors were drawn for
+  let editorsFor = null;   // active employee ids the editors were drawn for (and the declaration system)
+  const editorsKey = d => d.employees.filter(e => e.active).map(e => e.id).join(",") + (d.retro ? "|retro" : "");
+  let RETRO = false;       // the business declares changes and overtime afterwards (απολογιστικό σύστημα)
+  const OT_LIMITS = ["ot_deadline_minutes", "ot_notice_minutes"];   // only with προαναγγελία (the retrospective system has no deadline)
 
   // ---------- schedule analysis (mirrors the server rules; explains what the numbers mean) ----------
   const DAY_FULL = ["Δευτέρα", "Τρίτη", "Τετάρτη", "Πέμπτη", "Παρασκευή", "Σάββατο", "Κυριακή"];
@@ -1134,7 +1148,7 @@
         const over8 = Math.min(n, legalDay) - normalDay;
         if (over8 > 0) { parts.push(`${H(over8)} πάνω από το ${sixDay ? "6ω40" : "8ωρο"}`); cls = "warn"; }
         const ot = Math.max(0, n - legalDay);
-        if (ot > 0) { parts.push(`${H(ot)} υπερωρία (δήλωση στο ΕΡΓΑΝΗ πριν ξεκινήσει, +40%)`); cls = "bad"; weekOT += ot; }
+        if (ot > 0) { parts.push(`${H(ot)} υπερωρία (${RETRO ? "απολογιστική δήλωση στο ΕΡΓΑΝΗ" : "δήλωση στο ΕΡΓΑΝΗ πριν ξεκινήσει"}, +40%)`); cls = "bad"; weekOT += ot; }
       }
       if (sp.b && F && F.break_within === false && !sp.bo) { notes.push(`στο ΕΡΓΑΝΗ το διάλειμμα είναι ΕΚΤΟΣ ωραρίου: γράψε /+${sp.b} (όχι /${sp.b})`); cls = "bad"; }
       else if (sp.bo && F && F.break_within === true) { notes.push(`στο ΕΡΓΑΝΗ το διάλειμμα είναι ΕΝΤΟΣ ωραρίου: γράψε /${sp.b} (όχι /+${sp.b})`); cls = "bad"; }
@@ -1218,7 +1232,7 @@
   }
 
   const LIMIT_HELP = {
-    grace_minutes: v => `Αν κάποιος δεν έχει χτυπήσει προσέλευση ${v}′ μετά την έναρξη του ωραρίου του, ή είναι ακόμα μέσα ${v}′ μετά τη λήξη, σου έρχεται ειδοποίηση στο κινητό. Στο κατάστημα η υπενθύμιση ξεκινά από την ακριβή ώρα.`,
+    grace_minutes: v => `Αν κάποιος δεν έχει χτυπήσει προσέλευση ${v}′ μετά την έναρξη του ωραρίου του, ή είναι ακόμα μέσα ${RETRO ? "10′ (απολογιστικό σύστημα)" : `${v}′`} μετά τη λήξη, σου έρχεται ειδοποίηση στο κινητό. Στο κατάστημα η υπενθύμιση ξεκινά από την ακριβή ώρα.`,
     early_minutes: v => +v === 0
       ? "Κανείς δεν μπορεί να χτυπήσει προσέλευση πριν την ώρα έναρξης του ωραρίου του. Αν προσπαθήσει, η οθόνη το αρνείται και σου έρχεται ειδοποίηση."
       : `Επιτρέπεται προσέλευση έως ${v}′ πριν την έναρξη του ωραρίου. Νωρίτερα η οθόνη το αρνείται και σου έρχεται ειδοποίηση. (Το ΕΡΓΑΝΗ δεν δίνει ανοχή: για να είσαι 100% καλυμμένος άφησέ το 0.)`,
@@ -1227,7 +1241,7 @@
       ? "Καμία υπενθύμιση στο κινητό για την προθεσμία της υπερωρίας (η λίστα εργαζομένων τη δείχνει πάντα)."
       : `Ειδοποίηση στο κινητό ${v}′ πριν την προθεσμία, με όσους είναι μέσα και λήγουν εκείνη την ώρα: «αν χρειαστεί να μείνει κάποιος, δήλωσε υπερωρία έως …». Μία φορά ανά ώρα λήξης.`,
     escalate_minutes: v => `Αν συνεχίζει ${v}′ αργότερα: επείγον, με ήχο κάθε 2 λεπτά μέχρι να χτυπήσει αποχώρηση.`,
-    daily_max_hours: v => `Μετά από ${v} ώρες καθαρής εργασίας την ημέρα, κάθε λεπτό είναι υπερωρία και πρέπει να έχει δηλωθεί στο ΕΡΓΑΝΗ πριν ξεκινήσει. Πενθήμερο: 9 · εξαήμερο: 8.`,
+    daily_max_hours: v => `Μετά από ${v} ώρες καθαρής εργασίας την ημέρα, κάθε λεπτό είναι υπερωρία και ${RETRO ? "δηλώνεται απολογιστικά στο ΕΡΓΑΝΗ έως το τέλος του επόμενου μήνα" : "πρέπει να έχει δηλωθεί στο ΕΡΓΑΝΗ πριν ξεκινήσει"}. Πενθήμερο: 9 · εξαήμερο: 8.`,
     weekly_max_hours: v => `Έως ${v} ώρες την εβδομάδα είναι κανονική εργασία (συμβατικό 40ωρο). Πάνω από αυτό: υπερεργασία, +20%.`,
     weekly_legal_hours: v => `Πάνω από ${v} ώρες την εβδομάδα: υπερωρία, +40%, μόνο δηλωμένη. Πενθήμερο: 45 · εξαήμερο: 48. Μέσος όρος 4μήνου έως 48.`,
     min_rest_hours: v => `Τουλάχιστον ${v} συνεχόμενες ώρες από την αποχώρηση ως την επόμενη προσέλευση. Ελέγχεται στο ωράριο και σε κάθε προσέλευση.`,
@@ -1369,14 +1383,14 @@
 
     // limits, each with a live explanation of what the value means
     const form = document.getElementById("limits");
-    form.replaceChildren(...LIMITS.map(([k, label]) => {
+    form.replaceChildren(...LIMITS.filter(([k]) => !(RETRO && OT_LIMITS.includes(k))).map(([k, label]) => {
       const help = el("span", { class: "help" }, LIMIT_HELP[k](d.settings[k]));
       const input = el("input", { name: k, type: "number", step: "0.5", min: "0", value: String(d.settings[k]) });
       input.addEventListener("input", () => { help.textContent = LIMIT_HELP[k](input.value || "–"); refreshers.forEach(f => f()); });
       return el("label", {}, label, input, help);
     }), el("button", { class: "btn" }, "Αποθήκευση ορίων"));
     refreshers.forEach(f => f());
-    editorsFor = d.employees.filter(e => e.active).map(e => e.id).join(",");
+    editorsFor = editorsKey(d);
   }
 
 
@@ -1467,7 +1481,7 @@
     return [
       e.active && e.off_today ? el("div", { class: "small" }, `Σήμερα: ${e.off_today}`) : null,
       e.active && e.today ? el("div", { class: "small" }, `Σήμερα: ${e.today.label}` + (e.today.change === "overtime" ? " (δηλωμένη υπερωρία)" : e.today.change ? " (αλλαγή ημέρας)" : "") +
-        flexNote(e.today, e.inside) + ` · φεύγει έως ${e.today.end}` + (e.today.over ? "" : e.today.ot_passed ? " · προθεσμία υπερωρίας πέρασε" : ` · υπερωρία δηλώνεται έως ${e.today.ot_by}`)) : null,
+        flexNote(e.today, e.inside) + ` · φεύγει έως ${e.today.end}` + (e.today.over || !e.today.ot_by ? "" : e.today.ot_passed ? " · προθεσμία υπερωρίας πέρασε" : ` · υπερωρία δηλώνεται έως ${e.today.ot_by}`)) : null,
       (e.leaves || []).length ? el("div", { class: "small" }, e.leaves.map(l => `${l.label || "Άδεια"}: ${dmy(l.start_date)}–${dmy(l.end_date)}`).join(" · ")) : null,
       (e.day_changes || []).filter(c => c.day > todayAthens()).length ? el("div", { class: "small" },
         "Αλλαγές: " + e.day_changes.filter(c => c.day > todayAthens()).map(c => `${dmy(c.day)} ${c.text || "ρεπό"}`).join(", ")) : null,
@@ -1512,7 +1526,7 @@
     const row = (e, lines, buttons) => el("div", { class: "today-row" },
       el("div", { class: "tr-main" }, el("strong", {}, e.display_name), ...lines.filter(Boolean).map(t => el("div", { class: "small" }, t))),
       el("div", { class: "tr-actions" }, ...buttons.filter(Boolean), actionsMenu(empActions(e, d))));
-    const deadline = t => !t || t.over ? "" : t.ot_passed ? `προθεσμία υπερωρίας πέρασε (${t.ot_by})` : `υπερωρία δηλώνεται έως ${t.ot_by}`;
+    const deadline = t => !t || t.over || !t.ot_by ? "" : t.ot_passed ? `προθεσμία υπερωρίας πέρασε (${t.ot_by})` : `υπερωρία δηλώνεται έως ${t.ot_by}`;
     const kids = [];
     if (d.closed_today) kids.push(el("div", { class: "an-line muted" }, `Σήμερα: ${d.closed_today}`));
     if (open.length) kids.push(el("h3", {}, "Ξέχασαν αποχώρηση"), ...open.map(e => row(e,
@@ -1641,7 +1655,8 @@
   async function load() {
     let d;
     try { d = await api("/admin/api/overview"); } catch (e) { toast(e.message, true); return; }
-    if (editorsFor !== d.employees.filter(e => e.active).map(e => e.id).join(",")) renderEditors(d);
+    RETRO = !!d.retro;
+    if (editorsFor !== editorsKey(d)) renderEditors(d);
     document.getElementById("erganiState").textContent = d.ergani_configured
       ? "Στοιχεία σύνδεσης ΕΡΓΑΝΗ: ρυθμισμένα." : "Στοιχεία σύνδεσης ΕΡΓΑΝΗ: συμπλήρωσέ τα παραπάνω, στο «Επιχείρηση και σύνδεση με το ΕΡΓΑΝΗ».";
     document.getElementById("erganiCheck").disabled = !d.ergani_configured;

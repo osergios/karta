@@ -429,3 +429,10 @@
     the Cloudflare Tunnel unchanged, so a hand-made request could record any address. It now takes Cloudflare's
     `CF-Connecting-IP` (Cloudflare writes it itself, replacing what the browser sent), then `X-Real-IP`, then the
     connection's address. The wiki page «Πίσω από δικό σας reverse proxy» says to let only Cloudflare reach the proxy.
+87. **Προαναγγελία or απολογιστικό σύστημα.** New setting in «Ρυθμίσεις» → «Επιχείρηση» (`TIME_DECLARATION`, `advance` by
+    default or `retro`): how the business declares schedule changes and overtime in Ergani. With the retrospective
+    system (businesses on the digital card, since 1/7/2024: declared from the punches by the end of the next month)
+    Karta shows no overtime deadline and sends no phone reminder before the end of the shift; the «έληξε» phone alert
+    comes 10′ after the end (instead of after the 5′ grace) to say someone stayed late. That alert, the daily-limit
+    ones, a punch on a closed day and the monthly report say the hours are declared retrospectively instead of «μη
+    δηλωμένη υπερωρία». The shop screen's reminders with sound and the limits on hours and rest are the same.

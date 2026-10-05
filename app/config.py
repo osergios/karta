@@ -29,7 +29,7 @@ ERGANI_URLS = {
 
 # The settings below can also be changed from the admin page («Ρυθμίσεις»). Those values are kept in the
 # database (app/appconfig.py) and take precedence over .env; apply() recomputes everything derived.
-EDITABLE = ("ERGANI_MODE", "EMPLOYER_AFM", "BRANCH_NUMBER", "ERGANI_EMPLOYER_ID",
+EDITABLE = ("ERGANI_MODE", "EMPLOYER_AFM", "BRANCH_NUMBER", "ERGANI_EMPLOYER_ID", "TIME_DECLARATION",
             "ERGANI_USERNAME", "ERGANI_PASSWORD", "ERGANI_USER_TYPE",
             "ERGANI_TRIAL_USERNAME", "ERGANI_TRIAL_PASSWORD", "ERGANI_TRIAL_USER_TYPE",
             "NTFY_URL", "NTFY_TOPIC", "NTFY_TOKEN")
@@ -40,7 +40,7 @@ VALUES: dict = {}          # the effective raw values (.env overridden by the ad
 def apply(overrides: dict | None = None) -> None:
     """Sets the module-level settings from .env, overridden by the values saved in the admin page."""
     global ERGANI_MODE, ERGANI_BASE_URL, ERGANI_HOST, ERGANI_USERNAME, ERGANI_PASSWORD, ERGANI_USER_TYPE
-    global EMPLOYER_AFM, ERGANI_EMPLOYER_ID, BRANCH_NUMBER, NTFY_URL, NTFY_TOPIC, NTFY_TOKEN
+    global EMPLOYER_AFM, ERGANI_EMPLOYER_ID, BRANCH_NUMBER, NTFY_URL, NTFY_TOPIC, NTFY_TOKEN, RETRO
     v = {**ENV_VALUES, **(overrides or {})}
     VALUES.clear()
     VALUES.update(v)
@@ -66,6 +66,10 @@ def apply(overrides: dict | None = None) -> None:
     # from another employer is refused at the kiosk.
     ERGANI_EMPLOYER_ID = v["ERGANI_EMPLOYER_ID"]
     BRANCH_NUMBER = int(v["BRANCH_NUMBER"] or "0")
+    # How the business declares schedule changes and overtime in Ergani (its own choice there; the retrospective system exists since 1/7/2024):
+    # "advance" (προαναγγελία, the default) before they happen, or "retro" (απολογιστικό σύστημα, businesses on the
+    # digital card) afterwards, by the end of the next month, from the card's punches. It changes Karta's alerts.
+    RETRO = v["TIME_DECLARATION"] == "retro"
     # Phone alerts (optional), through an ntfy server and topic.
     NTFY_URL = v["NTFY_URL"].rstrip("/")
     NTFY_TOPIC = v["NTFY_TOPIC"]

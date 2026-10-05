@@ -82,6 +82,14 @@ use the «Κλείσιμο DD/MM…» button on the [Today](Admin-Today-EN) tab.
 
 «Ενέργειες ▾» → «Ξεχασμένη βάρδια…». It's recorded in Karta only, for the report and pay.
 
+### We declare overtime retrospectively. What changes?
+
+In «Ρυθμίσεις» → «Επιχείρηση», choose «Απολογιστικό» under «Δήλωση αλλαγών ωραρίου και
+υπερωριών». Karta then shows no overtime deadline, your phone gets one alert 10′ after the
+end if someone stayed (no reminder before), the
+alerts say the extra hours are declared by the end of the next month, and you'll find them in
+the monthly report's «Απολογιστικές δηλώσεις» sheet. See [Settings](Admin-Settings-EN).
+
 ### Someone needs to stay late
 
 Declare the overtime in Ergani **before** the deadline («υπερωρία δηλώνεται έως …»),

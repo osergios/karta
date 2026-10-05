@@ -17,7 +17,7 @@ log = logging.getLogger("workcard.appconfig")
 PREFIX = "cfg."
 SECRETS = ("ERGANI_PASSWORD", "ERGANI_TRIAL_PASSWORD", "NTFY_TOKEN")
 GROUPS = {
-    "business": ("EMPLOYER_AFM", "BRANCH_NUMBER", "ERGANI_EMPLOYER_ID"),
+    "business": ("EMPLOYER_AFM", "BRANCH_NUMBER", "ERGANI_EMPLOYER_ID", "TIME_DECLARATION"),
     "ergani": ("ERGANI_USERNAME", "ERGANI_PASSWORD", "ERGANI_USER_TYPE"),
     "trial": ("ERGANI_TRIAL_USERNAME", "ERGANI_TRIAL_PASSWORD", "ERGANI_TRIAL_USER_TYPE"),
     "ntfy": ("NTFY_URL", "NTFY_TOPIC", "NTFY_TOKEN"),
@@ -79,6 +79,12 @@ def _user_type(v: str) -> str:
     return v
 
 
+def _declaration(v: str) -> str:
+    if v not in ("", "advance", "retro"):
+        raise ConfigError("Σύστημα δήλωσης: προαναγγελία ή απολογιστικό.")
+    return v
+
+
 def _url(v: str) -> str:
     v = v.rstrip("/")
     if v and (urlparse(v).scheme not in ("http", "https") or not urlparse(v).netloc):
@@ -101,7 +107,7 @@ def _text(limit: int):
 
 
 CHECKS = {
-    "EMPLOYER_AFM": _afm, "BRANCH_NUMBER": _branch, "ERGANI_EMPLOYER_ID": _text(40),
+    "EMPLOYER_AFM": _afm, "BRANCH_NUMBER": _branch, "ERGANI_EMPLOYER_ID": _text(40), "TIME_DECLARATION": _declaration,
     "ERGANI_USERNAME": _text(100), "ERGANI_PASSWORD": _text(200), "ERGANI_USER_TYPE": _user_type,
     "ERGANI_TRIAL_USERNAME": _text(100), "ERGANI_TRIAL_PASSWORD": _text(200), "ERGANI_TRIAL_USER_TYPE": _user_type,
     "NTFY_URL": _url, "NTFY_TOPIC": _topic, "NTFY_TOKEN": _text(200),

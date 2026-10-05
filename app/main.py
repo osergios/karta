@@ -869,6 +869,7 @@ def admin_overview(admin: str = Depends(security.require_admin)):
         "schedules": schedules,
         "schedule_meta": sched_meta,
         "settings": monitor.get_settings(),
+        "retro": config.RETRO,                    # the business declares changes and overtime afterwards
         "ntfy": bool(config.NTFY_URL and config.NTFY_TOPIC),
         "config_problems": config.problems(),
         "config": appconfig.view(),
@@ -954,10 +955,11 @@ def today_info(employee_id: int):
         return None
     sched = hours.effective_schedule(employee_id, declared)   # flexible arrival: the end follows the arrival
     ch = hours.day_change(employee_id, now.date())
-    by = sched.leave_by - timedelta(minutes=monitor.get_settings()["ot_deadline_minutes"])
+    # retrospective system (config.RETRO): overtime is declared afterwards, so there is no deadline today
+    by = None if config.RETRO else sched.leave_by - timedelta(minutes=monitor.get_settings()["ot_deadline_minutes"])
     moved = int((sched.start - declared.start).total_seconds() // 60)
-    return {"label": declared.label(), "end": f"{sched.leave_by:%H:%M}", "ot_by": f"{by:%H:%M}",
-            "ot_passed": now >= by, "over": now >= sched.leave_by, "change": ch["kind"] if ch else None,
+    return {"label": declared.label(), "end": f"{sched.leave_by:%H:%M}", "ot_by": f"{by:%H:%M}" if by else None,
+            "ot_passed": by is not None and now >= by, "over": now >= sched.leave_by, "change": ch["kind"] if ch else None,
             "flex": declared.flex, "arrive_by": f"{declared.arrive_by:%H:%M}" if declared.flex else None,
             "moved": moved, "declared_end": f"{declared.leave_by:%H:%M}", "left": left_early_today(employee_id, now.date())}
 
@@ -1614,7 +1616,7 @@ def admin_day_change(employee_id: int, body: DayChangeIn, admin: str = Depends(s
     late = None
     reg = hours.effective_schedule(employee_id, hours.schedule_for(employee_id, d, regular=True))
     new = hours.effective_schedule(employee_id, hours.schedule_for(employee_id, d))
-    if d == today and new is not None:
+    if d == today and new is not None and not config.RETRO:
         ref = (new.start if reg is None or new.start < reg.start else
                reg.leave_by if new.leave_by > reg.leave_by else None)
         by = ref - timedelta(minutes=monitor.get_settings()["ot_deadline_minutes"]) if ref else None

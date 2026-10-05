@@ -13,6 +13,21 @@ that comes from `.env` is marked «από το .env».
 - **«Επιχείρηση» (business):** employer ΑΦΜ (the check digit is verified), branch number
   (usually 0) and, optionally, your employer id in Ergani (the «id:» in Ergani's QR, so a
   QR from another employer is refused).
+- **«Δήλωση αλλαγών ωραρίου και υπερωριών» (declaring schedule changes and overtime):** what
+  the business has chosen in Ergani.
+  - **Προαναγγελία** (advance, the default): schedule changes and overtime are declared
+    **before** they happen. Karta shows the overtime deadline every day and alerts about
+    "undeclared overtime".
+  - **Απολογιστικό σύστημα** (retrospective): for businesses on the digital work card (since
+    1/7/2024). Schedule changes, the organisation of working time and overtime are declared
+    **afterwards**, from the punches, by the **end of the next month**. Karta shows no overtime
+    deadline; the alerts say «δηλώνεται απολογιστικά» (declared retrospectively), and the
+    monthly report's «Απολογιστικές δηλώσεις» sheet has the hours to declare. No phone
+    reminder comes before the end; if someone is still inside **10′ after the end**, one alert
+    says they stayed late. The shop screen's reminders with sound stay the same.
+
+  The limits on hours, rest and overtime apply in both. This setting changes nothing in
+  Ergani: it only tells Karta what you chose there. If unsure, ask your accountant.
 - **«Χρήστης web services του ΕΡΓΑΝΗ» (Ergani web‑services user):** username, password and
   type (`01` API user, `02` branch «ΕΡΓΑΝΗ» user). **«Δοκιμή σύνδεσης»** (test connection)
   connects read‑only. The password is stored **encrypted** (with `PIN_KEY`) and is never

@@ -7,7 +7,8 @@ it, restart the app with `cd ~/karta && docker compose up -d`. **Never commit yo
 `.env`**: it holds your Ergani password and keys.
 
 > **From the admin page:** the mode (`ERGANI_MODE`), the ΑΦΜ (tax number), the branch, the
-> employer id in Ergani's QR (`ERGANI_EMPLOYER_ID`), the Ergani users and phone
+> employer id in Ergani's QR (`ERGANI_EMPLOYER_ID`), how overtime is declared
+> (`TIME_DECLARATION`), the Ergani users and phone
 > notifications (`NTFY_*`) can also be set in the admin page's **«Ρυθμίσεις»**, with no
 > restart. Whatever is saved there **overrides** `.env` (the page shows «από το .env» next
 > to anything that comes from here). So once a value is saved on the page, changing it in
@@ -28,6 +29,7 @@ Day‑to‑day rules such as flexibility minutes, overtime deadlines and weekly 
 | `ERGANI_TRIAL_USER_TYPE` | no (default `02`) | Same as above, for the test user. |
 | `EMPLOYER_AFM` | for `trial` / `production` | The employer's ΑΦΜ (9 digits). |
 | `BRANCH_NUMBER` | no (default `0`) | Branch number (Α/Α παραρτήματος). |
+| `TIME_DECLARATION` | no | `advance` (declared before, the default) or `retro` (retrospective system): how the business declares schedule changes and overtime in Ergani. See [Settings](Admin-Settings-EN). |
 | `ERGANI_EMPLOYER_ID` | no | Your employer id inside Ergani's employee QR (the `id:` part). When set, the shop screen refuses an Ergani QR issued by another employer. |
 
 > In `dry_run`, nothing is ever submitted. The **read** services used by «Έλεγχος ΕΡΓΑΝΗ»
