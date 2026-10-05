@@ -14,12 +14,33 @@ services:
     volumes:
       - karta-data:/data
     # No "ports": Karta is reached only through the tunnel, never directly from the internet.
+    # Hardening: only /data (the database, backups' cache) and /tmp are writable, no extra privileges.
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 512m              # Karta uses ~75 MB; 512 MB leaves room on small machines
+    pids_limit: 128
+    environment:
+      TZ: Europe/Athens          # log timestamps only; the app always uses Europe/Athens
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=3).status == 200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
 
   cloudflared:
     image: cloudflare/cloudflared:latest
     restart: unless-stopped
     # http2 for a machine at the shop or at home (home routers handle QUIC/UDP badly), auto on a VPS
     command: tunnel --no-autoupdate --protocol ${TUNNEL_PROTOCOL:-http2} run
+    read_only: true
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
     environment:
       TUNNEL_TOKEN: ${TUNNEL_TOKEN:?Set TUNNEL_TOKEN in .env}
     depends_on:
