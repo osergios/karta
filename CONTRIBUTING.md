@@ -79,7 +79,8 @@ python -m pytest
 - Το **Content‑Security‑Policy** είναι αυστηρό: όχι inline `<script>` ή `style="…"`.
   Βάλτε τον κώδικα στα αρχεία `.js` και `.css`.
 - Οι αλλαγές στη βάση πρέπει να εφαρμόζονται **αυτόματα και με ασφάλεια** σε υπάρχουσες
-  εγκαταστάσεις (δείτε τα `ALTER TABLE` στο `app/db.py`).
+  εγκαταστάσεις: ένα νέο βήμα στο τέλος του `MIGRATIONS` στο `app/db.py` (μόνο προσθήκες,
+  ποτέ αλλαγή παλιού βήματος).
 - Ό,τι αγγίζει **δηλώσεις στο ΕΡΓΑΝΗ, ωράρια ή αναφορές** έχει νομικές συνέπειες για τις
   επιχειρήσεις. Εξηγήστε στο pull request τη λογική και, όπου υπάρχει, την πηγή (νόμο,
   εγκύκλιο, οδηγίες του υπουργείου).
@@ -198,7 +199,7 @@ time.
 - The **Content‑Security‑Policy** is strict: no inline `<script>` or `style="…"`. Put code
   in the `.js` and `.css` files.
 - Database changes must apply **automatically and safely** to existing installations (see
-  the `ALTER TABLE` migrations in `app/db.py`).
+  `MIGRATIONS` in `app/db.py`: add a step at the end; only add, never change an old step).
 - Anything that touches **Ergani declarations, schedules or reports** has legal
   consequences for businesses. Explain the reasoning in the pull request and, where there
   is one, the source (law, circular, ministry guidance).

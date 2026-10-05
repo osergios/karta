@@ -171,6 +171,41 @@ def utc_now_iso() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
 
 
+# Changes to the schema of databases made by an earlier version, in order: step N brings a database to version N
+# (PRAGMA user_version). To change the schema, add the column to SCHEMA above (new databases) AND a step at the end
+# of this list (existing ones), idempotent: e.g. `if not _has_column(c, "employees", "x"): c.execute("ALTER TABLE
+# employees ADD COLUMN x TEXT")`. Only add: an older version must still run on the database after going back.
+# Never edit or reorder an existing step: databases out there have already run it.
+def _v1(c) -> None:
+    """The schema of Karta 1.4: nothing to change, it only gets a version number. (An older installation may still
+    hold the unused «schedules» table: it stays as it is.)"""
+
+
+MIGRATIONS = [_v1]
+
+
+def _has_column(c, table: str, column: str) -> bool:
+    return any(r[1] == column for r in c.execute(f"PRAGMA table_info({table})"))
+
+
+def migrate(c, steps=None) -> int:
+    """Applies the steps above the database's version in one transaction; returns the version."""
+    steps = MIGRATIONS if steps is None else steps
+    version = c.execute("PRAGMA user_version").fetchone()[0]
+    if version >= len(steps):            # up to date (or made by a newer version: leave it)
+        return version
+    c.execute("BEGIN IMMEDIATE")
+    try:
+        for step in steps[version:]:
+            step(c)
+        c.execute(f"PRAGMA user_version={len(steps)}")
+        c.execute("COMMIT")
+    except BaseException:
+        c.execute("ROLLBACK")
+        raise
+    return len(steps)
+
+
 def init() -> None:
     global _conn
     _conn = sqlite3.connect(config.DB_PATH, check_same_thread=False, isolation_level=None)
@@ -179,6 +214,7 @@ def init() -> None:
     _conn.execute("PRAGMA foreign_keys=ON")
     _conn.execute("PRAGMA busy_timeout=5000")
     _conn.executescript(SCHEMA)
+    migrate(_conn)
 
 
 @contextmanager
