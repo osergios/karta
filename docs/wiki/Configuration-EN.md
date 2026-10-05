@@ -51,6 +51,10 @@ Day‑to‑day rules such as flexibility minutes, overtime deadlines and weekly 
 | `LATE_THRESHOLD_SECONDS` | `120` | If a punch reaches Ergani later than this after it happened (e.g. after an internet outage), it's sent as a late declaration with a reason. See [How punches reach Ergani](Ergani-Submissions-EN). |
 | `DEBOUNCE_SECONDS` | `60` | Minimum time between two punches of the same person, to stop accidental double punches. |
 
+**Time:** Karta always works in Greek time (`Europe/Athens`), including the summer and
+winter changes, whatever timezone your server uses. You don't need to change anything;
+`TZ` in `docker-compose.yml` only affects log timestamps.
+
 ## Phone alerts (optional)
 
 Karta sends alerts to your phone through [ntfy](https://ntfy.sh): install the ntfy app and

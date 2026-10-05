@@ -61,8 +61,8 @@
 - **Ρυθμίσεις από τη σελίδα διαχείρισης:** ΑΦΜ, χρήστης ΕΡΓΑΝΗ (με δοκιμή σύνδεσης,
   κρυπτογραφημένος κωδικός), ειδοποιήσεις στο κινητό και αλλαγή λειτουργίας με επιβεβαίωση.
 - **Αντίγραφα ασφαλείας για χρόνια:** κάθε βράδυ, κρυπτογραφημένα σε cloud (Google Drive,
-  Dropbox, Backblaze B2) και σε USB, επαναφορά από τη σελίδα διαχείρισης, και «Αρχείο
-  χτυπημάτων» κάθε έτους σε Excel.
+  Dropbox, Backblaze B2) και, χωρίς κρυπτογράφηση, σε USB, επαναφορά από τη σελίδα
+  διαχείρισης, και «Αρχείο χτυπημάτων» κάθε έτους σε Excel.
 - **Χρώματα:** έτοιμα θέματα, δικά σας χρώματα (φόντο, κείμενο, κουμπιά) και σκούρο θέμα,
   για την οθόνη του καταστήματος και τη σελίδα διαχείρισης.
 - **Ενημέρωση με ένα κουμπί** από τη σελίδα διαχείρισης, με αντίγραφο ασφαλείας πρώτα.
@@ -217,8 +217,8 @@ See the screenshots above.
 - **Settings in the admin page:** employer ΑΦΜ, Ergani user (with a login test, password
   stored encrypted), phone alerts, and switching mode with confirmation.
 - **Backups kept for years:** nightly, encrypted to the cloud (Google Drive, Dropbox,
-  Backblaze B2) and to a USB stick, restore from the admin page, and a yearly "punch archive"
-  in Excel.
+  Backblaze B2) and, unencrypted, to a USB stick, restore from the admin page, and a yearly
+  "punch archive" in Excel.
 - **Colours:** ready themes, your own colours (background, text, buttons) and a dark theme,
   for the shop screen and the admin page.
 - **One-button updates** from the admin page, with a backup first.

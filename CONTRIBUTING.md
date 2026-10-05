@@ -78,6 +78,9 @@ python -m pytest
   χωρίς build για το frontend, χωρίς εξωτερικά CDN).
 - Το **Content‑Security‑Policy** είναι αυστηρό: όχι inline `<script>` ή `style="…"`.
   Βάλτε τον κώδικα στα αρχεία `.js` και `.css`.
+- Κάθε έκδοση έχει σημείωμα στο `docs/releases/vX.Y.Z.md`, από το
+  [`docs/releases/TEMPLATE.md`](docs/releases/TEMPLATE.md), με την ενότητα «Αναβάθμιση»
+  (τι κάνει ο χρήστης, αν αλλάζει η βάση, αν η επιστροφή είναι ασφαλής).
 - Οι αλλαγές στη βάση πρέπει να εφαρμόζονται **αυτόματα και με ασφάλεια** σε υπάρχουσες
   εγκαταστάσεις: ένα νέο βήμα στο τέλος του `MIGRATIONS` στο `app/db.py` (μόνο προσθήκες,
   ποτέ αλλαγή παλιού βήματος).
@@ -198,6 +201,9 @@ time.
   SQLite, no frontend build step, no external CDNs).
 - The **Content‑Security‑Policy** is strict: no inline `<script>` or `style="…"`. Put code
   in the `.js` and `.css` files.
+- Every release has a note in `docs/releases/vX.Y.Z.md`, from
+  [`docs/releases/TEMPLATE.md`](docs/releases/TEMPLATE.md), with the "Upgrading" section (what
+  users do, whether the database changes, whether going back is safe).
 - Database changes must apply **automatically and safely** to existing installations (see
   `MIGRATIONS` in `app/db.py`: add a step at the end; only add, never change an old step).
 - Anything that touches **Ergani declarations, schedules or reports** has legal

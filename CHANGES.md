@@ -416,3 +416,12 @@
     `resolved_at`, like the «please punch out» banners on departure: `backup_none` once any backup is set up,
     `backup_old` after a recent local copy, `backup_cloud_old` after a recent cloud copy, `backup_failed` when the last
     result is no longer a failure. The rows stay as history; the check writes only when something is open.
+83. **Docs: the USB copies are not encrypted.** The README no longer reads as if they were, and the Backups page (Greek
+    and English) says so plainly: the databases and `karta.env` (`PIN_KEY`, and the Ergani password if kept in
+    `.env`) are plain files on the stick, so keep it somewhere safe, like the shop's keys. The behaviour is unchanged.
+84. **Docs: Karta always uses Greek time.** Configuration and FAQ (Greek and English): all times are in
+    `Europe/Athens`, summer and winter changes included, whatever the server's timezone; `TZ` in `docker-compose.yml`
+    only affects log timestamps.
+85. **Release notes end with «Αναβάθμιση / Upgrading».** What users do to update, whether the database changes
+    (and to which schema version), and whether going back is safe. Template in `docs/releases/TEMPLATE.md`, pointed to
+    from `CONTRIBUTING.md`; the note for the next release (`docs/releases/v1.5.0.md`) already has it.

@@ -86,6 +86,11 @@ Every night the backups are also written to the USB stick, in the `karta-backups
 The USB stick is in the same place as the machine (fire, theft), so combine it with the
 cloud.
 
+> **The USB copies are not encrypted.** They are the databases as they are, together with
+> `karta.env`, which holds `PIN_KEY` (and the Ergani password, if you keep it in `.env`).
+> With those, the Ergani password and the PINs that Karta stores can be read too. Whoever
+> takes the stick can read it all: keep it somewhere safe, like the shop's keys.
+
 ## Downloading from the admin page
 
 - **«Λήψη αντιγράφου τώρα»** (download a backup now): downloads the whole database as one
