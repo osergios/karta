@@ -118,3 +118,15 @@ def test_device_registration_with_a_one_time_code(client, admin, clock):
     assert r.status_code == 200
     assert r.json()["device"] == "Ταμείο"
     assert client.post("/api/enroll", json={"code": code}).status_code == 400   # used up
+
+
+def test_the_punch_keeps_the_address_cloudflare_saw(kiosk, clock, employee):
+    """X-Real-IP comes from the browser through the tunnel unchanged: Cloudflare's own header wins."""
+    r = kiosk.post("/api/kiosk/punch", json={"employee_id": employee, "pin": PIN, "action": "ARRIVAL"},
+                   headers={"CF-Connecting-IP": "203.0.113.7", "X-Real-IP": "198.51.100.66"})
+    assert r.status_code == 200, r.text
+    assert db.one("SELECT client_ip FROM movements WHERE id=?", (r.json()["movement"]["id"],))["client_ip"] == "203.0.113.7"
+    clock.advance(hours=1)
+    r = kiosk.post("/api/kiosk/punch", json={"employee_id": employee, "pin": PIN, "action": "DEPARTURE"},
+                   headers={"X-Real-IP": "198.51.100.8"})          # a reverse proxy without Cloudflare
+    assert db.one("SELECT client_ip FROM movements WHERE id=?", (r.json()["movement"]["id"],))["client_ip"] == "198.51.100.8"

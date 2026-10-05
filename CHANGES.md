@@ -425,3 +425,7 @@
 85. **Release notes end with «Αναβάθμιση / Upgrading».** What users do to update, whether the database changes
     (and to which schema version), and whether going back is safe. Template in `docs/releases/TEMPLATE.md`, pointed to
     from `CONTRIBUTING.md`; the note for the next release (`docs/releases/v1.5.0.md`) already has it.
+86. **The IP kept with each punch can no longer be set by the browser.** Karta took it from `X-Real-IP`, which passes
+    the Cloudflare Tunnel unchanged, so a hand-made request could record any address. It now takes Cloudflare's
+    `CF-Connecting-IP` (Cloudflare writes it itself, replacing what the browser sent), then `X-Real-IP`, then the
+    connection's address. The wiki page «Πίσω από δικό σας reverse proxy» says to let only Cloudflare reach the proxy.

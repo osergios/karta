@@ -81,8 +81,8 @@ PYTHONPATH=vendor uvicorn app.main:app --host 127.0.0.1 --port 8000 --no-server-
 Tunnel** (`cloudflared`), που δεν χρειάζεται ανοιχτές θύρες. Κατευθύνετε το domain σας
 στο `http://127.0.0.1:8000`.
 
-Αν ο proxy σας δίνει τη διεύθυνση του χρήστη, περάστε τη στην κεφαλίδα `X-Real-IP`. Η
-Karta καταγράφει την IP κάθε χτυπήματος. Παραδείγματα για Caddy και nginx:
+Η Karta καταγράφει την IP κάθε χτυπήματος από την κεφαλίδα `CF-Connecting-IP` του
+Cloudflare (ή, αν λείπει, από την `X-Real-IP` του proxy σας). Παραδείγματα για Caddy και nginx:
 [Πίσω από δικό σας reverse proxy](Reverse-Proxy).
 
 ## 4. Προστατέψτε το `/admin` με Cloudflare Access
