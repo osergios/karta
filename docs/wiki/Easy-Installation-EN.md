@@ -308,6 +308,10 @@ When a new version comes out, the admin page says so under **«Ρυθμίσει�
 downloaded and Karta restarts (it's offline for about a minute). The page reloads by itself,
 and so does the shop screen.
 
+If the new version doesn't start properly within two minutes, Karta **goes back to the
+previous one by itself**, and the page says «απέτυχε — επέστρεψε στην …» (failed, went back
+to …). The running version is written in `.env` (`KARTA_VERSION`).
+
 The button works through `update.sh`, which the setup assistant installs on the machine:
 Karta itself never gets access to Docker, for security. Without it (or from the terminal):
 

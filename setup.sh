@@ -136,31 +136,84 @@ write_update_script() {
   cat > update.sh <<'SH'
 #!/bin/sh
 # Karta update — written by ./setup.sh (it rewrites this file). Runs every 2 minutes from cron: when «Ενημέρωση τώρα»
-# is pressed in the admin page, it keeps a backup, downloads the new version and restarts Karta. The admin page
-# only leaves a request; Karta itself never gets control of Docker on this machine.
+# is pressed in the admin page, it keeps a backup, switches to the newest version (KARTA_VERSION in .env) and waits for
+# Karta to report healthy; if it doesn't within about 2 minutes, it goes back to the previous version (its image is
+# still on this machine). The admin page only leaves a request; Karta itself never gets control of Docker here.
+#   ./update.sh now   update without waiting for the admin page (what ./setup.sh update does)
 set -u
 cd "$(dirname "$0")" || exit 1
-r=$(docker compose exec -T karta python -m app.updatemark poll 2>/dev/null) || exit 0
-[ "$r" = update ] || exit 0
-mkdir -p backups
-exec >> backups/update.log 2>&1
-echo "== $(date '+%F %T') update"
-[ -x ./backup.sh ] && ./backup.sh >/dev/null 2>&1      # a copy of the database first
-if docker compose pull && docker compose up -d; then
-  for _ in $(seq 1 45); do
-    sleep 2
-    docker compose exec -T karta python -m app.updatemark "done" ok >/dev/null 2>&1 && { echo "ok"; exit 0; }
-  done
+if [ "${1:-}" != now ]; then
+  r=$(docker compose exec -T karta python -m app.updatemark poll 2>/dev/null) || exit 0
+  [ "$r" = update ] || exit 0
+  mkdir -p backups && exec >> backups/update.log 2>&1
 fi
-echo "failed"
-docker compose up -d >/dev/null 2>&1
-docker compose exec -T karta python -m app.updatemark "done" fail >/dev/null 2>&1 || true
+echo "== $(date '+%F %T') update"
+
+use() {  # use VERSION: the version docker compose starts
+  ( umask 077; { grep -v '^KARTA_VERSION=' .env; echo "KARTA_VERSION=$1"; } > .env.new ) && cat .env.new > .env && rm -f .env.new
+}
+healthy() {  # Karta's healthcheck says healthy, within about 2 minutes
+  for _ in $(seq 1 60); do
+    sleep 2
+    case $(docker inspect -f '{{.State.Health.Status}}' "$(docker compose ps -q karta)" 2>/dev/null) in
+      healthy) return 0 ;;
+      unhealthy) return 1 ;;
+    esac
+  done
+  return 1
+}
+mark() { docker compose exec -T karta python -m app.updatemark "done" "$1" >/dev/null 2>&1 || true; }
+
+old=$(sed -n 's/^KARTA_VERSION=//p' .env | tail -n1)
+[ -n "$old" ] || old=$(docker compose exec -T karta printenv KARTA_VERSION 2>/dev/null | sed 's/^v//')
+repo=$(docker compose config --images 2>/dev/null | grep '/karta:' | head -n1); repo=${repo%:*}
+new=""
+[ -n "$repo" ] && docker pull -q "$repo:latest" >/dev/null && new=$(docker image inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$repo:latest" | sed -n 's/^KARTA_VERSION=v\{0,1\}//p')
+if [ -z "$old" ] || [ -z "$new" ]; then
+  echo "failed: current '$old', newest '$new'"; mark fail; exit 1
+fi
+if [ "$new" = "$old" ]; then echo "already $new"; use "$old"; mark ok; exit 0; fi
+[ -x ./backup.sh ] && ./backup.sh >/dev/null 2>&1      # a copy of the database first
+use "$new"
+if docker compose pull -q karta && docker compose up -d && healthy; then
+  echo "ok: $old -> $new"; mark ok; exit 0
+fi
+echo "failed: $new is not healthy, back to $old"
+use "$old"
+docker compose up -d && healthy
+mark fail
 exit 1
 SH
   chmod +x update.sh
+  command -v crontab >/dev/null 2>&1 || return 0
   # every 2 minutes; a check only reads one row of the database (an earlier per-minute line is replaced)
   ( crontab -l 2>/dev/null | grep -v "$PWD/update.sh"; echo "*/2 * * * * $PWD/update.sh >/dev/null 2>&1" ) | crontab -
   say "  ✓ Ενημερώσεις με ένα κουμπί από τη σελίδα διαχείρισης («Ρυθμίσεις» → «Έκδοση και ενημέρωση»)."
+}
+
+pin_version() {  # pin_version [image]: KARTA_VERSION in .env, the running version (or that of the image)
+  grep -qE '^KARTA_VERSION=.' .env 2>/dev/null && return 0
+  local v
+  v=$(docker compose exec -T karta printenv KARTA_VERSION 2>/dev/null || true)
+  [ -n "$v" ] || v=$(docker image inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "${1:-$IMAGE}" 2>/dev/null | sed -n 's/^KARTA_VERSION=//p')
+  v=${v#v}
+  case "$v" in ""|dev) return 0 ;; esac
+  [ -z "$(tail -c1 .env)" ] || echo >> .env
+  echo "KARTA_VERSION=$v" >> .env
+}
+
+# docker-compose.yml as downloaded by an earlier version and not changed by hand: replaced by the current one
+# (when docker-compose.yml changes, add the sha256 of the new file here; tests/test_update_script.py checks it)
+OLD_COMPOSE="ea57c0f256f5734edc18d4e3aa4e1a10e30ff23e197a3ee5a2e00859e0b3446a 22a84e76aca50d22d7d4f18bd5ed873e142df99cc75abb693c13d5eb0590c009
+032a33cf46bb0e6c5f1c82d8dbd5f9234f79673d1b7008309b153cb4b3291350 48552098ba8113312df6bfc339b45e3582f0199cbf54e09c9c33f62f87b83960
+3abca45802e2ab3a81160a954a142e22e45b0ff967e145909236a8f60f8c215e"
+refresh_compose() {
+  local h; h=$(sha256sum docker-compose.yml 2>/dev/null | cut -d' ' -f1)
+  printf '%s\n' $OLD_COMPOSE | grep -qx "${h:-none}" || return 0
+  curl -fsSL "$RAW/docker-compose.yml" -o docker-compose.yml.new 2>/dev/null || { rm -f docker-compose.yml.new; return 0; }
+  if cmp -s docker-compose.yml docker-compose.yml.new; then rm -f docker-compose.yml.new; return 0; fi
+  cp docker-compose.yml docker-compose.yml.bak && mv docker-compose.yml.new docker-compose.yml
+  say "  ✓ Ενημερώθηκε το docker-compose.yml (το προηγούμενο: docker-compose.yml.bak)"
 }
 
 backup_now() {
@@ -285,18 +338,18 @@ case "${1:-}" in
   cloud) say "Το αντίγραφο στο cloud ρυθμίζεται πλέον στη σελίδα διαχείρισης: «Ρυθμίσεις» → «Αντίγραφα ασφαλείας»."; exit 0 ;;
   update) [ -f docker-compose.yml ] || { say "Δεν βρέθηκε η Karta σε αυτόν τον φάκελο."; exit 1; }
           write_backup_script                    # the helpers of this version of setup.sh
-          if command -v crontab >/dev/null 2>&1; then write_update_script; fi
-          say "Αντίγραφο ασφαλείας…"; ./backup.sh >/dev/null 2>&1 || say "  (το αντίγραφο απέτυχε· δείτε backups/backup.log)"
-          docker compose pull && docker compose up -d && say "✓ Η Karta ενημερώθηκε."; exit $? ;;
+          write_update_script
+          refresh_compose
+          pin_version "ghcr.io/osergios/karta:latest"     # the version that runs now: the way back if needed
+          say "Ενημέρωση (πρώτα αντίγραφο ασφαλείας)…"
+          if ./update.sh now; then say "✓ Η Karta ενημερώθηκε: $(sed -n 's/^KARTA_VERSION=//p' .env | tail -n1)"; exit 0; fi
+          say "✗ Η ενημέρωση απέτυχε· η Karta συνεχίζει με την έκδοση $(sed -n 's/^KARTA_VERSION=//p' .env | tail -n1)."; exit 1 ;;
   ""|check) ;;
   *) say "Χρήση: ./setup.sh [check|usb|restore|update]"; exit 2 ;;
 esac
 
 [ -f docker-compose.yml ] || { say "Κατέβασμα docker-compose.yml…"; curl -fsSLO "$RAW/docker-compose.yml"; }
-# the first version's file (unchanged by hand) gets the tunnel protocol setting
-if grep -q "command: tunnel --no-autoupdate run$" docker-compose.yml && ! grep -q TUNNEL_PROTOCOL docker-compose.yml; then
-  cp docker-compose.yml docker-compose.yml.bak && curl -fsSLO "$RAW/docker-compose.yml" && say "  ✓ Ενημερώθηκε το docker-compose.yml"
-fi
+refresh_compose
 say "Κατέβασμα της τελευταίας έκδοσης της Karta…"
 docker pull -q "$IMAGE" >/dev/null 2>&1 || say "  (δεν έγινε λήψη· χρησιμοποιείται η έκδοση που υπάρχει ήδη στο μηχάνημα)"
 
@@ -315,6 +368,7 @@ fi
 run_wizard setup
 
 # ---- Εκκίνηση ------------------------------------------------------------------------------------
+pin_version                              # a new installation: the version just downloaded
 step "Εκκίνηση"
 if ask_yes "Να ξεκινήσει (ή να ξαναξεκινήσει) η Karta τώρα;"; then
   docker compose up -d
@@ -347,7 +401,7 @@ fi
 
 # ---- Ενημερώσεις -------------------------------------------------------------------------------
 step "Ενημερώσεις"
-if command -v crontab >/dev/null 2>&1; then write_update_script; fi
+write_update_script
 
 # ---- Επόμενα βήματα -----------------------------------------------------------------------------
 origin=$(grep -E '^PUBLIC_ORIGIN=' .env | cut -d= -f2- || true)

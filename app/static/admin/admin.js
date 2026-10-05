@@ -890,7 +890,8 @@
     const resLine = res && res.at
       ? el("div", { class: `an-line ${res.state === "ok" ? "" : "bad"}` },
           `Τελευταία ενημέρωση: ${dmyhm(new Date(res.at + "Z").toLocaleString("sv-SE", { timeZone: "Europe/Athens" }))} ` +
-          (res.state === "ok" ? `✓${res.version ? " (" + res.version.replace(/^v/, "") + ")" : ""}` : "✗ απέτυχε· η Karta συνεχίζει με την προηγούμενη έκδοση (δείτε το backups/update.log στο μηχάνημα)."))
+          (res.state === "ok" ? `✓ ενημερώθηκε σε ${(res.version || "").replace(/^v/, "") || "νέα έκδοση"}`
+            : `✗ απέτυχε — επέστρεψε στην ${(res.version || "").replace(/^v/, "") || "προηγούμενη έκδοση"} (δείτε το backups/update.log στο μηχάνημα).`))
       : null;
     const notes = U.latest_url ? el("a", { class: "link", href: U.latest_url, target: "_blank", rel: "noopener" }, "Τι αλλάζει") : null;
     let main;

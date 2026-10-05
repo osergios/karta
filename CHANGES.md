@@ -379,3 +379,10 @@
     next to `TUNNEL_TOKEN` (and adds it to an existing `.env` that has a token), so tunnel installations, `backup.sh`
     and `update.sh` work as before. `./setup.sh check` doesn't ask for a tunnel without one. New wiki page «Πίσω από
     δικό σας reverse proxy»: Caddy and nginx, Cloudflare Access for `/admin`, and `X-Real-IP`.
+75. **Updates go back by themselves when a version doesn't start.** The version is pinned in `.env`
+    (`KARTA_VERSION`, used by `docker-compose.yml` as `ghcr.io/osergios/karta:${KARTA_VERSION:-latest}`). `update.sh`
+    finds the newest version (what `:latest` points to), keeps the previous one, takes the backup, switches, and waits
+    up to about 2 minutes for the healthcheck; if Karta isn't healthy, it writes the previous version back and starts it
+    again (its image is still on the machine). The admin page shows «ενημερώθηκε σε X» or «απέτυχε — επέστρεψε στην X».
+    `./setup.sh update` runs the same `update.sh now`, pins the running version first, and replaces a
+    `docker-compose.yml` that is an untouched official copy (by its sha256; the old one is kept as `.bak`).

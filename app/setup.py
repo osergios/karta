@@ -73,6 +73,7 @@ ENV_LAYOUT = [
     ("Εφαρμογή", ["PUBLIC_ORIGIN", "LATE_THRESHOLD_SECONDS", "DEBOUNCE_SECONDS", "PIN_KEY",
                    "DISCLAIMER_ACCEPTED"]),
     ("Ειδοποιήσεις στο κινητό (ntfy)", ["NTFY_URL", "NTFY_TOPIC", "NTFY_TOKEN"]),
+    ("Έκδοση (την αλλάζει το «Ενημέρωση τώρα» ή το ./setup.sh update)", ["KARTA_VERSION"]),
     ("Cloudflare Tunnel (docker-compose.yml)", ["COMPOSE_PROFILES", "TUNNEL_TOKEN", "TUNNEL_PROTOCOL"]),
 ]
 
