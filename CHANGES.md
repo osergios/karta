@@ -416,3 +416,6 @@
     `resolved_at`, like the «please punch out» banners on departure: `backup_none` once any backup is set up,
     `backup_old` after a recent local copy, `backup_cloud_old` after a recent cloud copy, `backup_failed` when the last
     result is no longer a failure. The rows stay as history; the check writes only when something is open.
+83. **Docs: the USB copies are not encrypted.** The README no longer reads as if they were, and the Backups page (Greek
+    and English) says so plainly: the databases and `karta.env` (`PIN_KEY`, and the Ergani password if kept in
+    `.env`) are plain files on the stick, so keep it somewhere safe, like the shop's keys. The behaviour is unchanged.
