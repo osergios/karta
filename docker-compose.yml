@@ -11,7 +11,8 @@
 # "Behind your own reverse proxy" (docs/wiki/Reverse-Proxy.md).
 services:
   karta:
-    image: ghcr.io/osergios/karta:latest
+    # the version is set in .env (KARTA_VERSION=1.5.0); ./setup.sh writes it, «Ενημέρωση τώρα» changes it
+    image: ghcr.io/osergios/karta:${KARTA_VERSION:-latest}
     restart: unless-stopped
     env_file: .env
     volumes:

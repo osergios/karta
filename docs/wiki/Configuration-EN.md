@@ -87,6 +87,12 @@ you can only set a new one. If you lose the key:
 Keep a copy of `.env` (or at least `PIN_KEY`) somewhere safe, e.g. in a password manager.
 See [Backups](Backups-EN).
 
+## Version
+
+| Variable | Meaning |
+|---|---|
+| `KARTA_VERSION` | The Karta version `docker-compose.yml` starts, e.g. `1.5.0`. The setup assistant writes it, and «Ενημέρωση τώρα» (or `./setup.sh update`) changes it. If the new version doesn't start properly within two minutes, the previous one is written back and Karta returns to it. Without a value: the newest version (`latest`). |
+
 ## Cloudflare Tunnel
 
 | Variable | Meaning |
