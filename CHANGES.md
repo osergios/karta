@@ -407,3 +407,12 @@
 80. **A cloud backup cut off half-way no longer blocks the next ones.** Each backup starts with `restic unlock`
     (without `--remove-all`: only stale locks, of a process that no longer exists or older than 30 minutes, never a
     running backup), and a failing unlock no longer stops the backup: the backup itself reports any real problem.
+81. **A first cloud backup that never worked has its own alert.** «Το πρώτο αντίγραφο στο cloud δεν έγινε: ‹the
+    reason›» instead of «δεν ανέβηκε τις τελευταίες δύο ημέρες» (which it said even minutes after connecting). The
+    two-day wording stays for a cloud copy that worked before and is now over 50 hours old. A cloud-only installation
+    (a VPS) whose cloud never worked now gets this alert, instead of the Monday «Δεν γίνεται αντίγραφο ασφαλείας»,
+    which is now only for no backup set up at all.
+82. **Backup alerts close by themselves.** On each check (at any hour) the open backup alerts whose problem is gone get
+    `resolved_at`, like the «please punch out» banners on departure: `backup_none` once any backup is set up,
+    `backup_old` after a recent local copy, `backup_cloud_old` after a recent cloud copy, `backup_failed` when the last
+    result is no longer a failure. The rows stay as history; the check writes only when something is open.
