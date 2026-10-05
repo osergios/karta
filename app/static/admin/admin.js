@@ -789,17 +789,33 @@
 
   // ---------- backups: nightly copy (machine/USB), encrypted cloud upload, downloads, restore ----------
   const dmyhm = iso => `${iso.slice(8, 10)}/${iso.slice(5, 7)} ${iso.slice(11, 16)}`;
+  // The only way into the cloud backups if this machine is lost: it can't be recovered by anyone, so the panel stays
+  // until the admin types its last 4 characters back.
   function showCloudPassword(pw) {
     const box = document.getElementById("cloudPass");
+    const tail = pw.slice(-4);
+    const check = el("input", { type: "text", maxlength: "4", autocomplete: "off", spellcheck: "false", class: "pass-check",
+                                "aria-label": "Οι 4 τελευταίοι χαρακτήρες του κωδικού" });
+    const done = el("button", { class: "btn", type: "button", disabled: "", onclick: () => hide(box) }, "Τον σημείωσα");
+    check.addEventListener("input", () => { done.disabled = check.value.trim() !== tail; });
     box.hidden = false;
     box.replaceChildren(
       el("h3", {}, "Κωδικός κρυπτογράφησης των αντιγράφων"),
       el("p", { class: "pass" }, pw),
-      el("p", {}, el("strong", {}, "Γράψτε τον τώρα σε χαρτί ή σε διαχειριστή κωδικών. "),
-        "Εμφανίζεται μόνο αυτή τη φορά. Αν χαλάσει το μηχάνημα, χωρίς αυτόν τα αντίγραφα στο cloud δεν ανοίγουν."),
-      el("button", { class: "btn", type: "button", onclick: () => {
-        if (confirm("Τον έχετε σημειώσει; Δεν θα εμφανιστεί ξανά.")) hide(box);
-      } }, "Τον σημείωσα"));
+      el("div", { class: "pass-warn" },
+        el("strong", {}, "Χωρίς αυτόν τον κωδικό τα αντίγραφα στο cloud δεν ανοίγουν ποτέ."),
+        " Δεν υπάρχει «ξέχασα τον κωδικό»: δεν μπορεί να τον ανακτήσει ούτε η Karta, ούτε η Google / Dropbox / Backblaze, " +
+        "ούτε κανείς άλλος. Αν χαλάσει ή χαθεί αυτό το μηχάνημα, είναι ο μόνος τρόπος να πάρετε πίσω το αρχείο χτυπημάτων, " +
+        "που πρέπει να φυλάσσεται για χρόνια."),
+      el("p", {}, el("strong", {}, "Γράψτε τον τώρα σε χαρτί (φυλάξτε το εκτός καταστήματος) ή σε διαχειριστή κωδικών."),
+        " Εμφανίζεται μόνο αυτή τη φορά."),
+      el("div", { class: "backup-row" },
+        el("button", { class: "btn ghost", type: "button", onclick: async () => {
+          try { await navigator.clipboard.writeText(pw); toast("Ο κωδικός αντιγράφηκε"); } catch { toast("Επιλέξτε τον κωδικό και αντιγράψτε τον", true); }
+        } }, "Αντιγραφή")),
+      el("label", { class: "pass-confirm" }, "Για επιβεβαίωση, γράψτε τους 4 τελευταίους χαρακτήρες:", check),
+      done);
+    box.scrollIntoView({ behavior: "smooth", block: "center" });
   }
   function showRestore(info) {
     const box = document.getElementById("restorePanel");
@@ -865,6 +881,8 @@
         el("button", { class: "btn ghost", type: "button", onclick: send(true) }, "Σύνδεση στα υπάρχοντα αντίγραφα")));
     return el("div", { class: "cloud-form" },
       el("label", {}, "Πού ", provider), oauthBox, b2Box,
+      el("p", { class: "small warn-text" }, "Θα σας δοθεί ένας κωδικός κρυπτογράφησης, μία φορά. Κρατήστε τον οπωσδήποτε: χωρίς αυτόν " +
+        "τα αντίγραφα στο cloud δεν ανοίγουν και δεν υπάρχει τρόπος ανάκτησης."),
       el("div", { class: "backup-row" }, el("button", { class: "btn", type: "button", onclick: send(false) }, "Σύνδεση και πρώτο ανέβασμα")),
       existingBox);
   }

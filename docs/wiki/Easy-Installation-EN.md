@@ -289,8 +289,9 @@ a backup **off the machine**, one or both of these:
 
 - **Encrypted in the cloud** (Google Drive, Dropbox or Backblaze B2): from the admin page,
   **«Ρυθμίσεις» → «Αντίγραφα ασφαλείας»** (Settings → Backups). The page shows you the
-  steps, and at the end an **encryption password**: write it down somewhere safe, because
-  without it the backups can't be opened. On a **VPS / cloud server** (e.g. Oracle Cloud)
+  steps, and at the end an **encryption password**: write it down somewhere safe, outside the
+  shop. **Without it the backups can never be opened, and it can't be recovered in any way**
+  (see [Backups](Backups-EN)). On a **VPS / cloud server** (e.g. Oracle Cloud)
   it's the only way, because there's no USB.
 - **To a USB stick** on the machine: `cd ~/karta && ./setup.sh usb` (once, from the
   terminal).

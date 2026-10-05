@@ -481,3 +481,8 @@
     failure leaves the working setup untouched. Reconnecting without a password reuses the one on the machine: it
     carries on with the same backups (or starts a new repository with it, and shows it again); backups made with a
     different password get a clear message. Also: a backup-alert test failed after 22:00 Athens time (fixed).
+96. **The cloud encryption password is impossible to miss.** Its panel says plainly that nobody can recover it (not
+    Karta, not the cloud provider), that it is the only way back to the punch records if the machine is lost, and to
+    keep it on paper outside the shop or in a password manager; it has a «Αντιγραφή» button, and «Τον σημείωσα» works
+    only after the admin types its last 4 characters back. The connect form warns before it is shown. Backups,
+    Settings and Easy installation (GR/EN) say the same, with a warning box.
