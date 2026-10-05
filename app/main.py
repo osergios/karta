@@ -720,7 +720,7 @@ def first_steps():
          _offsite_ok() or "backup" in marked, {"tab": "settings", "target": "backupBox"}),
         ("training", "Δοκιμή με το προσωπικό", "«Λειτουργία εκπαίδευσης»: όλοι δοκιμάζουν να χτυπήσουν, χωρίς να καταγράφεται τίποτα.",
          bool(db.setting("training_used")) or "training" in marked, {"tab": "today", "target": "sendState"}),
-        ("live", "Έναρξη στο ΕΡΓΑΝΗ", "Πέρασμα σε δοκιμαστικό ΕΡΓΑΝΗ και μετά σε κανονική λειτουργία («Ρυθμίσεις» → «Λειτουργία»), ή περίοδος προσαρμογής.",
+        ("live", "Έναρξη στο ΕΡΓΑΝΗ", "Πέρασμα σε δοκιμαστικό ΕΡΓΑΝΗ και μετά σε κανονική λειτουργία («Ρυθμίσεις» → «Επιχείρηση και σύνδεση με το ΕΡΓΑΝΗ» → «Λειτουργία»), ή περίοδος προσαρμογής.",
          config.ERGANI_MODE == "production" or onboarding.until() is not None,
          {"href": "https://github.com/osergios/karta/wiki/Going-Live"}),
     ]

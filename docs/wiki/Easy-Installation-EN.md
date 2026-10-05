@@ -18,7 +18,7 @@ in [Discussions](https://github.com/osergios/karta/discussions/categories/q-a).
 | | What | Cost |
 |---|---|---|
 | 1 | **A domain name**, e.g. `yourshop.gr` | about €10–20 a year (free ones exist for testing) |
-| 2 | **A machine that stays on** (see below) | €0 (old PC or free cloud) or ~€60–100 for a Raspberry Pi |
+| 2 | **A machine that stays on** (see below) | €0 (old PC or free cloud server) or ~€60–100 for a Raspberry Pi |
 | 3 | **A free Cloudflare account** | €0 |
 | 4 | **An Ergani web‑services user** (your accountant can create it, or you can in Ergani) | €0 |
 
@@ -40,7 +40,7 @@ before paying, there are free domains too: see [step 1](#a-free-domain-for-testi
 |---|---|---|
 | **A. Raspberry Pi 4 or 5** (2 GB RAM or more), at the shop or at home | Small, silent, ~5 W of power (a few euros a year). Your data stays with you. | Purchase cost. If power or internet fails there, Karta is unavailable. |
 | **B. An old laptop or small PC** | Free if you already have one. A laptop's battery rides through power cuts. | Uses more power; same internet caveat. |
-| **C. Free cloud: Oracle Cloud "Always Free"** | Always on, fast internet, €0. | Needs a card for verification. Sign‑up sometimes says "out of capacity". Oracle may reclaim machines that are almost completely idle; keep backups. |
+| **C. Free cloud server (VPS): Oracle Cloud "Always Free"** | Always on, fast internet, €0. | Needs a card for verification. Sign‑up sometimes says "out of capacity". Oracle may reclaim machines that are almost completely idle; keep backups. Not a ready-made service: you create an Ubuntu server yourself and connect over SSH, like any VPS. |
 
 **Personal data (GDPR):** Karta stores details about your staff. If you choose a cloud,
 pick a **region inside the European Union** (e.g. Frankfurt, Amsterdam, Milan).
@@ -120,6 +120,10 @@ Choose **one** of the three options.
 
 ### Option C: Oracle Cloud Always Free
 
+Here you create your own (free) virtual server running Ubuntu. From then on it is just like
+the Raspberry Pi: you connect with `ssh` and follow the same steps. The same goes for any
+other VPS (Hetzner, DigitalOcean etc.), just paid.
+
 1. Sign up at [oracle.com/cloud/free](https://www.oracle.com/cloud/free/). During sign‑up,
    choose a **Home Region** inside the EU (it can't be changed later).
 2. **Compute → Instances → Create instance**:
@@ -193,8 +197,11 @@ tunnel, the `https://karta.…` address and the admin page protection.
 The assistant **doesn't store** the key. When you're done, you can delete it on the same
 page, or keep it to run the assistant again later.
 
-> Don't want a key? Answer «ο» (no) to «Να γίνει αυτόματα;» and follow the
-> [manual installation](#manual-installation-without-the-assistant) for Cloudflare.
+> Don't want a key? Answer «ο» (no) to «Να γίνει αυτόματα;». Follow only
+> [Create the Cloudflare Tunnel](#create-the-cloudflare-tunnel) and
+> [Protect the admin page](#protect-the-admin-page-cloudflare-access) from the manual
+> installation. The assistant then asks for the team domain, the AUD tag and the tunnel
+> token.
 
 ---
 
@@ -207,13 +214,15 @@ The assistant asks only what's needed for Karta to open safely:
 2. **Cloudflare:** first, **where Karta runs**: "1" at the shop or at home (Raspberry Pi,
    an old PC/laptop, a server on the local network) or "2" on a VPS / cloud server. With
    "1" the tunnel connects over **HTTP/2**, which works reliably behind a home or shop
-   router (with QUIC/HTTP/3 many routers make pages slow); with "2" over QUIC (HTTP/3).
+   router (with QUIC/HTTP/3 many routers make pages slow); with "2" automatically
+   (QUIC/HTTP/3, falling back to HTTP/2).
    Then paste the key from step 4, and the assistant creates the tunnel, address and
    protection, showing ✓ for each.
 
-It then writes the settings file (`.env`), **starts Karta**, sets up an **automatic backup
-every night**, and offers a backup to a USB stick (the cloud backup is set up in the admin
-page; see [step 8](#step-8-backups-important)).
+It then writes the settings file (`.env`), **starts Karta**, asks whether you want an
+**automatic backup every night** at 23:30 (answer «ν», yes, recommended; `.env` is copied
+with it as `karta.env`), and offers a backup to a USB stick (the cloud backup is set up in
+the admin page; see [step 8](#step-8-backups-important)).
 
 The **ΑΦΜ (tax number), Ergani user, phone notifications and mode** are set afterwards, on
 the admin page ([step 7](#step-7-follow-the-πρώτα-βήματα-first-steps)). Karta always
@@ -232,8 +241,10 @@ Wait a minute and run:
 cd ~/karta && ./setup.sh check
 ```
 
-It checks the settings, the Ergani login, Cloudflare, that Karta answers on your address, and
-that **the admin page is protected**. For every problem it tells you what to do.
+It checks the settings, Cloudflare, that Karta answers on your address, and that **the
+admin page is protected**. For every problem it tells you what to do. It tests the Ergani
+login only if the Ergani user is in `.env`; otherwise test it with «Δοκιμή σύνδεσης» (test
+connection) on the admin page ([step 7](#step-7-follow-the-πρώτα-βήματα-first-steps)).
 
 Then open `https://karta.yourshop.gr/admin` in your browser: Cloudflare asks for your email,
 sends you a code, and you see the admin page.
@@ -249,7 +260,8 @@ On the admin page's **«Σήμερα»** tab there's a **«Πρώτα βήματ
    the **ΑΦΜ**, the **branch number** (usually 0) and the Ergani **web‑services user**
    (username, password, type). Press **«Δοκιμή σύνδεσης»** (test connection; read‑only,
    nothing is submitted) and **«Αποθήκευση»** (save). The password is stored encrypted.
-2. Business details (name, colour, logo)
+2. Business details (name, colours: ready themes or your own, logo; see
+   [Settings](Admin-Settings-EN#στοιχεία-επιχείρησης-business-details))
 3. Staff from Ergani («Έλεγχος ΕΡΓΑΝΗ»)
 4. **Schedules:** Ergani usually gives only **how many hours a week** each person works,
    not the hours of each day. Type each day's hours from the schedule your accountant
@@ -260,14 +272,17 @@ On the admin page's **«Σήμερα»** tab there's a **«Πρώτα βήματ
    test-notification button
 8. Backups off the machine ([step 8](#step-8-backups-important))
 9. A trial run with the staff (training mode)
-10. Going live on Ergani: «Ρυθμίσεις» → «Λειτουργία» ([Going live](Going-Live-EN))
+10. Going live on Ergani: «Ρυθμίσεις» → «Επιχείρηση και σύνδεση με το ΕΡΓΑΝΗ» →
+    «Λειτουργία» ([Going live](Going-Live-EN))
 
 ---
 
 ## Step 8: Backups (important!)
 
-Punches must be **kept for at least 5 years**. The assistant has already set up a
-**backup every night** into `~/karta/backups` (30 daily, 24 monthly and one for each year).
+Punches must be **kept for at least 5 years**. If you answered «ν» (yes) to the nightly
+backup (recommended), the assistant has already set up a **backup every night** at 23:30
+into `~/karta/backups` (30 daily, 24 monthly and one for each year, plus a copy of `.env`
+as `karta.env`). If you answered «ο» (no), run `./setup.sh` again.
 But if the Raspberry Pi's card or the disk fails, they're lost along with it. So also keep
 a backup **off the machine**, one or both of these:
 
@@ -391,6 +406,7 @@ the arrow keys):
 | `PUBLIC_ORIGIN=` | `https://karta.yourshop.gr` |
 | `PIN_KEY=` | the key the command printed |
 | `TUNNEL_TOKEN=` | the token from "Create the Cloudflare Tunnel" |
+| `TUNNEL_PROTOCOL=` | `http2` for a machine at the shop or at home, `auto` on a VPS |
 
 Save with **Ctrl+O**, **Enter**, and exit with **Ctrl+X**. `.env` contains passwords: never
 send it anywhere.
@@ -427,3 +443,17 @@ docker compose logs --tail 50 cloudflared
 Common mistakes: a wrong or empty value in `.env` (Karta says which one is missing), a wrong
 tunnel token, or a wrong `PUBLIC_ORIGIN` (it must be exactly the address, with `https://`
 and no `/` at the end).
+
+Finally, for the «Ενημέρωση τώρα» (update now) button and the nightly backup, download the
+setup assistant into the same folder and run it:
+
+```bash
+cd ~/karta
+curl -fsSLO https://raw.githubusercontent.com/osergios/karta/main/setup.sh
+chmod +x setup.sh
+./setup.sh update
+```
+
+`./setup.sh update` installs `update.sh` (the «Ενημέρωση τώρα» button) and `backup.sh`. To
+make the backup run by itself every night, run `./setup.sh` once: it keeps your `.env`
+values as defaults and asks about the nightly backup.

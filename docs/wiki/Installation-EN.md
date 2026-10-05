@@ -2,7 +2,7 @@
 
 # Installation
 
-> First time? See [Easy installation, step by step](Easy-Installation-EN), with a Raspberry Pi, an old PC or a free cloud machine.
+> First time? See [Easy installation, step by step](Easy-Installation-EN), with a Raspberry Pi, an old PC or a free cloud server.
 > The **setup assistant** (`setup.sh`) writes `.env` and sets up the Cloudflare Tunnel and admin protection automatically.
 
 Karta is one small web service: Python, FastAPI and a single SQLite database file.
@@ -100,7 +100,8 @@ Cloudflare Access. Those pages have their own protection; see
    branches and current staff from Ergani, and lets you import the employees. This is the
    only way to add staff. Each new employee gets a 6‑digit PIN, shown once. Write it down
    or give it to them.
-3. **«Ρυθμίσεις» → «Στοιχεία επιχείρησης»**: shop name, short name, colour and logo.
+3. **«Ρυθμίσεις» → «Στοιχεία επιχείρησης»**: shop name, short name, colours (ready themes
+   or your own) and logo (see [Settings](Admin-Settings-EN#στοιχεία-επιχείρησης-business-details)).
 4. **«Ωράρια & αργίες»**: check each person's schedule (see
    [Schedules and holidays](Admin-Schedules-and-Holidays-EN)).
 5. **«Ρυθμίσεις» → «Συσκευές» → «Δημιουργία κωδικού εγγραφής»**: register the shop
@@ -112,9 +113,10 @@ Cloudflare Access. Those pages have their own protection; see
 Everything (employees, PIN hashes, punches, schedules, settings, logo) is in the one
 SQLite file. Punches must be kept for at least 5 years: back up the `/data` volume
 regularly, also off the machine, and keep the copies encrypted, because they contain
-staff data. Also keep a safe copy of your `.env`, especially `PIN_KEY`. With `setup.sh`
-all of this happens automatically (USB, cloud, restore): see
-[Backups and restore](Backups-EN).
+staff data. Also keep a safe copy of your `.env`, especially `PIN_KEY`. `setup.sh` sets up
+the nightly copy on the machine, the USB copy and restoring from the terminal. The
+encrypted cloud copy is set up in **«Ρυθμίσεις» → «Αντίγραφα ασφαλείας»** and works with
+any installation, with or without `setup.sh`. See [Backups and restore](Backups-EN).
 
 To copy the database while the app is running, use SQLite's backup command rather than a
 plain `cp`:
@@ -137,5 +139,6 @@ docker rm -f karta && docker run -d --name karta ... (same command as above)
 If you build the image yourself: `git pull`, `docker build -t karta .` and the
 `docker run` again.
 
-Database changes are applied automatically at startup. After an update, use
-**«Σήμερα» → «Οθόνη καταστήματος και αποστολή» → «Ανανέωση οθόνης»** to make the shop screen reload itself.
+Database changes are applied automatically at startup. After such a manual update, use
+**«Σήμερα» → «Οθόνη καταστήματος και αποστολή» → «Ανανέωση οθόνης»** to make the shop
+screen reload itself. With «Ενημέρωση τώρα» this happens by itself.

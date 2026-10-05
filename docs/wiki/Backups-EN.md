@@ -36,10 +36,9 @@ read them.
 
 **They take very little space:** each snapshot is the whole database and restores on its
 own, but the cloud only stores what changed since the previous one, compressed. Example: a
-shop with 8 people and 2.5 years of history (a database of about 6 MB) → about 1 MB a day,
-20–25 MB for the 30 daily snapshots, and about 1 MB for each monthly one: around 50 MB after
-two years, instead of half a GB with whole copies every night. A free Google Drive account
-(15 GB) is plenty.
+database of about 6 MB → about 1 MB a day, 20–25 MB for the 30 daily snapshots, and about
+1 MB for each monthly one: around 50 MB after two years, instead of half a GB with whole
+copies every night. A free Google Drive account (15 GB) is plenty.
 
 In **«Ρυθμίσεις» → «Αντίγραφα ασφαλείας»**:
 
@@ -114,8 +113,16 @@ in the backups' `karta.env`) or enter them again.
 
 ### On a new machine, from the cloud
 
+The cloud snapshot holds **only the database**, not `karta.env` or `PIN_KEY`. If your
+Karta is on a VPS, or your only backup is in the cloud, keep a copy of `.env` (at least
+`PIN_KEY`) in a password manager. Without the old `PIN_KEY`, after the restore the Ergani
+password and the ntfy token must be typed again in «Ρυθμίσεις», and PINs and QR cards
+can't be shown until you issue new ones. PINs and QR cards still work on the shop screen.
+
 1. Install Karta with [Easy installation](Easy-Installation-EN) (`./setup.sh`: same
-   address and same Cloudflare key, the assistant reuses the tunnel).
+   address and a Cloudflare API key, old or new; the assistant reuses the tunnel). If you
+   have the old `PIN_KEY`, put it in `.env` and restart (`cd ~/karta && docker compose up -d`)
+   before restoring.
 2. On the admin page: «Αντίγραφα ασφαλείας» → **«Έχω ήδη αντίγραφα στο cloud»** (I already
    have backups in the cloud): same provider, a new access code (`rclone authorize`), and
    the **encryption password** you wrote down → «Σύνδεση στα υπάρχοντα αντίγραφα» (connect

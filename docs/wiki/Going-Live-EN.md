@@ -20,7 +20,8 @@ small «Δοκιμαστική λειτουργία» label when not in producti
 who's in or out, alerts, rest checks and reports only look at the current mode. A test
 arrival in `dry_run` can never turn your first real punch into a departure. Reports only
 count from the first real punch of the current mode, so test days before it don't show
-as absences. A report made outside production is titled «Σύνοψη (ΔΟΚΙΜΗ)».
+as absences. A report made outside production has «… — ΔΟΚΙΜΑΣΤΙΚΑ ΔΕΔΟΜΕΝΑ» (test data)
+in its title.
 
 When you've finished testing, «Ρυθμίσεις» → «Κινήσεις» → **«Διαγραφή δοκιμαστικών
 κινήσεων»** removes the test punches.
@@ -39,7 +40,8 @@ When you've finished testing, «Ρυθμίσεις» → «Κινήσεις» �
 
 ### How to change the mode
 
-From the admin page, **«Ρυθμίσεις» → «Λειτουργία»** (mode), with no restart:
+From the admin page, **«Ρυθμίσεις» → «Επιχείρηση και σύνδεση με το ΕΡΓΑΝΗ» →
+«Λειτουργία»** (mode), with no restart:
 
 - For `trial` or `production` you're asked to type **the business's ΑΦΜ** (tax number) to
   confirm, and Karta **tests the connection first** to the matching Ergani. If the
@@ -68,7 +70,9 @@ For showing staff how the shop screen works. Turn it on from «Σήμερα» �
 ## Onboarding period («Περίοδος προσαρμογής»)
 
 For a business that has time before the digital card becomes mandatory for it. Start it
-from «Σήμερα» → «Οθόνη καταστήματος και αποστολή» → «Υποχρεωτική από [date]» → «Έναρξη».
+**after you switch to production**. Punches made during the period in `dry_run` or
+`trial` don't count in production, and «Διαγραφή δοκιμαστικών κινήσεων» removes them.
+Start it from «Σήμερα» → «Οθόνη καταστήματος και αποστολή» → «Υποχρεωτική από [date]» → «Έναρξη».
 
 Until that date:
 

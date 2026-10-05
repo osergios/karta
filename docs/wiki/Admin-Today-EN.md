@@ -61,8 +61,9 @@ into a warning from 3.
 ## «Ειδοποιήσεις» (alerts)
 
 Everything the live checks have flagged today: not punched in, still in after the end,
-undeclared overtime, rest or weekly limits, Ergani errors. Mark each one done, or clear
-the whole list with «Εκκαθάριση λίστας». Ergani rejections stay until you handle them.
+undeclared overtime, rest or weekly limits, Ergani errors, backups that stopped or
+failed. Mark each one done, or clear the whole list with «Εκκαθάριση λίστας». Ergani
+rejections stay until you handle them.
 See [Alerts and reminders](Alerts-and-Reminders-EN).
 
 If phone alerts aren't configured, a note says so here (they're set up in «Ρυθμίσεις» →
@@ -70,10 +71,11 @@ If phone alerts aren't configured, a note says so here (they're set up in «Ρυ
 
 ## «Οθόνη καταστήματος και αποστολή» (shop screen and sending)
 
-- **«Υπενθυμίσεις στο κατάστημα»:** shop‑screen reminders on or off.
-- **Festive decorations** on or off, with «Προεπισκόπηση» buttons for each holiday.
+- **«Υπενθυμίσεις στο κατάστημα»:** shop‑screen reminders on or off. (Festive
+  decorations are under [«Ωράρια & αργίες»](Admin-Schedules-and-Holidays-EN#festive-decorations).)
 - **«Λειτουργία εκπαίδευσης»:** training mode (see [Going live](Going-Live-EN)).
 - **Onboarding period** («Υποχρεωτική από … → Έναρξη»), see [Going live](Going-Live-EN).
-- **«Ανανέωση οθόνης»:** make the shop screen reload itself (e.g. after an update).
+- **«Ανανέωση οθόνης»:** make the shop screen reload itself. Only needed after an update
+  made on the machine; after «Ενημέρωση τώρα» the screen reloads by itself.
 - The state of the sending queue: anything pending, failed or waiting for your check.
   See [How punches reach Ergani](Ergani-Submissions-EN).

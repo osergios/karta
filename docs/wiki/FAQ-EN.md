@@ -6,9 +6,14 @@ Didn't find the answer? Ask in [Discussions](https://github.com/osergios/karta/d
 
 ### Something doesn't work. Where do I start?
 
-On Karta's machine run `cd ~/karta && ./setup.sh check`. It checks the settings, the Ergani
-login, Cloudflare, that Karta answers on your address and that the admin page is protected,
-and tells you what to fix. To change settings, run `./setup.sh` again.
+On Karta's machine run `cd ~/karta && ./setup.sh check`. It checks the settings,
+Cloudflare, that Karta answers on your address and that the admin page is protected, and
+tells you what to fix. It tests the Ergani login only if the Ergani user is in `.env`;
+otherwise press «Δοκιμή σύνδεσης» (test connection) in «Ρυθμίσεις» → «Επιχείρηση και
+σύνδεση με το ΕΡΓΑΝΗ».
+
+To change the address, the admin emails or Cloudflare, run `./setup.sh` again. Everything
+else is changed on the admin page, in «Ρυθμίσεις».
 
 ### How do I add an employee?
 
@@ -27,8 +32,8 @@ was slow at that moment: try again in a few minutes.
 
 ### Where do I set the ΑΦΜ, the Ergani user, notifications and the mode?
 
-On the admin page, in **«Ρυθμίσεις»**. `./setup.sh` only sets up the address and
-Cloudflare. See [Settings](Admin-Settings-EN).
+On the admin page, in **«Ρυθμίσεις»**. `./setup.sh` only sets up the address, the admin
+emails and Cloudflare. See [Settings](Admin-Settings-EN).
 
 ### How long do I keep punches? What if the machine breaks?
 
@@ -105,4 +110,6 @@ didn't save it with a date in the past.
 
 ### How do I update the shop screen after upgrading Karta?
 
-«Σήμερα» → «Οθόνη καταστήματος και αποστολή» → «Ανανέωση οθόνης».
+With «Ενημέρωση τώρα» (update now) on the admin page, the screen reloads by itself. Only
+after a manual update (e.g. `./setup.sh update`), use «Σήμερα» → «Οθόνη καταστήματος και
+αποστολή» → «Ανανέωση οθόνης».

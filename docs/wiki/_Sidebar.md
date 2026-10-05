@@ -25,6 +25,7 @@
 - [Ειδοποιήσεις](Alerts-and-Reminders)
 - [Ασφάλεια](Security-and-Privacy)
 - [Συχνές ερωτήσεις](FAQ)
+- [Αποποίηση ευθύνης](Disclaimer)
 
 ---
 
@@ -46,4 +47,5 @@
 [Ergani](Ergani-Submissions-EN) ·
 [Alerts](Alerts-and-Reminders-EN) ·
 [Security](Security-and-Privacy-EN) ·
-[FAQ](FAQ-EN)
+[FAQ](FAQ-EN) ·
+[Disclaimer](Disclaimer-EN)

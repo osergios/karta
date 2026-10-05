@@ -2,14 +2,16 @@
 
 # Configuration (`.env`)
 
-All server settings live in the `.env` file (start from `.env.example`). Restart the app
-after changing it. **Never commit your real `.env`**: it holds your Ergani password and keys.
+All server settings live in the `.env` file (start from `.env.example`). After changing
+it, restart the app with `cd ~/karta && docker compose up -d`. **Never commit your real
+`.env`**: it holds your Ergani password and keys.
 
 > **From the admin page:** the mode (`ERGANI_MODE`), the ΑΦΜ (tax number), the branch, the
-> Ergani users and phone notifications (`NTFY_*`) can also be set in the admin page's
-> **«Ρυθμίσεις»**, with no restart. Whatever is saved there **overrides** `.env` (the page
-> shows «από το .env» next to anything that comes from here). Passwords saved there are
-> encrypted with `PIN_KEY`.
+> employer id in Ergani's QR (`ERGANI_EMPLOYER_ID`), the Ergani users and phone
+> notifications (`NTFY_*`) can also be set in the admin page's **«Ρυθμίσεις»**, with no
+> restart. Whatever is saved there **overrides** `.env` (the page shows «από το .env» next
+> to anything that comes from here). So once a value is saved on the page, changing it in
+> `.env` has no effect. Passwords saved there are encrypted with `PIN_KEY`.
 
 Day‑to‑day rules such as flexibility minutes, overtime deadlines and weekly limits are
 **not** set here. They're on the admin page, under
@@ -22,7 +24,7 @@ Day‑to‑day rules such as flexibility minutes, overtime deadlines and weekly 
 | `ERGANI_MODE` | no (default `dry_run`) | `dry_run`, `trial` or `production`. See [Going live](Going-Live-EN). The Ergani URL follows the mode; don't set it yourself. |
 | `ERGANI_USERNAME` / `ERGANI_PASSWORD` | for `production` (and for importing staff) | The business's Ergani web‑services user. |
 | `ERGANI_USER_TYPE` | no (default `01`) | `01` = API / external user, `02` = «ΕΡΓΑΝΗ» user from «Εξωτερικοί Χρήστες Παραρτημάτων». |
-| `ERGANI_TRIAL_USERNAME` / `ERGANI_TRIAL_PASSWORD` | for `trial` | A user created in the Ergani test environment (`trialv2eservices.yeka.gr`, TaxisNet login of the employer). |
+| `ERGANI_TRIAL_USERNAME` / `ERGANI_TRIAL_PASSWORD` | no | A user created in the Ergani test environment (`trialv2eservices.yeka.gr`, TaxisNet login of the employer). If left empty, `trial` uses the normal user (`ERGANI_USERNAME`). |
 | `ERGANI_TRIAL_USER_TYPE` | no (default `02`) | Same as above, for the test user. |
 | `EMPLOYER_AFM` | for `trial` / `production` | The employer's ΑΦΜ (9 digits). |
 | `BRANCH_NUMBER` | no (default `0`) | Branch number (Α/Α παραρτήματος). |
@@ -61,15 +63,29 @@ on the admin page.
 | `NTFY_TOPIC` | The topic name. Pick something long and random if you use the public server. |
 | `NTFY_TOKEN` | Access token, if your ntfy server needs one. |
 
-## Viewing PINs (optional)
+## Encryption key (`PIN_KEY`)
 
 | Variable | Meaning |
 |---|---|
-| `PIN_KEY` | A 32‑byte key that lets the admin page show employees' current PINs. Generate it once with `python3 -c "import os,base64;print(base64.urlsafe_b64encode(os.urandom(32)).decode())"`. |
+| `PIN_KEY` | A 32‑byte key. The setup assistant writes it. If you set up by hand, generate it once with `python3 -c "import os,base64;print(base64.urlsafe_b64encode(os.urandom(32)).decode())"`. |
+
+`PIN_KEY` is **needed**, not optional. With it:
+
+- the admin page stores the Ergani password and the ntfy token encrypted; without it,
+  these can only be set in `.env`;
+- the admin page shows employees' current PINs and QR cards;
+- the link for the QR card on the phone works.
 
 Without `PIN_KEY`, PINs are stored only as one‑way hashes and can never be shown again;
-you can only set a new one. If you lose the key, PINs keep working, but they can't be
-shown until you give each person a new PIN («Νέο PIN»).
+you can only set a new one. If you lose the key:
+
+- PINs and QR cards keep working, but they can't be shown until you give each person a new
+  PIN («Νέο PIN») or a new card;
+- the Ergani password and the ntfy token saved on the admin page can no longer be read;
+  type them again in **«Ρυθμίσεις»**.
+
+Keep a copy of `.env` (or at least `PIN_KEY`) somewhere safe, e.g. in a password manager.
+See [Backups](Backups-EN).
 
 ## Cloudflare Tunnel
 

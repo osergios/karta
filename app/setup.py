@@ -70,7 +70,8 @@ ENV_LAYOUT = [
                 "ERGANI_TRIAL_USERNAME", "ERGANI_TRIAL_PASSWORD", "ERGANI_TRIAL_USER_TYPE",
                 "EMPLOYER_AFM", "BRANCH_NUMBER", "ERGANI_EMPLOYER_ID"]),
     ("Cloudflare Access (σελίδα διαχείρισης)", ["CF_ACCESS_TEAM_DOMAIN", "CF_ACCESS_AUD", "ADMIN_EMAILS"]),
-    ("Εφαρμογή", ["PUBLIC_ORIGIN", "LATE_THRESHOLD_SECONDS", "DEBOUNCE_SECONDS", "PIN_KEY"]),
+    ("Εφαρμογή", ["PUBLIC_ORIGIN", "LATE_THRESHOLD_SECONDS", "DEBOUNCE_SECONDS", "PIN_KEY",
+                   "DISCLAIMER_ACCEPTED"]),
     ("Ειδοποιήσεις στο κινητό (ntfy)", ["NTFY_URL", "NTFY_TOPIC", "NTFY_TOKEN"]),
     ("Cloudflare Tunnel (docker-compose.yml)", ["TUNNEL_TOKEN", "TUNNEL_PROTOCOL"]),
 ]
@@ -309,6 +310,30 @@ def yes(question: str, default: bool = True) -> bool:
 
 # ------------------------------------------------------------------ setup
 
+DISCLAIMER_URL = "https://github.com/osergios/karta/blob/main/DISCLAIMER.md"
+
+
+def accept_disclaimer(env: dict) -> bool:
+    """Asked once per installation; the date of acceptance is kept in .env."""
+    if env.get("DISCLAIMER_ACCEPTED"):
+        return True
+    title("Αποποίηση ευθύνης")
+    print("  Η Karta διατίθεται «ως έχει», χωρίς καμία εγγύηση. Δεν είναι επίσημο λογισμικό του Υπουργείου.")
+    print("  Εσείς, ως εργοδότης, είστε αποκλειστικά υπεύθυνος για τις δηλώσεις στο ΕΡΓΑΝΗ, τα πρόστιμα,")
+    print("  τα αντίγραφα ασφαλείας, τη διατήρηση των αρχείων και τα προσωπικά δεδομένα. Ο δημιουργός")
+    print("  δεν ευθύνεται για καμία ζημία, απώλεια δεδομένων ή πρόστιμο.")
+    print(f"  Ολόκληρο το κείμενο: {DISCLAIMER_URL}")
+    try:
+        a = input("  Το διαβάσατε και το αποδέχεστε; Γράψτε «ναι» για να συνεχίσετε: ").strip().lower()
+    except EOFError:
+        print(); a = ""
+    if a not in ("ναι", "nai", "yes"):
+        bad("Χωρίς αποδοχή δεν γίνεται εγκατάσταση. Δεν άλλαξε τίποτα.")
+        return False
+    env["DISCLAIMER_ACCEPTED"] = datetime.now().strftime("%Y-%m-%d")
+    return True
+
+
 def setup(path: str = ".env") -> int:
     env = read_env(path)
     print(f"{BOLD}Karta: οδηγός ρύθμισης{END}")
@@ -316,6 +341,8 @@ def setup(path: str = ".env") -> int:
     print("Πατήστε Enter για να κρατήσετε την τιμή σε [αγκύλες]. Ctrl+C για έξοδο χωρίς αλλαγές.")
     if env:
         warn(f"Βρέθηκε υπάρχον {path}: οι τιμές του προτείνονται ως προεπιλογές.")
+    if not accept_disclaimer(env):
+        return 1
 
     print("  Εδώ ρυθμίζεται μόνο η διεύθυνση και το Cloudflare. ΑΦΜ, χρήστης ΕΡΓΑΝΗ, ειδοποιήσεις στο κινητό")
     print("  και λειτουργία ρυθμίζονται μετά, από τη σελίδα διαχείρισης («Ρυθμίσεις»).")
@@ -375,7 +402,8 @@ def tunnel_protocol(current: str = "") -> str:
 
 
 def manual_cloudflare(env: dict) -> None:
-    print("  Ακολουθήστε τα βήματα 4 και 5 της Εύκολης εγκατάστασης στο wiki και δώστε μου τις τιμές:")
+    print("  Στο wiki, Εύκολη εγκατάσταση → Χειροκίνητη εγκατάσταση, ακολουθήστε τα «Φτιάξτε το Cloudflare Tunnel»")
+    print("  και «Προστατέψτε τη σελίδα διαχείρισης (Cloudflare Access)», και δώστε μου τις τιμές:")
     team = ask("Team domain (π.χ. tokatastimamou.cloudflareaccess.com)", env.get("CF_ACCESS_TEAM_DOMAIN", ""),
                lambda v: valid_hostname(re.sub(r"^https?://", "", v).rstrip("/")), "Γράψτε κάτι όπως tokatastimamou.cloudflareaccess.com.")
     env["CF_ACCESS_TEAM_DOMAIN"] = re.sub(r"^https?://", "", team).rstrip("/")

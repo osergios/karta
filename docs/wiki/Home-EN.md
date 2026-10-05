@@ -7,6 +7,10 @@ businesses. Staff clock in and out on a shop screen with a PIN or a QR code, and
 sends every arrival and departure to **Ergani II**. The owner manages everything from a
 web admin page, and the accountant gets monthly and yearly Excel reports.
 
+> **Disclaimer.** Karta is provided "as is", without any warranty, and is not official
+> Ministry software. The employer alone is responsible for Ergani declarations, fines,
+> backups and personal data. See the full [disclaimer](Disclaimer-EN).
+
 The app's screens are in Greek, and so is the main version of this wiki. These English
 pages quote every button or label exactly as it appears on screen, e.g. «Αποχώρηση…».
 
@@ -14,7 +18,7 @@ pages quote every button or label exactly as it appears on screen, e.g. «Απο
 
 | If you want to… | Read |
 |---|---|
-| Install Karta without being a programmer (Raspberry Pi, old PC or free cloud) | [Easy installation, step by step](Easy-Installation-EN) |
+| Install Karta without being a programmer (Raspberry Pi, old PC or free cloud server) | [Easy installation, step by step](Easy-Installation-EN) |
 | Install Karta on a server (short version) | [Installation](Installation-EN) |
 | Look up a setting in `.env` | [Configuration](Configuration-EN) |
 | Move from testing to real Ergani submissions | [Going live](Going-Live-EN) |
@@ -30,7 +34,7 @@ pages quote every button or label exactly as it appears on screen, e.g. «Απο
 | «Προσωπικό» | [Staff](Admin-Staff-EN): employee cards and the «Ενέργειες ▾» menu (leave, overtime, PIN, QR…) |
 | «Ωράρια & αργίες» | [Schedules and holidays](Admin-Schedules-and-Holidays-EN) |
 | «Αναφορές» | [Reports](Admin-Reports-EN): monthly and yearly Excel files for the accountant |
-| «Ρυθμίσεις» | [Settings](Admin-Settings-EN): Ergani check, limits, business details, devices, movements |
+| «Ρυθμίσεις» | [Settings](Admin-Settings-EN): business and Ergani connection (mode, ΑΦΜ, Ergani user), Ergani check, limits and alerts, phone notifications, backups, version and update, business details, devices, movements |
 
 ## How it works
 

@@ -363,3 +363,10 @@
     a stale lock is cleared first. `init` refuses to start a new repository over existing backups (use «Έχω ήδη
     αντίγραφα στο cloud»). Connections made with 1.2–1.3 (rclone crypt copies) need to be connected again; the
     older copies stay in the folder.
+71. **Disclaimer.** New `DISCLAIMER.md` (Greek and English; also in the wiki, the README and the admin page):
+    no warranty, not official software, the employer is responsible for Ergani declarations, fines, backups,
+    record retention and personal data, limitation of liability to the extent the law allows. `./setup.sh`
+    asks once for «ναι» before installing and keeps the date in `.env` (`DISCLAIMER_ACCEPTED`).
+72. **Docs.** "Free cloud" now says what it is (your own VPS, reached over SSH). Wiki pages brought up to date:
+    `PIN_KEY` is required, festive decorations live in «Ωράρια & αργίες», backup alerts, the full path to
+    «Λειτουργία», what `./setup.sh check` tests, keeping `.env` safe when the only copy is in the cloud.

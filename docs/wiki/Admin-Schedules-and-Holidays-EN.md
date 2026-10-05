@@ -81,3 +81,15 @@ On a closed day:
 Nothing is sent to Ergani for these days; the accountant declares them there. If someone
 does work on a closed day, declare it in Ergani, then add it with «Υπερωρία / αλλαγή
 ημέρας…».
+
+### Festive decorations
+
+At the end of this section, «Εορταστική διακόσμηση στην οθόνη του καταστήματος» (festive
+decorations on the shop screen) turns them on or off («Ενεργοποίηση» / «Απενεργοποίηση»).
+They're on by default and appear by themselves: Christmas, Easter, 25 March and
+28 October, Καθαρά Δευτέρα (Clean Monday), 1 May. When they're off, the screen always
+keeps its normal look; the greetings on closed days still appear.
+
+The preview buttons (Christmas, New Year, Clean Monday, 25 March, Easter, 1 May,
+28 October, 15 August, «Κλείσιμο (π.χ. ανακαίνιση)» for a closure) open the shop screen in
+a new tab, as it will look on that day. A preview records nothing.

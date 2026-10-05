@@ -26,7 +26,8 @@ If sending fails, Karta tries again with a growing pause: 1 minute, then 2, then
 15 minutes between attempts. It stops after 30 attempts («Απέτυχε»). Errors raise an
 alert:
 
-- **Login rejected:** usually a wrong or expired Ergani password in `.env`.
+- **Login rejected:** usually a wrong or expired Ergani password. Fix it in «Ρυθμίσεις» →
+  «Επιχείρηση και σύνδεση με το ΕΡΓΑΝΗ» (or in `.env`).
 - **Ergani rejected the punch:** the alert shows Ergani's own message. Ergani rejections
   stay on the admin page until you mark them done.
 - **Ergani down** (HTTP 5xx) or **no connection:** retried automatically.

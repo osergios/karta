@@ -52,7 +52,9 @@ returns there by itself after a few seconds.
 
 The camera also accepts the employee QR that Ergani and myErgani show
 (`erg|nm:…;ln:…;afm:…;id:…`). Karta matches it on ΑΦΜ plus surname, ignoring accents. Set
-`ERGANI_EMPLOYER_ID` in `.env` to refuse QR codes issued by another employer. Punches
+«Κωδικός εργοδότη στο ΕΡΓΑΝΗ» (employer id) in «Ρυθμίσεις» → «Επιχείρηση και σύνδεση με
+το ΕΡΓΑΝΗ» (or `ERGANI_EMPLOYER_ID` in `.env`) to refuse QR codes issued by another
+employer. Punches
 made this way show «QR ΕΡΓΑΝΗ» in the movements list.
 
 Ergani's QR contains no secret, so a photocopy works like the original. The shop's own
@@ -86,11 +88,13 @@ Tapping a reminder card opens that person's PIN pad. Someone on leave, muted for
 
 ## Look and feel
 
-- Shows your business name or logo, colour, and a large clock with the date
-  (see «Στοιχεία επιχείρησης» in [Settings](Admin-Settings-EN)).
-- **Festive decorations** (on by default; switch them off on the admin page). They follow
-  the calendar: Christmas, Easter, 25 March and 28 October flags, Clean Monday kites, and
-  May Day flowers. «Προεπισκόπηση» buttons on the admin page preview each one.
+- Shows your business name or logo, colours (ready themes or your own), and a large clock
+  with the date (see
+  [«Ρυθμίσεις» → «Στοιχεία επιχείρησης»](Admin-Settings-EN#στοιχεία-επιχείρησης-business-details)).
+- **Festive decorations** (on by default; switch them off in «Ωράρια & αργίες» →
+  [«Αργίες και κλειστό κατάστημα»](Admin-Schedules-and-Holidays-EN#festive-decorations)).
+  They follow the calendar: Christmas, Easter, 25 March and 28 October flags, Clean Monday
+  kites, and May Day flowers. The preview buttons there show each one.
 - Respects the Windows setting "reduce animations": all motion stops.
 - Scales from 1024×600 up to 4K, and fits a phone if needed.
 - Works briefly offline: if the internet drops, the page still loads and tells staff to
@@ -98,6 +102,8 @@ Tapping a reminder card opens that person's PIN pad. Someone on leave, muted for
 
 ## Updating the screen remotely
 
-After you update Karta, use «Σήμερα» → «Οθόνη καταστήματος και αποστολή» →
-**«Ανανέωση οθόνης»**. The shop screen reloads itself within ~30 seconds (it waits if
-someone is mid‑punch), and the admin page shows «✓ η οθόνη ανανεώθηκε».
+After «Ενημέρωση τώρα» (update now) on the admin page, the shop screen reloads by itself
+with the new version. Only if you updated on the machine (e.g. `./setup.sh update`), use
+«Σήμερα» → «Οθόνη καταστήματος και αποστολή» → **«Ανανέωση οθόνης»**. The shop screen
+then reloads itself within ~30 seconds (it waits if someone is mid‑punch), and the admin
+page shows «✓ η οθόνη ανανεώθηκε».

@@ -52,8 +52,9 @@ The daily and weekly limits depend on the employment contract and on whether you
 | «Νόμιμη εβδομάδα, μετά υπερωρία (ώρες)» | 45 | Legal week (45 for a 5‑day week, 48 for 6‑day); beyond it is υπερωρία. |
 | «Ελάχιστη ανάπαυση (ώρες)» | 11 | Minimum rest between two working days. |
 
-The shop‑screen reminders and festive decorations switches are on the
-[Today](Admin-Today-EN) tab.
+The shop‑screen reminders switch is on the [Today](Admin-Today-EN) tab. Festive
+decorations are under «Ωράρια & αργίες» →
+[«Αργίες και κλειστό κατάστημα»](Admin-Schedules-and-Holidays-EN#festive-decorations).
 
 ## «Ειδοποιήσεις στο κινητό» (phone notifications)
 
@@ -129,5 +130,5 @@ The last 300 punches, with their status (see
 - **retry** a failed submission;
 - decide on an **uncertain** one («Υπάρχει στο ΕΡΓΑΝΗ» / «Δεν υπάρχει — νέα αποστολή»);
 - **«Διαγραφή δοκιμαστικών κινήσεων»:** remove every punch made in `dry_run` or `trial`
-  mode. Punches made in `production` mode are never touched, including onboarding‑period
-  ones.
+  mode, including those made in these modes during the onboarding period. Punches made in
+  `production` mode are never touched, including onboarding‑period ones.

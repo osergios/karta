@@ -14,6 +14,14 @@
 
 **Ερωτήσεις και ιδέες** στις [Συζητήσεις](https://github.com/osergios/karta/discussions).
 
+> [!WARNING]
+> **Αποποίηση ευθύνης.** Η Karta διατίθεται **«ως έχει», χωρίς καμία εγγύηση**. Δεν είναι
+> επίσημο ούτε εγκεκριμένο λογισμικό του Υπουργείου Εργασίας. **Εσείς**, ως εργοδότης,
+> είστε αποκλειστικά υπεύθυνος για τις δηλώσεις στο ΕΡΓΑΝΗ, τα πρόστιμα, τα αντίγραφα
+> ασφαλείας, τη διατήρηση των αρχείων και τα προσωπικά δεδομένα. Ο δημιουργός δεν ευθύνεται
+> για καμία ζημία, απώλεια δεδομένων ή πρόστιμο. Με τη χρήση αποδέχεστε την πλήρη
+> [αποποίηση ευθύνης](DISCLAIMER.md).
+
 ## Στιγμιότυπα
 
 *Δοκιμαστική επιχείρηση με φανταστικούς εργαζόμενους, σε λειτουργία `dry_run`.*
@@ -73,7 +81,7 @@
 
 ## Γρήγορη εκκίνηση
 
-**Δεν είστε προγραμματιστής;** Ακολουθήστε την [εύκολη εγκατάσταση, βήμα προς βήμα](https://github.com/osergios/karta/wiki/Easy-Installation) σε Raspberry Pi, παλιό PC ή δωρεάν cloud. Ο οδηγός ρύθμισης κάνει τα περισσότερα:
+**Δεν είστε προγραμματιστής;** Ακολουθήστε την [εύκολη εγκατάσταση, βήμα προς βήμα](https://github.com/osergios/karta/wiki/Easy-Installation) σε Raspberry Pi, παλιό PC ή δωρεάν server στο cloud (π.χ. Oracle Cloud Always Free, με Ubuntu και πρόσβαση SSH). Ο οδηγός ρύθμισης κάνει τα περισσότερα:
 
 ```bash
 mkdir ~/karta && cd ~/karta
@@ -158,6 +166,8 @@ Copyright © 2026 osergios. Ο κώδικας της Karta διατίθεται 
 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)). Για να συνεισφέρετε, δείτε το
 [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
+Δείτε επίσης την [αποποίηση ευθύνης](DISCLAIMER.md).
+
 ---
 
 <a id="english"></a>
@@ -175,6 +185,13 @@ installation, every admin tab, the shop screen, how punches reach Ergani, alerts
 FAQ. The wiki pages live in [`docs/wiki/`](docs/wiki/) and are published automatically.
 
 **Questions and ideas** go to [Discussions](https://github.com/osergios/karta/discussions).
+
+> [!WARNING]
+> **Disclaimer.** Karta is provided **"as is", without any warranty**. It is not official or
+> approved software of the Ministry of Labour. **You**, as the employer, are solely
+> responsible for Ergani declarations, fines, backups, record retention and personal data.
+> The author is not liable for any damage, data loss or fine. By using Karta you accept the
+> full [disclaimer](DISCLAIMER.md).
 
 See the screenshots above.
 
@@ -220,7 +237,7 @@ See [`CHANGES.md`](CHANGES.md) for the detailed history.
 
 ## Quick start
 
-**Not a programmer?** Follow the [easy step‑by‑step installation](https://github.com/osergios/karta/wiki/Easy-Installation-EN) on a Raspberry Pi, an old PC or a free cloud machine. The setup assistant does most of it:
+**Not a programmer?** Follow the [easy step‑by‑step installation](https://github.com/osergios/karta/wiki/Easy-Installation-EN) on a Raspberry Pi, an old PC or a free cloud server (e.g. Oracle Cloud Always Free, running Ubuntu, reached over SSH). The setup assistant does most of it:
 
 ```bash
 mkdir ~/karta && cd ~/karta
@@ -302,3 +319,5 @@ license on other terms, contact the author.
 Bundled third-party components keep their own licenses (see
 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)). To contribute, see
 [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+See also the [disclaimer](DISCLAIMER.md).
