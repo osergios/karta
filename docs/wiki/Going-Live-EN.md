@@ -51,12 +51,12 @@ Everything happens in one place: **«Ρυθμίσεις» → «Επιχείρη
   **the business's ΑΦΜ** (tax number) to confirm, and Karta **tests the connection** to
   Ergani first. If it fails, nothing changes.
 - During the onboarding period, **«Αλλαγή ημερομηνίας»** (change date) moves the mandatory
-  day, and **«Τέλος περιόδου τώρα»** (end the period now) on «Κανονική λειτουργία» starts
-  sending right away.
+  day, and **«Τέλος περιόδου τώρα»** (end the period now, right below it) switches to normal
+  operation and starts sending right away.
 - Going back to «Δοκιμαστική» just needs an «ΟΚ» (and ends an onboarding period).
 - Every change is logged (who, when, from what to what).
 
-**For the advanced: the Ergani test environment** (`trial`). Under «Λειτουργία», it sends
+**For the advanced: the Ergani test environment** (`trial`). At the end of the section, it sends
 punches to Ergani's test environment, with no legal effect, to try the connection before
 normal operation. Fill in the **«Χρήστης για το δοκιμαστικό ΕΡΓΑΝΗ»** (user for the Ergani
 test environment; if empty, the normal user is used). It isn't a required step.

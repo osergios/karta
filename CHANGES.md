@@ -446,4 +446,4 @@
     ημερομηνίας» and «Τέλος περιόδου τώρα») moved there from «Σήμερα», which now only shows its status and the «Πώς τα
     πάνε» table. `POST /admin/api/mode` takes `onboarding_until`: the period is set before the switch to production
     (not a punch can reach Ergani in between) and undone if the Ergani login test fails; «Κανονική λειτουργία» or
-    «Δοκιμαστική» end a running period. The Ergani test environment (`trial`) is under «Για προχωρημένους».
+    «Δοκιμαστική» end a running period. The Ergani test environment (`trial`), with its own user, is under «Για προχωρημένους» at the end of the section.

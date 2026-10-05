@@ -697,27 +697,32 @@
           "δεν στέλνεται στο ΕΡΓΑΝΗ μέχρι την ημερομηνία που ορίζεις· από εκείνη τη μέρα η αποστολή ξεκινά μόνη της."],
       ["production", "Κανονική λειτουργία", "Κάθε χτύπημα δηλώνεται στο πραγματικό ΕΡΓΑΝΗ και έχει νομική ισχύ."],
     ];
-    const label = k => k === cur ? "Αλλαγή ημερομηνίας" : k === "onboarding" ? "Έναρξη"
-      : k === "production" && cur === "onboarding" ? "Τέλος περιόδου τώρα" : "Επιλογή";
+    const buttons = k => k === "onboarding" && cur === "onboarding"
+      ? [el("button", { class: "btn ghost", type: "button", onclick: act(choose.onboarding) }, "Αλλαγή ημερομηνίας"),
+         el("button", { class: "btn danger", type: "button", onclick: act(choose.production) }, "Τέλος περιόδου τώρα")]
+      : k === cur || (k === "production" && cur === "onboarding") ? []      // the period ends from its own row
+      : [el("button", { class: k === "production" ? "btn" : "btn ghost", type: "button", onclick: act(choose[k]) },
+            k === "onboarding" ? "Έναρξη" : "Επιλογή")];
     const modeRows = MODES.map(([k, title, text]) => el("div", { class: `mode-opt${k === cur ? " current" : ""}` },
       el("div", { class: "mode-text" },
         el("strong", {}, title), k === cur ? el("span", { class: "mode-now" }, " · τώρα") : null,
         k === cur && C.mode.source === "env" ? el("span", { class: "cfg-src" }, " (από το .env)") : null,
         el("div", { class: "small" }, text),
         k === "onboarding" ? el("label", { class: "mode-date" }, "Υποχρεωτική από ", until) : null),
-      k === cur && k !== "onboarding" ? null
-        : el("button", { class: k === "production" && cur === "onboarding" ? "btn danger" : k === "production" ? "btn" : "btn ghost",
-                         type: "button", onclick: act(choose[k]) }, label(k))));
-    const advanced = cur === "trial" ? null : el("details", { class: "help" },
+      buttons(k).length ? el("div", { class: "mode-buttons" }, ...buttons(k)) : null));
+    const advanced = el("details", { class: "help cfg-advanced" },
       el("summary", {}, "Για προχωρημένους: δοκιμαστικό ΕΡΓΑΝΗ"),
-      el("p", { class: "small" }, "Στέλνει τα χτυπήματα στο περιβάλλον δοκιμών του ΕΡΓΑΝΗ (trialv2eservices.yeka.gr), χωρίς νομική ισχύ: " +
-        "για να δοκιμάσετε τη σύνδεση πριν την κανονική λειτουργία. Χρειάζεται χρήστη του δοκιμαστικού ΕΡΓΑΝΗ (παρακάτω)."),
-      el("button", { class: "btn ghost", type: "button", onclick: act(choose.trial) }, "Πέρασμα σε δοκιμαστικό ΕΡΓΑΝΗ"));
+      el("p", { class: "small" }, "Στέλνει τα χτυπήματα στο περιβάλλον δοκιμών του ΕΡΓΑΝΗ (trialv2eservices.yeka.gr), χωρίς νομική ισχύ, " +
+        "για να δοκιμάσετε τη σύνδεση πριν την κανονική λειτουργία. Δεν χρειάζεται για να ξεκινήσετε. Το περιβάλλον δοκιμών έχει δικούς " +
+        "του χρήστες· αν αφήσετε τον χρήστη κενό, χρησιμοποιείται ο παραπάνω."),
+      erganiUserForm(C, "trial", "trial", ["ERGANI_TRIAL_USERNAME", "ERGANI_TRIAL_PASSWORD", "ERGANI_TRIAL_USER_TYPE"], "02"),
+      cur === "trial" ? null : el("div", { class: "mode-buttons" },
+        el("button", { class: "btn ghost", type: "button", onclick: act(choose.trial) }, "Πέρασμα σε δοκιμαστικό ΕΡΓΑΝΗ")));
     box.replaceChildren(
       ...(C.problems.length ? [el("div", { class: "an-line bad" }, el("strong", {}, "Χρειάζεται συμπλήρωση: "), C.problems.join(" · "),
         mode !== "dry_run" ? " — μέχρι τότε τα χτυπήματα περιμένουν και δεν στέλνονται." : "")] : []),
       el("div", { class: "cfg-group" },
-        el("h3", {}, "Λειτουργία"), ...modeRows, advanced),
+        el("h3", {}, "Λειτουργία"), ...modeRows),
       el("div", { class: "cfg-group" },
         el("h3", {}, "Επιχείρηση"),
         el("div", { class: "brand-form" },
@@ -739,10 +744,7 @@
         el("p", { class: "small" }, "Τον φτιάχνει ο λογιστής σας ή εσείς στο ΕΡΓΑΝΗ. Με αυτόν η Karta διαβάζει το προσωπικό και, σε κανονική λειτουργία, στέλνει τα χτυπήματα. Ο κωδικός φυλάσσεται κρυπτογραφημένος."),
         C.can_store_secrets ? null : el("p", { class: "small warn-text" }, "Λείπει το PIN_KEY από το .env: ο κωδικός μπορεί να αλλάξει μόνο στο .env."),
         erganiUserForm(C, "ergani", "production", ["ERGANI_USERNAME", "ERGANI_PASSWORD", "ERGANI_USER_TYPE"], "01")),
-      el("details", { class: "help" },
-        el("summary", {}, "Χρήστης για το δοκιμαστικό ΕΡΓΑΝΗ (προαιρετικά)"),
-        el("p", { class: "small" }, "Το περιβάλλον δοκιμών (trialv2eservices.yeka.gr) έχει δικούς του χρήστες. Αν το αφήσετε κενό, χρησιμοποιείται ο παραπάνω χρήστης."),
-        erganiUserForm(C, "trial", "trial", ["ERGANI_TRIAL_USERNAME", "ERGANI_TRIAL_PASSWORD", "ERGANI_TRIAL_USER_TYPE"], "02")));
+      advanced);
   }
 
   // ---------- phone alerts (ntfy) ----------
@@ -1017,15 +1019,13 @@
     const notReal = d.mode !== "production"
       ? el("div", { class: "an-line muted" }, `Η εφαρμογή είναι σε λειτουργία ${d.mode === "dry_run" ? "dry run" : "δοκιμαστικού ΕΡΓΑΝΗ"}: ` +
           "και μετά το τέλος της περιόδου δεν θα σταλεί τίποτα στο πραγματικό ΕΡΓΑΝΗ μέχρι να περάσεις σε κανονική λειτουργία («Ρυθμίσεις» → «Επιχείρηση και σύνδεση με το ΕΡΓΑΝΗ» → «Λειτουργία»).") : null;
-    const toSettings = el("button", { class: "link", type: "button", onclick: () => goTo("settings", "cfgBox") }, "Αλλαγή στις «Ρυθμίσεις»");
     const kids = [];
     if (ob) {
       kids.push(el("div", { class: "an-line ok onb-line" },
         el("span", {}, el("strong", {}, "ΠΕΡΙΟΔΟΣ ΠΡΟΣΑΡΜΟΓΗΣ "),
           `από ${fmtDayLong(ob.since)}. Η κάρτα γίνεται υποχρεωτική ${fmtDayLong(ob.until)} ` +
           `(${ob.days_left === 1 ? "αύριο" : `σε ${ob.days_left} ημέρες`}). Το προσωπικό χτυπά κανονικά — υπενθυμίσεις, ειδοποιήσεις ` +
-          "και αναφορές λειτουργούν — αλλά τίποτα δεν στέλνεται στο ΕΡΓΑΝΗ. Η οθόνη του καταστήματος δεν δείχνει τίποτα διαφορετικό (μόνο ένα αχνό «✓ καταγράφηκε» κάτω δεξιά μετά από κάθε χτύπημα), ώστε το προσωπικό να το παίρνει στα σοβαρά. "),
-        el("span", { class: "onb-actions" }, toSettings)));
+          "και αναφορές λειτουργούν — αλλά τίποτα δεν στέλνεται στο ΕΡΓΑΝΗ. Η οθόνη του καταστήματος δεν δείχνει τίποτα διαφορετικό (μόνο ένα αχνό «✓ καταγράφηκε» κάτω δεξιά μετά από κάθε χτύπημα), ώστε το προσωπικό να το παίρνει στα σοβαρά.")));
       if (notReal) kids.push(notReal);
     } else if (d.onboarding_until && d.onboarding_until <= today) {
       kids.push(el("div", { class: "an-line muted" }, `Η περίοδος προσαρμογής τελείωσε: η κάρτα είναι υποχρεωτική από ${fmtDayLong(d.onboarding_until)}.`));

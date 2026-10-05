@@ -426,3 +426,5 @@ button:disabled { cursor: default; }
 .mode-now { color: var(--accent); font-weight: 600; }
 .mode-date { display: flex; gap: .4rem; align-items: center; margin-top: .4rem; font-size: .9rem; }
 .mode-date input[type=date] { font: inherit; padding: .35rem .5rem; border: 1px solid var(--line); border-radius: 6px; }
+.mode-buttons { display: flex; flex-direction: column; gap: .4rem; align-items: stretch; }
+.cfg-advanced { margin-top: 1.4rem; padding-top: .8rem; border-top: 1px solid var(--line); }
