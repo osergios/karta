@@ -248,7 +248,10 @@ def _backup() -> None:
     try:
         os.makedirs(folder, exist_ok=True)
         snapshot(os.path.join(folder, "karta.db"))
-        _run("restic", "unlock", timeout=300)                  # a lock left by an interrupted run
+        try:    # a lock left by an interrupted run (power cut, restart): only stale ones, never a running backup
+            _run("restic", "unlock", timeout=300)
+        except CloudError:
+            pass                                               # the backup below reports any real problem
         _run("restic", "backup", "--quiet", "--host", "karta", "--tag", "karta", "karta.db", cwd=folder)
         _run("restic", "forget", "--quiet", "--host", "karta", *KEEP, "--prune")
         _record("ok")

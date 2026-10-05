@@ -1,6 +1,9 @@
 """Cloud backups (real rclone against a local folder, when rclone is installed) and restore from the admin page."""
 import base64
 import os
+import signal
+import subprocess
+import time
 from datetime import datetime, timedelta
 
 import pytest
@@ -154,3 +157,35 @@ def test_connect_reports_the_first_backup(client, admin, monkeypatch):
     r = client.post("/admin/api/cloud/connect", json={"provider": "drive", "token": "{}"})
     assert r.json() == {"ok": True, "password": "secret-password-1234", "first_backup": "fail",
                         "error": "δεν απαντά το cloud"}
+
+
+@needs_rclone
+def test_a_killed_backup_does_not_block_the_next_one(client, admin, store):
+    cloud.connect("local", local_path=str(store))
+    big = store.parent / "big.bin"
+    big.write_bytes(os.urandom(200_000_000))
+    p = subprocess.Popen(["restic", "backup", "--quiet", str(big)], env=cloud._env(),
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    deadline = time.time() + 30
+    while not any((store / "locks").iterdir()) and time.time() < deadline:       # it holds its lock
+        time.sleep(0.05)
+    os.kill(p.pid, signal.SIGKILL)                                                # a power cut
+    p.wait()
+    assert any((store / "locks").iterdir())                                       # the lock stays behind
+    cloud.run_backup()
+    assert cloud.status()["state"] == "ok"
+    big.unlink()
+
+
+def test_a_failing_unlock_does_not_stop_the_backup(client, admin, store, monkeypatch):
+    calls = []
+
+    def fake_run(tool, *args, **kw):
+        calls.append(args[0])
+        if args[0] == "unlock":
+            raise cloud.CloudError("unlock failed")
+        return ""
+    monkeypatch.setattr(cloud, "_run", fake_run)
+    monkeypatch.setattr(cloud, "connected", lambda: True)
+    cloud.run_backup()
+    assert calls[:2] == ["unlock", "backup"] and cloud.status()["state"] == "ok"
