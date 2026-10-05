@@ -46,7 +46,8 @@ Many thanks to their authors.
 
 The packages listed in `requirements.txt` (FastAPI, Uvicorn, Requests, argon2-cffi,
 PyJWT, tzdata, openpyxl, segno) are **not** included in this repository. `pip`
-downloads them at install time, and each package is covered by its own license.
+downloads them at install time (the Docker image contains them already), and each package
+is covered by its own license.
 
 ## restic and rclone (in the Docker image)
 

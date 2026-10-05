@@ -14,7 +14,7 @@
 Ανοίξτε ένα [issue](https://github.com/osergios/karta/issues) και γράψτε:
 
 - τι κάνατε, τι περιμένατε να γίνει και τι έγινε τελικά·
-- τη λειτουργία (`dry_run`, `trial` ή `production`) και την έκδοση (commit) της Karta·
+- τη λειτουργία (`dry_run`, `trial` ή `production`) και την έκδοση της Karta («Ρυθμίσεις» → «Έκδοση και ενημέρωση»)·
 - τον browser και τη συσκευή, αν το πρόβλημα αφορά την οθόνη του καταστήματος.
 
 **Μη βάζετε ποτέ πραγματικά προσωπικά δεδομένα** σε issues: ονόματα εργαζομένων, ΑΦΜ,
@@ -135,7 +135,7 @@ For **questions** ("how do I…?") use [Discussions](https://github.com/osergios
 Open an [issue](https://github.com/osergios/karta/issues) and include:
 
 - what you did, what you expected, and what happened instead;
-- the mode (`dry_run`, `trial` or `production`) and the Karta version (commit);
+- the mode (`dry_run`, `trial` or `production`) and the Karta version («Ρυθμίσεις» → «Έκδοση και ενημέρωση»);
 - the browser and device, if it's about the shop screen.
 
 **Never put real personal data** in issues: employee names, ΑΦΜ, Ergani credentials, PINs,

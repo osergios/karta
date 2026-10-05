@@ -14,7 +14,7 @@
 - τι βρήκατε και ποιο τμήμα αφορά (οθόνη καταστήματος, σελίδα διαχείρισης, αποστολή στο
   ΕΡΓΑΝΗ, κάρτες QR…)·
 - βήματα για να αναπαραχθεί, σε λειτουργία `dry_run`·
-- την έκδοση (commit) της Karta·
+- την έκδοση της Karta (στη σελίδα διαχείρισης, «Ρυθμίσεις» → «Έκδοση και ενημέρωση»)·
 - τι θα μπορούσε να κάνει κάποιος που το εκμεταλλεύεται.
 
 **Μη στέλνετε πραγματικά προσωπικά δεδομένα** (ονόματα εργαζομένων, ΑΦΜ, κωδικούς ΕΡΓΑΝΗ,
@@ -31,8 +31,9 @@ PIN, αρχεία `.env` ή βάσεις δεδομένων). Χρησιμοπο
 
 ## Ποιες εκδόσεις υποστηρίζονται
 
-Διορθώσεις ασφαλείας γίνονται μόνο στον κλάδο `main`. Κρατάτε την εγκατάστασή σας
-ενημερωμένη (δείτε [Εγκατάσταση → Ενημέρωση](https://github.com/osergios/karta/wiki/Installation)).
+Διορθώσεις ασφαλείας γίνονται μόνο στην τελευταία έκδοση. Κρατάτε την εγκατάστασή σας
+ενημερωμένη: «Ρυθμίσεις» → «Έκδοση και ενημέρωση» → «Ενημέρωση τώρα» (δείτε και
+[Εγκατάσταση → Ενημέρωση](https://github.com/osergios/karta/wiki/Installation)).
 
 ## Ασφάλεια της δικής σας εγκατάστασης
 
@@ -60,7 +61,7 @@ Please include:
 - what you found and which part it affects (shop screen, admin page, Ergani submission,
   QR cards…);
 - steps to reproduce it, in `dry_run` mode;
-- the Karta version (commit);
+- the Karta version (in the admin page, «Ρυθμίσεις» → «Έκδοση και ενημέρωση»);
 - what an attacker could do with it.
 
 **Don't send real personal data** (employee names, ΑΦΜ, Ergani credentials, PINs, `.env`
@@ -77,7 +78,8 @@ Karta is a one‑person project, with no paid bug bounty.
 
 ## Supported versions
 
-Security fixes are made on the `main` branch only. Keep your installation up to date (see
+Security fixes go into the latest release only. Keep your installation up to date:
+«Ρυθμίσεις» → «Έκδοση και ενημέρωση» → «Ενημέρωση τώρα» (see also
 [Installation → Updating](https://github.com/osergios/karta/wiki/Installation-EN)).
 
 ## Securing your own installation

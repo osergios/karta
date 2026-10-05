@@ -56,7 +56,7 @@
 
 Ο συντηρητής μπορεί, ανάλογα με τη σοβαρότητα:
 
-1. **Διόρθωση:** ιδιωτικό μήνυμα με εξήγηση, και διαγραφή ή επεξεργασία του σχολίου.
+1. **Διόρθωση:** σχόλιο με εξήγηση του προβλήματος, και διαγραφή ή επεξεργασία του σχολίου.
 2. **Προειδοποίηση:** προειδοποίηση για τις συνέπειες αν η συμπεριφορά επαναληφθεί.
 3. **Προσωρινός αποκλεισμός:** προσωρινή απαγόρευση συμμετοχής στο έργο.
 4. **Μόνιμος αποκλεισμός:** για σοβαρή ή επαναλαμβανόμενη παραβίαση, ή για παρενόχληση.
@@ -124,8 +124,7 @@ protected.
 
 Depending on how serious it is, the maintainer may give:
 
-1. **A correction:** a private message explaining the problem, and the comment deleted or
-   edited.
+1. **A correction:** a reply explaining the problem, and the comment deleted or edited.
 2. **A warning:** a warning about the consequences if the behaviour continues.
 3. **A temporary ban:** a temporary ban from taking part in the project.
 4. **A permanent ban:** for serious or repeated violations, or harassment.
