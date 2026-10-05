@@ -56,6 +56,12 @@
 - Το image του Docker τρέχει ως **χρήστης χωρίς δικαιώματα διαχειριστή**, χωρίς banner
   server και χωρίς access log.
 
+## Από πού έρχεται το image
+
+Το image της Karta χτίζεται μόνο από το GitHub Actions του έργου, με υπογεγραμμένη
+προέλευση (build provenance) και SBOM. Έλεγχος:
+`gh attestation verify oci://ghcr.io/osergios/karta:<έκδοση> --owner osergios`.
+
 ## Αρχείο ενεργειών
 
 Οι ενέργειες του διαχειριστή (νέο PIN, έκδοση QR, αλλαγές ωραρίου, άδειες, αποχωρήσεις

@@ -386,3 +386,7 @@
     again (its image is still on the machine). The admin page shows «ενημερώθηκε σε X» or «απέτυχε — επέστρεψε στην X».
     `./setup.sh update` runs the same `update.sh now`, pins the running version first, and replaces a
     `docker-compose.yml` that is an untouched official copy (by its sha256; the old one is kept as `.bak`).
+76. **Supply chain.** Every action in the workflows is pinned to its full commit SHA (the version stays as a comment;
+    Dependabot keeps both current). The release image is built with `provenance: mode=max` and an SBOM, and
+    `actions/attest-build-provenance` signs it: `gh attestation verify oci://ghcr.io/osergios/karta:<version> --owner
+    osergios`. cloudflared is pinned (`2026.9.3`); Dependabot's new `docker-compose` entry offers new versions.

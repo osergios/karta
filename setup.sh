@@ -206,7 +206,8 @@ pin_version() {  # pin_version [image]: KARTA_VERSION in .env, the running versi
 # (when docker-compose.yml changes, add the sha256 of the new file here; tests/test_update_script.py checks it)
 OLD_COMPOSE="ea57c0f256f5734edc18d4e3aa4e1a10e30ff23e197a3ee5a2e00859e0b3446a 22a84e76aca50d22d7d4f18bd5ed873e142df99cc75abb693c13d5eb0590c009
 032a33cf46bb0e6c5f1c82d8dbd5f9234f79673d1b7008309b153cb4b3291350 48552098ba8113312df6bfc339b45e3582f0199cbf54e09c9c33f62f87b83960
-3abca45802e2ab3a81160a954a142e22e45b0ff967e145909236a8f60f8c215e"
+3abca45802e2ab3a81160a954a142e22e45b0ff967e145909236a8f60f8c215e
+12a54674f35525c4b75cae781474d7e65b3f4113e65b7c9ad4972c1b06375c2f"
 refresh_compose() {
   local h; h=$(sha256sum docker-compose.yml 2>/dev/null | cut -d' ' -f1)
   printf '%s\n' $OLD_COMPOSE | grep -qx "${h:-none}" || return 0
