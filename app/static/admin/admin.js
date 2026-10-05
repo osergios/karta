@@ -3,7 +3,7 @@
   const LABEL = { ARRIVAL: "Προσέλευση", DEPARTURE: "Αποχώρηση" };
   const STATUS = { submitted: "Υποβλήθηκε", dry_run: "Δοκιμή (δεν στάλθηκε)", pending: "Σε αναμονή", failed: "Απέτυχε", uncertain: "Προς έλεγχο στο ΕΡΓΑΝΗ",
                    local: "Μόνο στην κάρτα (δεν στάλθηκε)", onboarding: "Προσαρμογή (δεν στάλθηκε)" };
-  const MODE = { dry_run: "Δοκιμαστική λειτουργία (τίποτα δεν στέλνεται)", trial: "Περιβάλλον δοκιμών ΕΡΓΑΝΗ", production: "Παραγωγή ΕΡΓΑΝΗ" };
+  const MODE = { dry_run: "Δοκιμαστική", trial: "Δοκιμαστικό ΕΡΓΑΝΗ", production: "Κανονική λειτουργία" };   // same names as «Ρυθμίσεις» → «Λειτουργία»
 
   function el(tag, attrs = {}, ...children) {
     const n = document.createElement(tag);
@@ -1023,21 +1023,7 @@
     const box = document.getElementById("onboardState");
     if (!box || editing(box)) return;
     const ob = d.onboarding && d.onboarding.active ? d.onboarding : null;
-    const today = todayAthens();
-    const notReal = d.mode !== "production"
-      ? el("div", { class: "an-line muted" }, `Η εφαρμογή είναι σε λειτουργία ${d.mode === "dry_run" ? "dry run" : "δοκιμαστικού ΕΡΓΑΝΗ"}: ` +
-          "και μετά το τέλος της περιόδου δεν θα σταλεί τίποτα στο πραγματικό ΕΡΓΑΝΗ μέχρι να περάσεις σε κανονική λειτουργία («Ρυθμίσεις» → «Επιχείρηση και σύνδεση με το ΕΡΓΑΝΗ» → «Λειτουργία»).") : null;
     const kids = [];
-    if (ob) {
-      kids.push(el("div", { class: "an-line ok onb-line" },
-        el("span", {}, el("strong", {}, "ΠΕΡΙΟΔΟΣ ΠΡΟΣΑΡΜΟΓΗΣ "),
-          `από ${fmtDayLong(ob.since)}. Η κάρτα γίνεται υποχρεωτική ${fmtDayLong(ob.until)} ` +
-          `(${ob.days_left === 1 ? "αύριο" : `σε ${ob.days_left} ημέρες`}). Το προσωπικό χτυπά κανονικά — υπενθυμίσεις, ειδοποιήσεις ` +
-          "και αναφορές λειτουργούν — αλλά τίποτα δεν στέλνεται στο ΕΡΓΑΝΗ. Η οθόνη του καταστήματος δεν δείχνει τίποτα διαφορετικό (μόνο ένα αχνό «✓ καταγράφηκε» κάτω δεξιά μετά από κάθε χτύπημα), ώστε το προσωπικό να το παίρνει στα σοβαρά.")));
-      if (notReal) kids.push(notReal);
-    } else if (d.onboarding_until && d.onboarding_until <= today) {
-      kids.push(el("div", { class: "an-line muted" }, `Η περίοδος προσαρμογής τελείωσε: η κάρτα είναι υποχρεωτική από ${fmtDayLong(d.onboarding_until)}.`));
-    }
     const P = d.onboarding_progress;
     if (P && P.length) {
       const pct = (a, b) => b ? `${Math.round(100 * a / b)}%` : "—";
@@ -1056,34 +1042,19 @@
     box.replaceChildren(...kids);
   }
 
+  // One line on «Σήμερα»: the mode chosen in «Ρυθμίσεις» (same names) and what it means for Ergani.
   function renderSendState(d) {
     const box = document.getElementById("sendState");
-    const where = d.mode === "trial" ? "στο δοκιμαστικό ΕΡΓΑΝΗ" : "στο ΕΡΓΑΝΗ";
     const ob = d.onboarding && d.onboarding.active ? d.onboarding : null;
-    const sending = d.mode === "dry_run"
-      ? "Δοκιμαστική λειτουργία (dry run): τίποτα δεν στέλνεται στο ΕΡΓΑΝΗ."
-      : ob ? `Περίοδος προσαρμογής: οι νέες κινήσεις ΔΕΝ στέλνονται ${where} μέχρι ${fmtDayLong(ob.until)}.`
-           + (d.held || d.uncertain ? ` Παλαιότερες: σε αναμονή ${d.held}, προς έλεγχο ${d.uncertain}.` : "")
-      : `Αποστολή ${where}: ενεργή${d.held ? ` · σε αναμονή/επανάληψη: ${d.held}` : ""}${d.uncertain ? ` · προς έλεγχο: ${d.uncertain} (δες «Κινήσεις»)` : ""}.`;
-    if (d.training_until) {
-      box.replaceChildren(el("div", { class: "an-line warn send-row" },
-        el("span", {}, el("strong", {}, "ΛΕΙΤΟΥΡΓΙΑ ΕΚΠΑΙΔΕΥΣΗΣ "), `έως ${d.training_until.slice(11, 16)}. ` +
-          "Στο κατάστημα οι κινήσεις είναι μόνο για εξάσκηση: δεν καταγράφονται, δεν στέλνονται και δεν μετρούν πουθενά."),
-        el("button", { class: "btn", onclick: act(async () => {
-          await api("/admin/api/training", { on: false }); toast("Τέλος εκπαίδευσης — η κάρτα λειτουργεί κανονικά");
-        }) }, "Τέλος εκπαίδευσης")));
-      return;
-    }
-    box.replaceChildren(el("div", { class: "an-line ok send-row" },
-      el("span", {}, sending),
-      el("button", { class: "btn ghost", onclick: act(async () => {
-        const busy = d.training_busy || [];
-        const warn = busy.length
-          ? `\n\nΠΡΟΣΟΧΗ: τώρα εργάζονται ${busy.join(", ")}. Όσο διαρκεί η εκπαίδευση, οι ΠΡΑΓΜΑΤΙΚΕΣ κινήσεις τους ΔΕΝ καταγράφονται — θα πρέπει να τις δηλώσεις αλλιώς στο ΕΡΓΑΝΗ.`
-          : "";
-        if (!confirm(`Λειτουργία εκπαίδευσης για ${d.training_minutes} λεπτά;\n\nΗ οθόνη του καταστήματος δουλεύει κανονικά για επίδειξη, αλλά ό,τι χτυπηθεί δεν καταγράφεται και δεν στέλνεται στο ΕΡΓΑΝΗ. Κλείνει μόνη της μετά από ${d.training_minutes}′ ή με «Τέλος εκπαίδευσης».${warn}`)) return;
-        await api("/admin/api/training", { on: true }); toast("Λειτουργία εκπαίδευσης: τίποτα δεν καταγράφεται");
-      }) }, "Λειτουργία εκπαίδευσης")));
+    const where = d.mode === "trial" ? "στο δοκιμαστικό ΕΡΓΑΝΗ" : "στο ΕΡΓΑΝΗ";
+    const [name, text] = d.mode === "dry_run" ? ["Δοκιμαστική", "τίποτα δεν στέλνεται στο ΕΡΓΑΝΗ"]
+      : ob ? ["Περίοδος προσαρμογής", `τίποτα δεν στέλνεται ${where}· η αποστολή ξεκινά ${fmtDayLong(ob.until)}`]
+      : d.mode === "trial" ? ["Δοκιμαστικό ΕΡΓΑΝΗ", "οι κινήσεις στέλνονται στο δοκιμαστικό ΕΡΓΑΝΗ, χωρίς ισχύ"]
+      : ["Κανονική λειτουργία", "οι κινήσεις στέλνονται στο ΕΡΓΑΝΗ"];
+    const extra = (d.held ? ` · σε αναμονή/επανάληψη: ${d.held}` : "") + (d.uncertain ? ` · προς έλεγχο: ${d.uncertain} (δες «Κινήσεις»)` : "");
+    const cls = d.uncertain || d.mode === "dry_run" || d.mode === "trial" ? "warn" : "ok";
+    box.replaceChildren(el("div", { class: `an-line ${cls} send-row` },
+      el("span", {}, "Λειτουργία: ", el("strong", {}, name), ` · ${text}${extra}.`)));
   }
 
   // Runs an action, then refreshes. One tap = one action: while it runs, further taps are ignored and the button is
@@ -1241,7 +1212,8 @@
       lines.push({ cls: year > 150 ? "bad" : "warn",
         text: `Υπερωρία ${H(weekOT)}/εβδομάδα ≈ ${Math.round(year)} ώρες τον χρόνο (όριο 150). ` +
               (year > 150 ? "Ξεπερνά το ετήσιο όριο — χρειάζεται αλλαγή ωραρίου ή διευθέτηση χρόνου εργασίας (ρώτα τον λογιστή)."
-                          : "Κάθε φορά πρέπει να δηλώνεται στο ΕΡΓΑΝΗ πριν γίνει.") });
+                          : RETRO ? "Δηλώνεται απολογιστικά στο ΕΡΓΑΝΗ, έως το τέλος του επόμενου μήνα."
+                                  : "Κάθε φορά πρέπει να δηλώνεται στο ΕΡΓΑΝΗ πριν γίνει.") });
     }
     return { days, lines };
   }
@@ -1710,7 +1682,7 @@
     document.getElementById("alerts").replaceChildren(...(alertRows.length ? alertRows
       : [el("p", { class: "small" }, "Καμία ειδοποίηση.")]));
     document.getElementById("alertsClear").hidden = !d.alerts.length;
-    document.getElementById("status").textContent = `${MODE[d.mode]}${d.mode !== "dry_run" ? ` (${d.ergani_host})` : ""} · παράρτημα ${d.branch} · ${d.admin}`;
+    document.getElementById("status").textContent = `${d.onboarding && d.onboarding.active ? "Περίοδος προσαρμογής" : MODE[d.mode]} · παράρτημα ${d.branch} · ${d.admin}`;
     document.body.classList.toggle("env-trial", d.mode === "trial");
     renderSendState(d);
     renderOnboarding(d);

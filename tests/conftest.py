@@ -68,7 +68,6 @@ def clean(client):
     appconfig.load()                   # settings saved from the admin page are gone with the table
     main._enroll_fails.clear()
     main._qr_fails.clear()
-    main._training_state.clear()
     client.cookies.clear()
     main.app.dependency_overrides.clear()
     yield

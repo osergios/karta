@@ -126,7 +126,7 @@
     else mode.hidden = true;
     employees = data.employees;
     festive(data.festive);
-    closedKey = data.closed && !data.closed.works && !trainingOn ? data.closed.key : null;
+    closedKey = data.closed && !data.closed.works ? data.closed.key : null;
     if (closedKey) return closedDay(data.closed, data.festive);
     if (!employees.length) {
       show(el("h1", {}, "Δεν υπάρχουν εργαζόμενοι"), el("p", { class: "hint" }, "Προσθέστε εργαζόμενους από τη διαχείριση."));
@@ -148,7 +148,7 @@
   }
 
   // ---------- closed day (holiday / shop closed): a greeting instead of the punch choices ----------
-  let closedKey = null, trainingOn = false;
+  let closedKey = null;
   const fmtReopen = new Intl.DateTimeFormat("el-GR", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Athens" });
   function closedDay(c, theme) {
     disarmIdle();
@@ -366,9 +366,9 @@
   }
 
   function confirm(emp, cred, state) {
-    if (state.closed && state.next_action === "ARRIVAL" && !state.training) return shopClosed(emp, state);
-    if (state.early && state.next_action === "ARRIVAL" && !state.training) return tooEarly(emp, state);
-    if (state.leaving_unpunched && state.next_action === "ARRIVAL" && !state.training && !cred.goOn) return leavingGuard(emp, cred, state);
+    if (state.closed && state.next_action === "ARRIVAL") return shopClosed(emp, state);
+    if (state.early && state.next_action === "ARRIVAL") return tooEarly(emp, state);
+    if (state.leaving_unpunched && state.next_action === "ARRIVAL" && !cred.goOn) return leavingGuard(emp, cred, state);
     armIdle();
     const err = el("p", { class: "msg-error", role: "alert" });
     const btn = el("button", { class: "action " + state.next_action }, LABEL[state.next_action]);
@@ -384,7 +384,6 @@
     });
     const nodes = [el("h1", {}, `${hello(nowHour())}, ${vocative(emp.short || state.name)}`)];
     if (state.open_previous_day) nodes.push(el("p", { class: "hint" }, "Δεν καταγράφηκε αποχώρηση την προηγούμενη φορά. Ενημέρωσε τη διαχείριση."));
-    if (state.training) { setTraining(true); nodes.push(el("p", { class: "msg-error" }, "ΕΚΠΑΙΔΕΥΣΗ: αυτή η κίνηση δεν θα καταγραφεί.")); }
     nodes.push(el("p", { class: "hint" }, (state.inside ? "Είσαι σε βάρδια." : "Δεν είσαι σε βάρδια.") + (cred.qr ? " · Κάρτα QR" : "")),
                btn, err, el("div", { class: "row" }, el("button", { class: "plain", onclick: home }, "Άκυρο")));
     show(...nodes);
@@ -408,7 +407,6 @@
     else if (m.status === "submitted") detail = `Καταχωρήθηκε στο ΕΡΓΑΝΗ. Πρωτόκολλο ${m.protocol || "-"}.`;
     else if (m.status === "dry_run") detail = "Δοκιμαστική λειτουργία: δεν στάλθηκε στο ΕΡΓΑΝΗ.";
     else if (m.status === "onboarding") { detail = ""; punchLog(m); }   // onboarding: nothing that says "not for real"
-    else if (m.status === "training") { cls = "warn"; detail = "ΕΚΠΑΙΔΕΥΣΗ: δεν καταγράφηκε και δεν στάλθηκε στο ΕΡΓΑΝΗ."; }
     else if (m.status === "uncertain") { cls = "warn"; detail = "Καταγράφηκε. Η διαχείριση θα επιβεβαιώσει την αποστολή στο ΕΡΓΑΝΗ."; }
     else { cls = "warn"; detail = "Καταγράφηκε. Θα σταλεί στο ΕΡΓΑΝΗ μόλις αποκατασταθεί η σύνδεση."; }
     // «Επόμενο χτύπημα»: the next person doesn't have to wait; the bar inside shows the automatic return
@@ -519,8 +517,6 @@
     logLine.hidden = false;
     clearTimeout(punchLog.t); punchLog.t = setTimeout(() => { logLine.hidden = true; }, 8000);
   }
-  const trainingBox = document.getElementById("training");
-  function setTraining(on) { trainingBox.hidden = !on; document.body.classList.toggle("training", on); }
   async function notifyAll(list) {
     if (!("Notification" in window) || Notification.permission !== "granted") return;
     for (const r of list) {
@@ -548,7 +544,7 @@
     try {
       const res = await fetch(`/api/kiosk/reminders${loadedFor ? `?rv=${encodeURIComponent(loadedFor)}` : ""}`, { credentials: "same-origin", cache: "no-store" });
       if (!res.ok) return;
-      const { reminders, training, next_in, closed_today, closed, festive: theme, reload_at } = await res.json();
+      const { reminders, next_in, closed_today, closed, festive: theme, reload_at } = await res.json();
       // admin «Ανανέωση οθόνης καταστήματος»: reload with the latest version (not in the middle of a punch)
       if (reload_at !== undefined) {
         if (seenReload === undefined) {
@@ -557,11 +553,9 @@
         } else if (reload_at && reload_at !== seenReload) reloadWanted = reload_at;
       }
       if (reloadWanted && atHome) return forceReload(reloadWanted);
-      setTraining(!!training);
-      trainingOn = !!training;
       festive(theme);
-      const nowClosed = closed && !closed.works && !trainingOn ? closed.key : null;
-      if (atHome && nowClosed !== closedKey) home();      // midnight / closure added or removed / training switched
+      const nowClosed = closed && !closed.works ? closed.key : null;
+      if (atHome && nowClosed !== closedKey) home();      // midnight / closure added or removed
       const cn = document.getElementById("closedNote");
       if (cn) { cn.textContent = closed_today ? `Σήμερα κλειστά · ${closed_today.replace(/^Αργία: |^Κατάστημα κλειστό: /, "")}` : ""; cn.hidden = !closed_today; }
       // redraw the cards only when they change: a redraw at the moment of a tap would swallow the tap

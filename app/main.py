@@ -50,28 +50,6 @@ def _prepare_db():
         log.error("Settings: %s (complete it in the admin page, «Ρυθμίσεις»)", problem)
 
 
-# ---- training mode («Εκπαίδευση»): the kiosk works exactly as usual, but NOTHING is stored or sent.
-# Practice punches live only in memory (to show the arrival -> departure flow) and vanish when it ends.
-TRAINING_MINUTES = 60
-_training_state: dict[int, str] = {}      # employee_id -> last practice action
-_training_lock = threading.Lock()
-
-
-def training_until():
-    """End time (Athens wall time) while training mode is on, else None. It switches itself off."""
-    raw = db.setting("training_until")
-    try:
-        until = datetime.fromisoformat(raw) if raw else None
-    except ValueError:
-        until = None
-    if until is None or until <= now_local():
-        if _training_state:
-            with _training_lock:
-                _training_state.clear()
-        return None
-    return until
-
-
 app = FastAPI(lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
 
 CSP = ("default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; "
@@ -127,10 +105,6 @@ def require_device(request: Request):
 
 # ------------------------------------------------------------------ helpers
 def employee_state(employee_id: int) -> dict:
-    if training_until():
-        inside = _training_state.get(employee_id) == "ARRIVAL"
-        return {"inside": inside, "next_action": "DEPARTURE" if inside else "ARRIVAL",
-                "last_movement_at": None, "open_previous_day": False, "training": True}
     # Only movements of the current ERGANI_MODE count: a dry-run/trial arrival must never make the
     # first real punch a DEPARTURE (each mode is its own world, see hours.last_movement).
     last = hours.last_movement(employee_id)
@@ -508,14 +482,6 @@ def kiosk_qr_punch(body: QrPunchIn, request: Request):
 
 
 def record_punch(emp, action: str, dev, request: Request, method: str) -> dict:
-    if training_until():
-        with _training_lock:
-            if action != employee_state(emp["id"])["next_action"]:
-                raise HTTPException(status_code=409, detail="Η κίνηση δεν ταιριάζει με την τρέχουσα κατάσταση. Ξεκινήστε ξανά.")
-            _training_state[emp["id"]] = action
-        return {"name": emp["display_name"], "training": True,
-                "movement": {"id": None, "type": action, "movement_at": now_local().isoformat(timespec="seconds"),
-                             "status": "training", "protocol": None, "mode": "training"}}
     # State check, debounce and insert happen in ONE write transaction (BEGIN IMMEDIATE + the db lock),
     # so two simultaneous requests (network retry, double scan, two kiosks) can't both record a punch.
     with db.tx() as c:
@@ -585,8 +551,6 @@ def kiosk_leaving_unpunched(body: LeavingIn, request: Request):
         emp = check_pin(body.employee_id, body.pin)
     else:
         raise HTTPException(status_code=400, detail="Χρειάζεται PIN ή κάρτα QR.")
-    if training_until():
-        return {"ok": True, "name": emp["display_name"], "training": True}
     now = now_local()
     part = leaving_without_arrival(emp["id"])
     when = f" (ωράριο {part['start']}–{part['end']})" if part else ""
@@ -611,12 +575,10 @@ def kiosk_reminders(request: Request, rv: str | None = None):
     if rv and reload_at and rv == reload_at and db.setting("kiosk_reload_ack") != rv:
         with db.tx() as c:
             db.put_setting(c, "kiosk_reload_ack", rv)
-    until = training_until()
     closed = hours.closure_on(now_local().date())
-    training = {"training": bool(until), "training_until": until.isoformat(timespec="minutes") if until else None,
-                "closed_today": closed["label"] if closed else None, "reload_at": reload_at, **shop_day()}
+    screen = {"closed_today": closed["label"] if closed else None, "reload_at": reload_at, **shop_day()}
     if not monitor.get_settings()["kiosk_reminders"]:
-        return {"enabled": False, "reminders": [], **training}
+        return {"enabled": False, "reminders": [], **screen}
     rows = db.all_rows("SELECT id, display_name, last_name FROM employees WHERE active=1")
     labels = kiosk_labels(rows)
     short = {r["id"]: r["display_name"].strip() for r in rows}
@@ -624,7 +586,7 @@ def kiosk_reminders(request: Request, rv: str | None = None):
     gone = {r["employee_id"] for r in db.all_rows(   # said «Φεύγω» without a punch-in today: stop the ding-dong
         "SELECT employee_id FROM alerts WHERE kind='left_unpunched' AND key LIKE ?", (f"%:{now.date().isoformat()}",))}
     nxt = hours.next_reminder_in(now)
-    return {"enabled": True, **training, "next_in": round(nxt, 1) if nxt is not None else None,
+    return {"enabled": True, **screen, "next_in": round(nxt, 1) if nxt is not None else None,
             "reminders": [{**r, "name": labels.get(r["employee_id"], ""), "short": short.get(r["employee_id"], "")}
                           for r in hours.reminders(now) if r["employee_id"] not in gone]}
 
@@ -690,7 +652,7 @@ def admin_asset(name: str, admin: str = Depends(security.require_admin)):
 
 
 # ---- «Πρώτα βήματα»: a checklist for a new installation, ticked off from what is already in place
-FIRST_STEPS_MANUAL = ("holidays", "notify", "backup", "training")     # can't be detected: «Έγινε» / «Παράλειψη» marks them
+FIRST_STEPS_MANUAL = ("holidays", "notify", "backup", "training")     # «Έγινε» / «Παράλειψη» marks them (a test punch ticks "training")
 
 
 def first_steps():
@@ -722,8 +684,10 @@ def first_steps():
         ("backup", "Αντίγραφα ασφαλείας", "Τα χτυπήματα φυλάσσονται για χρόνια: αντίγραφο εκτός μηχανήματος, "
          "κρυπτογραφημένο στο cloud (Google Drive, Dropbox, Backblaze B2) ή σε USB (./setup.sh usb).",
          _offsite_ok() or "backup" in marked, {"tab": "settings", "target": "backupBox"}),
-        ("training", "Δοκιμή με το προσωπικό", "«Λειτουργία εκπαίδευσης»: όλοι δοκιμάζουν να χτυπήσουν, χωρίς να καταγράφεται τίποτα.",
-         bool(db.setting("training_used")) or "training" in marked, {"tab": "today", "target": "sendState"}),
+        ("training", "Δοκιμή με το προσωπικό", "Στη «Δοκιμαστική» λειτουργία όλοι δοκιμάζουν να χτυπήσουν· τίποτα δεν "
+         "στέλνεται στο ΕΡΓΑΝΗ. Μετά: «Κινήσεις» → «Διαγραφή δοκιμαστικών κινήσεων».",
+         db.one("SELECT 1 FROM movements WHERE mode<>'production' LIMIT 1") is not None or "training" in marked,
+         {"tab": "settings", "target": "cfgBox"}),
         ("live", "Έναρξη στο ΕΡΓΑΝΗ", "«Περίοδος προσαρμογής» μέχρι να γίνει υποχρεωτική η κάρτα, ή «Κανονική λειτουργία» "
          "(«Ρυθμίσεις» → «Επιχείρηση και σύνδεση με το ΕΡΓΑΝΗ» → «Λειτουργία»).",
          config.ERGANI_MODE == "production" or onboarding.until() is not None, {"tab": "settings", "target": "cfgBox"}),
@@ -906,9 +870,6 @@ def admin_overview(admin: str = Depends(security.require_admin)):
         "mode": config.ERGANI_MODE,
         "ergani_host": config.ERGANI_HOST,
         "test_movements": db.one("SELECT COUNT(*) n FROM movements WHERE mode<>'production'")["n"],
-        "training_until": (lambda u: u.isoformat(timespec="minutes") if u else None)(training_until()),
-        "training_minutes": TRAINING_MINUTES,
-        "training_busy": training_busy(),
         "onboarding": onboarding.info(),
         "onboarding_until": (lambda u: u.isoformat() if u else None)(onboarding.until()),
         "onboarding_since": (lambda u: u.isoformat() if u else None)(onboarding.since()),
@@ -1049,41 +1010,6 @@ def admin_issue_qr(employee_id: int, admin: str = Depends(security.require_admin
                   (security.sha256(code), security.seal_pin(code, security.QR_AAD), db.utc_now_iso(), employee_id))
     db.audit(admin, "qr_reissued" if emp["qr_hash"] else "qr_issued", f"employee={employee_id}")
     return {"name": emp["display_name"], "code": code, "svg": security.qr_svg(code), "viewable": bool(config.PIN_KEY)}
-
-
-def training_busy() -> list[str]:
-    """Who is really at work right now (punched in, or their schedule is running): their real punches
-    can't be made while training mode is on."""
-    now = now_local()
-    out = []
-    for e in db.all_rows("SELECT id, display_name FROM employees WHERE active=1"):
-        last = hours.last_movement(e["id"])
-        inside = bool(last and last["type"] == "ARRIVAL" and last["movement_at"][:10] == now.date().isoformat())
-        sched = hours.schedule_for(e["id"], now.date())
-        working = bool(sched and not hours.day_off(e["id"], now.date())
-                       and any(a - timedelta(minutes=30) <= now < b + timedelta(minutes=30) for a, b in sched.segments))
-        if inside or working:
-            out.append(e["display_name"])
-    return out
-
-
-class TrainingIn(BaseModel):
-    on: bool
-
-
-@app.post("/admin/api/training")
-def admin_training(body: TrainingIn, admin: str = Depends(security.require_admin)):
-    """Training mode on/off. While on, kiosk punches are practice only: not stored, not sent, not
-    counted anywhere. It switches itself off after TRAINING_MINUTES."""
-    until = (now_local() + timedelta(minutes=TRAINING_MINUTES)).isoformat(timespec="seconds") if body.on else ""
-    with db.tx() as c:
-        db.put_setting(c, "training_until", until)
-        if body.on:
-            db.put_setting(c, "training_used", "1")     # «Πρώτα βήματα»: the staff tried it
-    with _training_lock:
-        _training_state.clear()
-    db.audit(admin, "training_on" if body.on else "training_off", until)
-    return {"ok": True, "training_until": until[:16] or None}
 
 
 # ---- onboarding period («Περίοδος προσαρμογής»): real use of the card, nothing sent to Ergani until a date
@@ -2133,12 +2059,8 @@ def admin_restore_apply(body: RestoreApplyIn, admin: str = Depends(security.requ
     if not body.confirm:
         raise HTTPException(status_code=400, detail="Χρειάζεται επιβεβαίωση.")
 
-    def after():
-        _prepare_db()
-        with _training_lock:
-            _training_state.clear()
     try:
-        kept = restore.apply(after)
+        kept = restore.apply(_prepare_db)
     except restore.RestoreError as e:
         raise HTTPException(status_code=400, detail=str(e))
     db.audit(admin, "restore", f"previous database kept as {kept}")

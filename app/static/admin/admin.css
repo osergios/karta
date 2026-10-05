@@ -357,8 +357,6 @@ details.help[open] > summary { margin-bottom: .4rem; }
 details.help > p { margin: 0; max-width: 75ch; color: var(--ink-soft); font-size: .92rem; line-height: 1.5; }
 
 /* onboarding period («Περίοδος προσαρμογής») */
-.onb-line { display: flex; flex-wrap: wrap; gap: .6rem 1rem; align-items: center; justify-content: space-between; }
-.onb-line > span:first-child { flex: 1 1 26rem; }
 .onb-actions { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
 .onb-actions label { display: flex; gap: .4rem; align-items: center; font-size: .9rem; }
 .onb-actions input[type=date] { font: inherit; padding: .4rem .5rem; border: 1px solid var(--line); border-radius: 6px; }

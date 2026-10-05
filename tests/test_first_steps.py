@@ -25,8 +25,11 @@ def test_steps_tick_themselves_off(client, admin, clock, employee):
     assert not steps(client)["device"]["done"]                         # a code alone is not a registered device
     with db.tx() as c:
         c.execute("INSERT INTO devices(name, token_hash, created_at) VALUES ('Ταμείο', 'x', ?)", (db.utc_now_iso(),))
-    client.post("/admin/api/training", json={"on": True})
-    client.post("/admin/api/training", json={"on": False})
+    assert not steps(client)["training"]["done"]
+    with db.tx() as c:                                                 # the staff tried it in «Δοκιμαστική»
+        c.execute("INSERT INTO movements(employee_id, type, movement_at, created_at, mode, status, next_attempt_at) "
+                  "VALUES (?,?,?,?,?,?,?)", (employee, "ARRIVAL", "2026-10-01T09:00:00", db.utc_now_iso(),
+                                             "dry_run", "dry_run", db.utc_now_iso()))
     s = steps(client)
     assert s["schedules"]["done"] and s["device"]["done"] and s["training"]["done"]
     assert not s["live"]["done"]                                       # still dry_run
