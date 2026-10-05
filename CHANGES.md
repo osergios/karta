@@ -412,3 +412,7 @@
     two-day wording stays for a cloud copy that worked before and is now over 50 hours old. A cloud-only installation
     (a VPS) whose cloud never worked now gets this alert, instead of the Monday «Δεν γίνεται αντίγραφο ασφαλείας»,
     which is now only for no backup set up at all.
+82. **Backup alerts close by themselves.** On each check (at any hour) the open backup alerts whose problem is gone get
+    `resolved_at`, like the «please punch out» banners on departure: `backup_none` once any backup is set up,
+    `backup_old` after a recent local copy, `backup_cloud_old` after a recent cloud copy, `backup_failed` when the last
+    result is no longer a failure. The rows stay as history; the check writes only when something is open.

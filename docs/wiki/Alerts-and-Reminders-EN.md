@@ -35,7 +35,7 @@ seconds until the person punches. Turn them off with «Υπενθυμίσεις 
 | "Leaving, didn't punch in" | Someone chose «Φεύγω — ενημέρωσε τη διαχείριση» on the shop screen. |
 | Sending problems | A punch was rejected, the Ergani login failed, or a submission is uncertain. See [How punches reach Ergani](Ergani-Submissions-EN). |
 | Onboarding period | On its last day and on the first mandatory day. |
-| Backups | Checked once a day, from 09:00. An alert if the last copy on the machine is more than two days old, if the cloud copy hasn't been uploaded in the last two days (or, if it never worked, «Το πρώτο αντίγραφο στο cloud δεν έγινε» (the first cloud copy wasn't made) with the reason), or if the nightly copy failed on the machine or on the USB stick. If no backup of any kind is set up while real (`production`) punches exist, a «Δεν γίνεται αντίγραφο ασφαλείας» (no backups are being made) alert every Monday. See [Backups](Backups-EN). |
+| Backups | Checked once a day, from 09:00. An alert if the last copy on the machine is more than two days old, if the cloud copy hasn't been uploaded in the last two days (or, if it never worked, «Το πρώτο αντίγραφο στο cloud δεν έγινε» (the first cloud copy wasn't made) with the reason), or if the nightly copy failed on the machine or on the USB stick. If no backup of any kind is set up while real (`production`) punches exist, a «Δεν γίνεται αντίγραφο ασφαλείας» (no backups are being made) alert every Monday. Once the problem is gone (e.g. the next backup works), the alert closes by itself. See [Backups](Backups-EN). |
 
 ## Muting
 

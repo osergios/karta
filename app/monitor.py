@@ -228,15 +228,33 @@ def backup_status() -> dict | None:
     return b
 
 
+def _resolve_backup_alerts(b: dict | None, c: dict | None, cloud_ok: datetime | None, now: datetime) -> None:
+    """Backup alerts whose problem is gone close by themselves (like resolve_employee); the rows stay as history."""
+    fresh = lambda t: t is not None and (now - t).total_seconds() <= 50 * 3600
+    gone = [kind for kind, ok in (
+        ("backup_none", b is not None or c is not None),
+        ("backup_old", b is not None and fresh(b["when"])),
+        ("backup_cloud_old", fresh(cloud_ok)),
+        ("backup_failed", b is not None and "fail" not in (b.get("local"), b.get("usb"))),
+    ) if ok]
+    marks = ",".join("?" * len(gone))
+    if gone and db.one(f"SELECT 1 FROM alerts WHERE resolved_at IS NULL AND kind IN ({marks}) LIMIT 1", gone):
+        with db.tx() as tx:
+            tx.execute(f"UPDATE alerts SET resolved_at=? WHERE resolved_at IS NULL AND kind IN ({marks})",
+                       (now.isoformat(timespec="seconds"), *gone))
+
+
 def _check_backup(now: datetime) -> None:
-    """Once a day: backups stopped (or never ran although real punches exist), or a copy failed."""
-    if now.hour < 9:          # backups run in the evening; look at them in the morning
-        return
+    """Once a day: backups stopped (or never ran although real punches exist), or a copy failed. Alerts whose problem
+    is gone close at any hour."""
     from . import cloud
     b, c = backup_status(), cloud.status()
     today = now.date()
     raw_ok = db.setting("cloud_last_ok")
     cloud_ok = datetime.fromisoformat(raw_ok) if c and raw_ok else None
+    _resolve_backup_alerts(b, c, cloud_ok, now)
+    if now.hour < 9:          # backups run in the evening; look at them in the morning
+        return
     if b is None and c is None:           # no backup of any kind is set up
         if db.one("SELECT 1 FROM movements WHERE mode='production' LIMIT 1") and today.weekday() == 0:
             raise_alert("backup_none", None, today, "warning",

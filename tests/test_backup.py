@@ -69,6 +69,31 @@ def test_cloud_alert_says_whether_the_cloud_ever_worked(monkeypatch):
     assert "backup_cloud_old" not in alerts()
 
 
+def open_alerts():
+    return {a["kind"] for a in db.all_rows("SELECT kind FROM alerts WHERE resolved_at IS NULL")}
+
+
+def test_backup_alerts_close_when_the_problem_is_gone(monkeypatch):
+    from app import cloud
+    noon = datetime.now(config.TZ).replace(tzinfo=None, hour=12, minute=0, second=0, microsecond=0)
+    for kind in ("backup_none", "backup_cloud_old"):
+        monitor.raise_alert(kind, None, noon.date(), "warning", kind, None, noon, push=False)
+    mark(local="fail", usb="fail", hours_ago=60)
+    monitor._check_backup(noon)                               # backups exist now: «none» closes, the others open
+    assert open_alerts() == {"backup_old", "backup_failed", "backup_cloud_old"}
+    mark()                                                    # tonight's backup worked
+    monitor._check_backup(noon.replace(hour=1))               # the next check closes them, at any hour
+    assert open_alerts() == {"backup_cloud_old"}              # no cloud set up: that one stays
+    status = {"provider": "Google Drive", "state": "ok", "when": noon, "error": ""}
+    monkeypatch.setattr(cloud, "status", lambda: status)
+    with db.tx() as c:
+        db.put_setting(c, "cloud_last_ok", noon.isoformat(timespec="seconds"))
+    monitor._check_backup(noon.replace(hour=1))
+    assert open_alerts() == set()
+    assert len(db.all_rows("SELECT 1 FROM alerts")) == 4      # kept as history
+    assert not [a for a in monitor.active_alerts(False, noon) if a["kind"].startswith("backup")]
+
+
 def test_database_download_is_a_complete_copy(client, admin, employee):
     r = client.get("/admin/api/backup.db")
     assert r.status_code == 200 and "attachment" in r.headers["content-disposition"]
