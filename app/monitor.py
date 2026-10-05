@@ -189,8 +189,9 @@ def check(now: datetime | None = None) -> None:
                                     "αποχώρηση ΤΩΡΑ, με την πραγματική ώρα") +
                                 f" — ποτέ αποχώρηση και μετά συνέχεια της δουλειάς.{back}",
                                 None, now)   # the shop screen shows the repeating reminder instead
-                dl = sched.leave_by - timedelta(minutes=s["ot_deadline_minutes"])
-                if (last_part and s["ot_notice_minutes"] > 0 and not config.RETRO     # retro: no deadline before
+                # the reminder comes before the deadline to declare overtime; retrospective system: before the end
+                dl = sched.leave_by - timedelta(minutes=0 if config.RETRO else s["ot_deadline_minutes"])
+                if (last_part and s["ot_notice_minutes"] > 0
                         and dl - timedelta(minutes=s["ot_notice_minutes"]) <= now < dl):
                     _ot_notice(sched.leave_by, dl, today, now)
                 if now >= over + timedelta(minutes=s["escalate_minutes"]):
@@ -290,7 +291,8 @@ def _check_backup(now: datetime) -> None:
 
 
 def _ot_notice(end: datetime, deadline: datetime, today, now: datetime) -> None:
-    """One phone reminder per end time: who is at work and until when overtime can still be declared in Ergani."""
+    """One phone reminder per end time: who is at work and until when overtime can still be declared in Ergani
+    (retrospective system: that extra hours are declared afterwards)."""
     names = []
     for e in db.all_rows("SELECT id, display_name FROM employees WHERE active=1"):
         last = hours.last_movement(e["id"])
@@ -301,8 +303,11 @@ def _ot_notice(end: datetime, deadline: datetime, today, now: datetime) -> None:
             names.append(e["display_name"])
     if names:
         raise_alert(f"ot_notice@{end:%H%M}", None, today, "info",
-                    f"Λήξη {end:%H:%M}: {', '.join(names)}. Αν χρειαστεί να μείνει κάποιος παραπάνω, η υπερωρία "
-                    f"δηλώνεται στο ΕΡΓΑΝΗ έως τις {deadline:%H:%M} (και μετά «Υπερωρία / αλλαγή ημέρας…» στη διαχείριση).",
+                    f"Λήξη {end:%H:%M}: {', '.join(names)}. Αν χρειαστεί να μείνει κάποιος παραπάνω, " + (
+                        "οι επιπλέον ώρες δηλώνονται απολογιστικά στο ΕΡΓΑΝΗ έως το τέλος του επόμενου μήνα (και "
+                        "«Υπερωρία / αλλαγή ημέρας…» στη διαχείριση)." if config.RETRO else
+                        f"η υπερωρία δηλώνεται στο ΕΡΓΑΝΗ έως τις {deadline:%H:%M} (και μετά «Υπερωρία / αλλαγή ημέρας…» "
+                        "στη διαχείριση)."),
                     None, now)
 
 

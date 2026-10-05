@@ -20,10 +20,11 @@ that comes from `.env` is marked «από το .env».
     "undeclared overtime".
   - **Απολογιστικό σύστημα** (retrospective): for businesses on the digital work card (since
     1/7/2024). Schedule changes, the organisation of working time and overtime are declared
-    **afterwards**, from the punches, by the **end of the next month**. Karta shows no deadline
-    before the end of the shift; the alerts say «δηλώνεται απολογιστικά» (declared
-    retrospectively), and the monthly report's «Απολογιστικές δηλώσεις» sheet has the hours to
-    declare.
+    **afterwards**, from the punches, by the **end of the next month**. Karta shows no overtime
+    deadline; the alerts say «δηλώνεται απολογιστικά» (declared retrospectively), and the
+    monthly report's «Απολογιστικές δηλώσεις» sheet has the hours to declare. The shop
+    screen's reminders with sound, the phone reminder before the end and the alerts when
+    someone stays after the end all stay the same.
 
   The limits on hours, rest and overtime apply in both. This setting changes nothing in
   Ergani: it only tells Karta what you chose there. If unsure, ask your accountant.

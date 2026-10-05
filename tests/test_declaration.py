@@ -40,11 +40,8 @@ def test_retrospective_system_changes_the_alerts(kiosk, admin, clock, employee):
     assert declaration(kiosk, "retro").status_code == 200
     assert config.RETRO and kiosk.get("/admin/api/overview").json()["retro"] is True
     assert today(kiosk)["ot_by"] is None and today(kiosk)["ot_passed"] is False   # no deadline before
-    with db.tx() as c:
-        db.put_setting(c, "ot_notice_minutes", "30")
     msg = still_inside_after_the_end(kiosk, clock, employee)
     assert "απολογιστικά" in msg and "τέλος του επόμενου μήνα" in msg and "μη δηλωμένη" not in msg
-    assert not db.one("SELECT 1 FROM alerts WHERE kind LIKE 'ot_notice%'")      # no «declare by …» reminder
     xlsx = kiosk.get("/admin/api/report.xlsx?month=2026-10").content
     note = " ".join(str(c.value) for row in openpyxl.load_workbook(io.BytesIO(xlsx))["Απολογιστικές δηλώσεις"].iter_rows()
                     for c in row if c.value)
@@ -72,3 +69,22 @@ def test_retro_keeps_the_break_outside_hours_and_the_flexible_arrival(kiosk, adm
     clock.advance(minutes=30)                                               # 18:55: past the end (and the grace)
     monitor.check(clock())
     assert "18:30" in db.one("SELECT message FROM alerts WHERE kind='overdue'")["message"]
+
+
+def test_retro_still_alerts_the_phone_and_the_shop_screen(kiosk, admin, clock, employee, monkeypatch):
+    """Retrospective system: the same reminders and alerts at the end of the schedule, only the wording differs."""
+    pushed = []
+    monkeypatch.setattr(monitor, "_ntfy", lambda title, message, level: pushed.append((level, message)))
+    assert declaration(kiosk, "retro").status_code == 200
+    set_schedule(kiosk, employee, WORKDAYS)
+    with db.tx() as c:
+        db.put_setting(c, "ot_notice_minutes", "15")
+    assert kiosk.post("/api/kiosk/punch", json={"employee_id": employee, "pin": PIN, "action": "ARRIVAL"}).status_code == 200
+    clock.advance(hours=6, minutes=50)                                      # 16:50: 10′ before the end
+    monitor.check(clock())
+    assert any("Λήξη 17:00: Μαρία" in m and "απολογιστικά" in m for _, m in pushed)   # phone, before the end
+    clock.advance(minutes=10)                                               # 17:00: the shop screen reminds
+    assert [r["kind"] for r in kiosk.get("/api/kiosk/reminders").json()["reminders"]] == ["out"]
+    clock.advance(minutes=10)                                               # 17:10: still inside → phone alert
+    monitor.check(clock())
+    assert any(level == "warning" and "έληξε 17:00" in m for level, m in pushed)
