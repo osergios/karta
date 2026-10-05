@@ -399,3 +399,8 @@
     so the worker can no longer start a backup before `restic init` has finished (it did, and the first backup failed
     with an alert although nothing was wrong). The admin page says «το πρώτο αντίγραφο ανέβηκε ✓» or shows the reason
     it failed; the connection (and the password shown once) stays either way.
+79. **Clear cloud errors.** A failed restic / rclone command no longer shows only its last line (for a missing
+    repository that was just «rclone:karta-store:Karta-backups»). Known cases read in Greek: no backups in that cloud
+    folder, backups locked by an interrupted job, wrong encryption password, the cloud is full, access expired
+    (401 / 403 / `invalid_grant`); anything else shows its last 2–3 lines (up to 300 characters). The full output is
+    logged at WARNING.
