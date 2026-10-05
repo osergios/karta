@@ -1991,7 +1991,8 @@ def admin_cloud_connect(body: CloudIn, admin: str = Depends(security.require_adm
     except cloud.CloudError as e:
         raise HTTPException(status_code=400, detail=str(e))
     db.audit(admin, "cloud_connect", body.provider + (" (existing backups)" if pw is None else ""))
-    return {"ok": True, "password": pw}
+    st = cloud.status() or {}
+    return {"ok": True, "password": pw, "first_backup": st.get("state"), "error": st.get("error", "")}
 
 
 @app.post("/admin/api/cloud/disconnect")

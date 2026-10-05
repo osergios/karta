@@ -60,7 +60,9 @@ In **«Ρυθμίσεις» → «Αντίγραφα ασφαλείας»**:
 
    For **Backblaze B2**: create a bucket (Private) and an Application Key, and enter the
    keyID, the applicationKey and the bucket name.
-3. Press **«Σύνδεση και πρώτο ανέβασμα»** (connect and first upload). Karta shows an
+3. Press **«Σύνδεση και πρώτο ανέβασμα»** (connect and first upload). Connecting takes a
+   moment: at the end the first backup is uploaded straight away, and the page says whether it
+   worked. Karta shows an
    **encryption password** once. **Write it on paper or in a password manager.** Without
    it, if the machine breaks, the backups in the cloud **can't be opened**.
 

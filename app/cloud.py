@@ -113,7 +113,19 @@ def _forget() -> None:
 def connect(provider: str, *, token: str = "", account: str = "", key: str = "", bucket: str = "",
             password: str | None = None, local_path: str = "") -> str | None:
     """Sets up the cloud. Without a password a new encrypted repository is made and its password returned (show it
-    once); with the password of existing backups (restore on a new machine) it checks that they can be read."""
+    once); with the password of existing backups (restore on a new machine) it checks that they can be read. Then the
+    first snapshot is taken right away (its result: status()); the nightly worker can't start one meanwhile."""
+    if not _running.acquire(blocking=False):
+        raise CloudError("Ένα ανέβασμα τρέχει ήδη· δοκιμάστε ξανά σε λίγο.")
+    try:
+        return _connect(provider, token=token, account=account, key=key, bucket=bucket, password=password,
+                        local_path=local_path)
+    finally:
+        _running.release()
+
+
+def _connect(provider: str, *, token: str, account: str, key: str, bucket: str, password: str | None,
+             local_path: str) -> str | None:
     if provider in ("drive", "dropbox"):
         try:
             tok = json.loads(token)
@@ -153,6 +165,10 @@ def connect(provider: str, *, token: str = "", account: str = "", key: str = "",
     except Exception:
         _forget()
         raise
+    try:
+        _backup()                      # the first snapshot; a failure is recorded and shown, the connection stays
+    except Exception:
+        pass
     return password if new else None
 
 
@@ -197,9 +213,18 @@ def snapshot(path: str) -> None:
 
 
 def run_backup(now: datetime | None = None) -> None:
-    """Tonight's snapshot, then the old ones are thinned out (30 daily, 24 monthly, yearly for good)."""
+    """Tonight's snapshot (or one asked for in the admin page)."""
     if not _running.acquire(blocking=False):
         raise CloudError("Ένα ανέβασμα τρέχει ήδη.")
+    try:
+        _backup()
+    finally:
+        _running.release()
+
+
+def _backup() -> None:
+    """A snapshot, then the old ones are thinned out (30 daily, 24 monthly, yearly for good). The caller holds
+    _running."""
     folder = os.path.join(data_dir(), "cloud-snapshot")
     try:
         os.makedirs(folder, exist_ok=True)
@@ -214,7 +239,6 @@ def run_backup(now: datetime | None = None) -> None:
         log.warning("Cloud backup failed: %s", e)
         raise
     finally:
-        _running.release()
         shutil.rmtree(folder, ignore_errors=True)
 
 
