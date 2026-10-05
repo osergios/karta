@@ -237,7 +237,7 @@ def _check_backup(now: datetime) -> None:
     today = now.date()
     raw_ok = db.setting("cloud_last_ok")
     cloud_ok = datetime.fromisoformat(raw_ok) if c and raw_ok else None
-    if b is None and cloud_ok is None:
+    if b is None and c is None:           # no backup of any kind is set up
         if db.one("SELECT 1 FROM movements WHERE mode='production' LIMIT 1") and today.weekday() == 0:
             raise_alert("backup_none", None, today, "warning",
                         "Δεν γίνεται αντίγραφο ασφαλείας. Τα χτυπήματα πρέπει να φυλάσσονται για χρόνια: «Ρυθμίσεις» → "
@@ -249,9 +249,11 @@ def _check_backup(now: datetime) -> None:
                     "της Karta είναι ανοιχτό και ότι τρέχει το backup.sh κάθε βράδυ.", None, now)
     if c is not None and (cloud_ok is None or (now - cloud_ok).total_seconds() > 50 * 3600) and c.get("when"):
         raise_alert("backup_cloud_old", None, today, "warning",
-                    "Το αντίγραφο στο cloud δεν ανέβηκε τις τελευταίες δύο ημέρες"
-                    + (f" ({c['error']})" if c.get("error") else "") + ". Δείτε «Ρυθμίσεις» → «Αντίγραφα ασφαλείας».",
-                    None, now)
+                    (f"Το πρώτο αντίγραφο στο cloud δεν έγινε: {c.get('error') or 'άγνωστο σφάλμα'}"
+                     if cloud_ok is None else           # it never worked: right after connecting, not «two days»
+                     "Το αντίγραφο στο cloud δεν ανέβηκε τις τελευταίες δύο ημέρες"
+                     + (f" ({c['error']})" if c.get("error") else ""))
+                    + ". Δείτε «Ρυθμίσεις» → «Αντίγραφα ασφαλείας».", None, now)
     failed = [n for k, n in (("local", "στο μηχάνημα"), ("usb", "στο USB")) if b and b.get(k) == "fail"]
     if failed:
         raise_alert("backup_failed", None, today, "warning",

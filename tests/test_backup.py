@@ -46,6 +46,29 @@ def test_old_or_failed_backups_raise_an_alert():
     assert "backup_old" in alerts()
 
 
+def test_cloud_alert_says_whether_the_cloud_ever_worked(monkeypatch):
+    from app import cloud
+    noon = datetime.now(config.TZ).replace(tzinfo=None, hour=12, minute=0, second=0, microsecond=0)
+    status = {"provider": "Google Drive", "state": "fail", "when": noon - timedelta(hours=1),
+              "error": "Δεν βρέθηκαν αντίγραφα σε αυτόν τον φάκελο του cloud"}
+    monkeypatch.setattr(cloud, "status", lambda: status)
+    monitor._check_backup(noon)                               # connected, never succeeded (only cloud: a VPS)
+    assert alerts()["backup_cloud_old"]["message"] == ("Το πρώτο αντίγραφο στο cloud δεν έγινε: Δεν βρέθηκαν "
+                                                       "αντίγραφα σε αυτόν τον φάκελο του cloud. Δείτε «Ρυθμίσεις» → "
+                                                       "«Αντίγραφα ασφαλείας».")
+    assert "backup_none" not in alerts()
+    with db.tx() as c:
+        c.execute("DELETE FROM alerts")
+        db.put_setting(c, "cloud_last_ok", (noon - timedelta(hours=60)).isoformat(timespec="seconds"))
+    monitor._check_backup(noon)                               # it worked once, 60 hours ago
+    assert alerts()["backup_cloud_old"]["message"].startswith("Το αντίγραφο στο cloud δεν ανέβηκε τις τελευταίες δύο")
+    with db.tx() as c:
+        c.execute("DELETE FROM alerts")
+        db.put_setting(c, "cloud_last_ok", (noon - timedelta(hours=20)).isoformat(timespec="seconds"))
+    monitor._check_backup(noon)                               # recent: no alert
+    assert "backup_cloud_old" not in alerts()
+
+
 def test_database_download_is_a_complete_copy(client, admin, employee):
     r = client.get("/admin/api/backup.db")
     assert r.status_code == 200 and "attachment" in r.headers["content-disposition"]
