@@ -31,12 +31,13 @@ that comes from `.env` is marked «από το .env».
 
   The limits on hours, rest and overtime apply in both. This setting changes nothing in
   Ergani: it only tells Karta what you chose there. If unsure, ask your accountant.
-- **«Χρήστης web services του ΕΡΓΑΝΗ» (Ergani web‑services user):** username, password and
+- **«Χρήστης web services του ΕΡΓΑΝΗ» (Ergani web‑services user,** in the same block as
+  «Επιχείρηση»; one «Αποθήκευση» saves both**):** username, password and
   type (`01` API user, `02` branch «ΕΡΓΑΝΗ» user). **«Δοκιμή σύνδεσης»** (test connection)
   connects read‑only. The password is stored **encrypted** (with `PIN_KEY`) and is never
   shown again; to keep it unchanged, leave the box empty.
-- **«Χρήστης για το δοκιμαστικό ΕΡΓΑΝΗ»** (user for the Ergani test environment, optional):
-  for `trial` mode, if you have a separate user on `trialv2eservices.yeka.gr`.
+- **«Για προχωρημένους: δοκιμαστικό ΕΡΓΑΝΗ»** (advanced, at the end): the user for
+  `trialv2eservices.yeka.gr` (if you have a separate one) and the switch to `trial` mode.
 
 If something the current mode needs is missing, a red «Χρειάζεται συμπλήρωση» (needs
 filling in) line appears, and punches wait until it's filled in.

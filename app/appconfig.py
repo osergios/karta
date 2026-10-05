@@ -22,6 +22,7 @@ GROUPS = {
     "trial": ("ERGANI_TRIAL_USERNAME", "ERGANI_TRIAL_PASSWORD", "ERGANI_TRIAL_USER_TYPE"),
     "ntfy": ("NTFY_URL", "NTFY_TOPIC", "NTFY_TOKEN"),
 }
+GROUPS["company"] = GROUPS["business"] + GROUPS["ergani"]      # «Επιχείρηση»: both, saved together
 
 
 class ConfigError(ValueError):
@@ -127,13 +128,13 @@ def save(group: str, values: dict, admin: str) -> None:
         clean[name] = CHECKS[name](str(v or "").strip())
     if group == "ntfy" and bool(clean.get("NTFY_URL")) != bool(clean.get("NTFY_TOPIC")):
         raise ConfigError("Συμπλήρωσε και τον server και το θέμα, ή άφησέ τα και τα δύο κενά.")
-    if group == "business" and config.ERGANI_MODE != "dry_run" and not clean.get("EMPLOYER_AFM"):
+    if "EMPLOYER_AFM" in names and config.ERGANI_MODE != "dry_run" and not clean.get("EMPLOYER_AFM"):
         raise ConfigError("Το ΑΦΜ χρειάζεται όσο η Karta στέλνει στο ΕΡΓΑΝΗ.")
     if any(clean.get(n) for n in SECRETS) and not config.PIN_KEY:
         raise ConfigError("Για να φυλαχτεί κωδικός από εδώ χρειάζεται PIN_KEY στο .env (το βάζει ο οδηγός ρύθμισης).")
-    if group in ("ergani", "trial") and config.ERGANI_MODE == ("trial" if group == "trial" else "production"):
-        user = clean.get(names[0]); pwd = clean.get(names[1], "keep")
-        if not user or not pwd:
+    for users, mode in (("ergani", "production"), ("trial", "trial")):
+        u, p = GROUPS[users][:2]
+        if u in names and config.ERGANI_MODE == mode and (not clean.get(u) or not clean.get(p, "keep")):
             raise ConfigError("Η Karta στέλνει με αυτόν τον χρήστη: δεν μπορεί να μείνει κενός.")
     with db.tx() as c:
         for name, v in clean.items():
@@ -146,6 +147,8 @@ def view() -> dict:
     """What the admin page shows: values with their source; secrets only as set / not set."""
     out = {}
     for group, names in GROUPS.items():
+        if group == "company":           # the same values as business + ergani
+            continue
         out[group] = {}
         for n in names:
             v = config.VALUES.get(n, "")

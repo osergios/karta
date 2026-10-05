@@ -447,3 +447,6 @@
     πάνε» table. `POST /admin/api/mode` takes `onboarding_until`: the period is set before the switch to production
     (not a punch can reach Ergani in between) and undone if the Ergani login test fails; «Κανονική λειτουργία» or
     «Δοκιμαστική» end a running period. The Ergani test environment (`trial`), with its own user, is under «Για προχωρημένους» at the end of the section.
+90. **«Επιχείρηση» is one block.** ΑΦΜ, branch, employer id, the declaration system and the Ergani web-services user
+    are saved together with one «Αποθήκευση» (new config group `company`, checked as a whole: a wrong value saves
+    nothing), with «Δοκιμή σύνδεσης» next to it.

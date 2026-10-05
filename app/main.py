@@ -784,7 +784,7 @@ def admin_ntfy_test(admin: str = Depends(security.require_admin)):
 
 # ---- settings changed from the admin page (business, Ergani users, mode, phone alerts)
 class ConfigIn(BaseModel):
-    group: str = Field(pattern="^(business|ergani|trial|ntfy)$")
+    group: str = Field(pattern="^(company|business|ergani|trial|ntfy)$")
     values: dict[str, str | None] = Field(max_length=10)
 
 

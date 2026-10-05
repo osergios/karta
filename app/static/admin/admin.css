@@ -428,3 +428,4 @@ button:disabled { cursor: default; }
 .mode-date input[type=date] { font: inherit; padding: .35rem .5rem; border: 1px solid var(--line); border-radius: 6px; }
 .mode-buttons { display: flex; flex-direction: column; gap: .4rem; align-items: stretch; }
 .cfg-advanced { margin-top: 1.4rem; padding-top: .8rem; border-top: 1px solid var(--line); }
+.cfg-sub { font-size: .95rem; margin: 1.1rem 0 .2rem; }

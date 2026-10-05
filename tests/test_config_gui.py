@@ -126,3 +126,17 @@ def test_one_mode_control_with_the_onboarding_period(client, admin, pin_key, log
     assert mode("production", until="2026-10-12").status_code == 200              # back to a period (not yet mandatory)
     assert mode("dry_run").status_code == 200                                      # Δοκιμαστική: the period ends
     assert config.ERGANI_MODE == "dry_run" and not onboarding.active()
+
+
+def test_business_and_ergani_user_are_saved_together(client, admin, pin_key):
+    """«Επιχείρηση»: business details and the Ergani web-services user in one save, all or nothing."""
+    values = {"EMPLOYER_AFM": "123456783", "BRANCH_NUMBER": "0", "ERGANI_EMPLOYER_ID": "", "TIME_DECLARATION": "retro",
+              "ERGANI_USERNAME": "user2", "ERGANI_PASSWORD": "secret-2", "ERGANI_USER_TYPE": "01"}
+    r = save(client, "company", **{**values, "EMPLOYER_AFM": "123"})                # a bad ΑΦΜ: nothing is saved
+    assert r.status_code == 400 and config.VALUES["ERGANI_USERNAME"] != "user2" and not config.RETRO
+    r = save(client, "company", **values)
+    assert r.status_code == 200, r.text
+    assert config.EMPLOYER_AFM == "123456783" and config.RETRO and config.ERGANI_USERNAME == "user2"
+    assert config.ERGANI_PASSWORD == "secret-2"
+    assert save(client, "company", **{**values, "ERGANI_PASSWORD": None}).status_code == 200   # password kept
+    assert config.ERGANI_PASSWORD == "secret-2" and "company" not in client.get("/admin/api/config").json()

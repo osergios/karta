@@ -603,29 +603,35 @@
     s.value = value || fallback;
     return s;
   }
-  function erganiUserForm(C, group, target, names, typeFallback) {
+  function erganiUser(C, group, target, names, typeFallback) {
     const [U, P, T] = names;
     const user = input(C[group][U].value, { maxlength: "100", autocomplete: "off" });
     const pass = secretInput(C[group][P], "κωδικός");
     const type = userTypeSelect(C[group][T].value, typeFallback);
     const result = el("span", { class: "small" });
-    const values = () => ({ [U]: user.value.trim(), [P]: pass.value ? pass.value : null, [T]: type.value });
-    return el("div", { class: "brand-form" },
-      field("Όνομα χρήστη", user, C[group][U].source),
-      field("Κωδικός", pass, C[group][P].source),
-      field("Τύπος χρήστη", type, C[group][T].source),
-      el("button", { class: "btn ghost", type: "button", onclick: act(async () => {
+    return {
+      fields: [field("Όνομα χρήστη", user, C[group][U].source), field("Κωδικός", pass, C[group][P].source),
+               field("Τύπος χρήστη", type, C[group][T].source)],
+      values: () => ({ [U]: user.value.trim(), [P]: pass.value ? pass.value : null, [T]: type.value }),
+      saved: () => { pass.value = ""; },
+      result,
+      test: el("button", { class: "btn ghost", type: "button", onclick: act(async () => {
         result.textContent = "Δοκιμή…";
         const r = await api("/admin/api/config/login-test", { target, username: user.value.trim(),
           password: pass.value ? pass.value : null, user_type: type.value });
         result.className = r.ok ? "small" : "small warn-text";
         result.textContent = r.ok ? "✓ Η σύνδεση πέτυχε (δεν υποβλήθηκε τίποτα)." : `✗ ${r.message}`;
       }) }, "Δοκιμή σύνδεσης"),
+    };
+  }
+  function erganiUserForm(C, group, target, names, typeFallback) {
+    const u = erganiUser(C, group, target, names, typeFallback);
+    return el("div", { class: "brand-form" }, ...u.fields, u.test,
       el("button", { class: "btn", type: "button", onclick: act(async () => {
-        await api("/admin/api/config", { group, values: values() }); pass.value = "";
+        await api("/admin/api/config", { group, values: u.values() }); u.saved();
         toast("Τα στοιχεία σύνδεσης αποθηκεύτηκαν");
       }) }, "Αποθήκευση"),
-      result);
+      u.result);
   }
   function renderConfig(d) {
     const box = document.getElementById("cfgBox");
@@ -639,6 +645,7 @@
       el("option", { value: "advance" }, "Προαναγγελία: αλλαγές και υπερωρίες δηλώνονται πριν"),
       el("option", { value: "retro" }, "Απολογιστικό: δηλώνονται μετά, έως το τέλος του επόμενου μήνα"));
     decl.value = B.TIME_DECLARATION.value || "advance";
+    const ergUser = erganiUser(C, "ergani", "production", ["ERGANI_USERNAME", "ERGANI_PASSWORD", "ERGANI_USER_TYPE"], "01");
     const mode = C.mode.value;
     const onboard = d.onboarding && d.onboarding.active ? d.onboarding : null;   // nothing is sent until its end
     // «Λειτουργία»: Δοκιμαστική · Περίοδος προσαρμογής (production with a date) · Κανονική λειτουργία; trial for the advanced
@@ -716,7 +723,7 @@
         "για να δοκιμάσετε τη σύνδεση πριν την κανονική λειτουργία. Δεν χρειάζεται για να ξεκινήσετε. Το περιβάλλον δοκιμών έχει δικούς " +
         "του χρήστες· αν αφήσετε τον χρήστη κενό, χρησιμοποιείται ο παραπάνω."),
       erganiUserForm(C, "trial", "trial", ["ERGANI_TRIAL_USERNAME", "ERGANI_TRIAL_PASSWORD", "ERGANI_TRIAL_USER_TYPE"], "02"),
-      cur === "trial" ? null : el("div", { class: "mode-buttons" },
+      cur === "trial" ? null : el("div", { class: "mode-actions" },
         el("button", { class: "btn ghost", type: "button", onclick: act(choose.trial) }, "Πέρασμα σε δοκιμαστικό ΕΡΓΑΝΗ")));
     box.replaceChildren(
       ...(C.problems.length ? [el("div", { class: "an-line bad" }, el("strong", {}, "Χρειάζεται συμπλήρωση: "), C.problems.join(" · "),
@@ -732,18 +739,19 @@
           field("Δήλωση αλλαγών ωραρίου και υπερωριών", decl, B.TIME_DECLARATION.source,
             "Ό,τι έχει επιλέξει η επιχείρηση στο ΕΡΓΑΝΗ (ρωτήστε τον λογιστή). Το απολογιστικό σύστημα υπάρχει για " +
             "επιχειρήσεις με ψηφιακή κάρτα: οι αλλαγές και οι υπερωρίες δηλώνονται από τα χτυπήματα, έως το τέλος του " +
-            "επόμενου μήνα. Τα όρια ωρών και ανάπαυσης ισχύουν και στα δύο. Αλλάζει τις ειδοποιήσεις της Karta."),
-          el("button", { class: "btn", type: "button", onclick: act(async () => {
-            await api("/admin/api/config", { group: "business", values: {
-              EMPLOYER_AFM: afm.value.trim(), BRANCH_NUMBER: branch.value.trim(), ERGANI_EMPLOYER_ID: empId.value.trim(),
-              TIME_DECLARATION: decl.value } });
-            toast("Τα στοιχεία της επιχείρησης αποθηκεύτηκαν");
-          }) }, "Αποθήκευση"))),
-      el("div", { class: "cfg-group" },
-        el("h3", {}, "Χρήστης web services του ΕΡΓΑΝΗ"),
+            "επόμενου μήνα. Τα όρια ωρών και ανάπαυσης ισχύουν και στα δύο. Αλλάζει τις ειδοποιήσεις της Karta.")),
+        el("h4", { class: "cfg-sub" }, "Χρήστης web services του ΕΡΓΑΝΗ"),
         el("p", { class: "small" }, "Τον φτιάχνει ο λογιστής σας ή εσείς στο ΕΡΓΑΝΗ. Με αυτόν η Karta διαβάζει το προσωπικό και, σε κανονική λειτουργία, στέλνει τα χτυπήματα. Ο κωδικός φυλάσσεται κρυπτογραφημένος."),
         C.can_store_secrets ? null : el("p", { class: "small warn-text" }, "Λείπει το PIN_KEY από το .env: ο κωδικός μπορεί να αλλάξει μόνο στο .env."),
-        erganiUserForm(C, "ergani", "production", ["ERGANI_USERNAME", "ERGANI_PASSWORD", "ERGANI_USER_TYPE"], "01")),
+        el("div", { class: "brand-form" }, ...ergUser.fields, ergUser.test,
+          el("button", { class: "btn", type: "button", onclick: act(async () => {
+            await api("/admin/api/config", { group: "company", values: {
+              EMPLOYER_AFM: afm.value.trim(), BRANCH_NUMBER: branch.value.trim(), ERGANI_EMPLOYER_ID: empId.value.trim(),
+              TIME_DECLARATION: decl.value, ...ergUser.values() } });
+            ergUser.saved();
+            toast("Τα στοιχεία της επιχείρησης αποθηκεύτηκαν");
+          }) }, "Αποθήκευση"),
+          ergUser.result)),
       advanced);
   }
 
