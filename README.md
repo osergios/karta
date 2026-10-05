@@ -36,7 +36,9 @@
 |---|---|
 | ![Διαχείριση, σήμερα](docs/screenshots/admin-today.png) | ![Διαχείριση, προσωπικό](docs/screenshots/admin-staff.png) |
 
-![Διαχείριση, εβδομαδιαία ωράρια](docs/screenshots/admin-schedules.png)
+| Διαχείριση: ωράρια | Διαχείριση: ρυθμίσεις |
+|---|---|
+| ![Διαχείριση, εβδομαδιαία ωράρια](docs/screenshots/admin-schedules.png) | ![Διαχείριση, ρυθμίσεις: λειτουργία και σύνδεση με το ΕΡΓΑΝΗ](docs/screenshots/admin-settings.png) |
 
 ## Δυνατότητες
 
@@ -48,14 +50,17 @@
 - **Αποστολή στο ΕΡΓΑΝΗ:** ουρά με επαναλήψεις και αιτιολογίες εκπρόθεσμης δήλωσης. Μια
   υποβολή που μπορεί να έχει ήδη φτάσει στο ΕΡΓΑΝΗ δεν ξαναστέλνεται ποτέ αυτόματα·
   μπαίνει σε κατάσταση «Προς έλεγχο» για να αποφασίσει ο διαχειριστής.
-- **Τρεις λειτουργίες:** `dry_run` (δεν στέλνεται τίποτα), `trial` (δοκιμαστικό
-  περιβάλλον ΕΡΓΑΝΗ) και `production`.
+- **Τρεις λειτουργίες**, που αλλάζουν από τη σελίδα διαχείρισης: «Δοκιμαστική» (για
+  δοκιμές και εξάσκηση του προσωπικού, δεν στέλνεται τίποτα), «Περίοδος προσαρμογής»
+  (κανονική χρήση, η αποστολή ξεκινά μόνη της την ημέρα που η κάρτα γίνεται υποχρεωτική)
+  και «Κανονική λειτουργία». Για προχωρημένους και το δοκιμαστικό ΕΡΓΑΝΗ.
 - **Σελίδα διαχείρισης** (`/admin`, προστατευμένη με Cloudflare Access): εργαζόμενοι,
-  PIN, ωράρια, άδειες, αργίες και κλεισίματα, ξεχασμένες αποχωρήσεις, λειτουργία
-  εκπαίδευσης, και όνομα, χρώμα και λογότυπο της επιχείρησης.
+  PIN, ωράρια, άδειες, αργίες και κλεισίματα, ξεχασμένες αποχωρήσεις, αντίγραφα
+  ασφαλείας, ενημέρωση με ένα κουμπί, και όνομα, χρώματα και λογότυπο της επιχείρησης.
 - **Αυτόματοι έλεγχοι:** χτυπήματα που λείπουν, παραμονή μετά τη λήξη, όρια ημέρας και
-  εβδομάδας, ανάπαυση. Οι ειδοποιήσεις πάνε στη σελίδα διαχείρισης, στην οθόνη του
-  καταστήματος και προαιρετικά στο κινητό σας (μέσω [ntfy](https://ntfy.sh)).
+  εβδομάδας, ανάπαυση. Οι ειδοποιήσεις πάνε στη σελίδα διαχείρισης και προαιρετικά στο
+  κινητό σας (μέσω [ntfy](https://ntfy.sh))· η οθόνη του καταστήματος δείχνει
+  υπενθυμίσεις με ήχο σε όποιον πρέπει να χτυπήσει.
 - **Μηνιαίες και ετήσιες αναφορές** σε Excel για τον λογιστή, με τις απολογιστικές
   δηλώσεις που πρέπει να γίνουν.
 - **Ρυθμίσεις από τη σελίδα διαχείρισης:** ΑΦΜ, χρήστης ΕΡΓΑΝΗ (με δοκιμή σύνδεσης,
@@ -204,14 +209,17 @@ See the screenshots above.
 - **Ergani submission:** a queue with retries and late-declaration reasons. A
   submission that may already have reached Ergani is never retried automatically;
   it goes to a "needs checking" state for the admin to decide.
-- **Three modes:** `dry_run` (nothing is sent), `trial` (Ergani test environment)
-  and `production`.
+- **Three modes**, switched from the admin page: «Δοκιμαστική» (test and staff
+  practice, nothing is sent), «Περίοδος προσαρμογής» (onboarding period: normal use,
+  sending starts by itself on the day the card becomes mandatory) and «Κανονική
+  λειτουργία» (normal operation). The Ergani test environment is there for the advanced.
 - **Admin page** (`/admin`, protected by Cloudflare Access): employees, PINs,
-  schedules, leave, holidays and closures, forgotten departures, training mode, and
-  the business name, colour and logo.
+  schedules, leave, holidays and closures, forgotten departures, backups, one-button
+  updates, and the business name, colours and logo.
 - **Live checks:** missed punches, shift over-runs, daily/weekly limits and rest
-  periods. Alerts go to the admin page, the shop screen and optionally your phone
-  (via [ntfy](https://ntfy.sh)).
+  periods. Alerts go to the admin page and optionally your phone (via
+  [ntfy](https://ntfy.sh)); the shop screen shows reminders with sound to whoever needs
+  to punch.
 - **Monthly and yearly Excel reports** for the accountant, including the
   retrospective declarations to file.
 - **Settings in the admin page:** employer ΑΦΜ, Ergani user (with a login test, password

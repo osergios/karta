@@ -101,15 +101,10 @@ def test_ergani_qr_with_the_wrong_surname_is_refused(kiosk, admin, clock, employ
     assert kiosk.post("/api/kiosk/qr/state", json={"code": code}).status_code == 404
 
 
-def test_training_mode_records_nothing(kiosk, admin, clock, employee):
-    set_schedule(kiosk, employee, WORKDAYS)
-    r = kiosk.post("/admin/api/training", json={"on": True})
-    assert r.status_code == 200, r.text
-    r = punch(kiosk, employee, "ARRIVAL")
-    assert r.status_code == 200
-    assert r.json()["training"] is True
-    assert db.one("SELECT COUNT(*) n FROM movements")["n"] == 0
-    kiosk.post("/admin/api/training", json={"on": False})
+def test_training_mode_is_gone(kiosk, admin, clock, employee):
+    """Practice happens in «Δοκιμαστική»: there is no separate training switch any more."""
+    assert kiosk.post("/admin/api/training", json={"on": True}).status_code in (404, 405)
+    assert "training" not in kiosk.get("/api/kiosk/reminders").json()
 
 
 def test_device_registration_with_a_one_time_code(client, admin, clock):

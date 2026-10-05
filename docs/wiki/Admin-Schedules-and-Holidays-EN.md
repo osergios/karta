@@ -20,8 +20,21 @@ exactly as it's declared in Ergani. Leave a box empty for a day off («ρεπό�
 > week** each employee works (and, less often, a schedule in free text), not the hours of
 > each day. Type each day's hours from the **schedule your accountant gives you**, as they
 > declared it. Under each employee, Karta shows whether the weekly total **matches** the
-> Ergani hours («Ταιριάζει … ✓», or by how much it differs). When Ergani has a readable
-> per‑day schedule, a button appears to fill it in automatically.
+> Ergani hours («Ταιριάζει … ✓», or by how much it differs).
+
+At the top right of each employee:
+
+- **«Διάλειμμα 30′ παντού»:** a 30′ break on every day over 4 hours.
+- **«Από κατάστημα»:** copy the shop hours.
+- **«Αποθήκευση»:** save, valid from the date at the top.
+- **«Συμπλήρωση ωρών από ΕΡΓΑΝΗ»** (fill in hours from Ergani): appears when Ergani has a
+  readable per‑day schedule; it writes the hours into the boxes (with Ergani's break).
+  Check them and press «Αποθήκευση».
+- **«Διάλειμμα N′ εκτός ωραρίου (από ΕΡΓΑΝΗ)»** (N′ break outside working hours, from
+  Ergani): when Ergani has a declared outside‑hours break but no per‑day schedule, it adds
+  it to every day over 4 hours.
+
+The «−» / «+» buttons under each day change that day's break.
 
 ### How to write a schedule
 
@@ -66,8 +79,8 @@ employee for comparison.
 
 | Type | How it works |
 |---|---|
-| **Public holidays** | The Greek public holidays are calculated every year, including the moveable ones from Orthodox Easter. Each has a «κλειστά» tick box. Μεγάλη Παρασκευή is open by default. |
-| **Local holidays** | Holidays that repeat every year in your area, e.g. your town's patron saint. None are preset. |
+| **Public holidays** | The Greek public holidays of the next 12 months, calculated every year including the moveable ones from Orthodox Easter. Each has a «κλειστά» tick box. Μεγάλη Παρασκευή is open by default. |
+| **Local holidays** | Holidays that repeat every year in your area, e.g. your town's patron saint. Type **DD/MM** (e.g. 15/05) and a name, then press **«Προσθήκη»** (add); **«Αφαίρεση»** (remove) deletes it. None are preset. |
 | **Closures** | Any date range with a reason, e.g. «Ανακαίνιση». |
 
 On a closed day:
@@ -78,6 +91,9 @@ On a closed day:
 - reports write «Αργία: …» or «Κατάστημα κλειστό: …» instead of an absence, plus a list of
   holidays and closures that fell on working days and who they affected.
 
+**A holiday that was moved** (e.g. 1 May, when it falls near Easter): untick the original
+date and add the new one under «Κλείσιμο καταστήματος» (shop closure).
+
 Nothing is sent to Ergani for these days; the accountant declares them there. If someone
 does work on a closed day, declare it in Ergani, then add it with «Υπερωρία / αλλαγή
 ημέρας…».
@@ -86,8 +102,9 @@ does work on a closed day, declare it in Ergani, then add it with «Υπερωρ
 
 At the end of this section, «Εορταστική διακόσμηση στην οθόνη του καταστήματος» (festive
 decorations on the shop screen) turns them on or off («Ενεργοποίηση» / «Απενεργοποίηση»).
-They're on by default and appear by themselves: Christmas, Easter, 25 March and
-28 October, Καθαρά Δευτέρα (Clean Monday), 1 May. When they're off, the screen always
+They're on by default and appear by themselves: Christmas (1/12–6/1: snow, trees, Santa),
+Easter (from Palm Sunday: eggs, a candle, flowers), 25 March and 28 October (flags),
+Καθαρά Δευτέρα (Clean Monday: kites), 1 May (a wreath). When they're off, the screen always
 keeps its normal look; the greetings on closed days still appear.
 
 The preview buttons (Christmas, New Year, Clean Monday, 25 March, Easter, 1 May,

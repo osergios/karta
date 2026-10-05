@@ -7,14 +7,33 @@ printed) and show to the shop screen's camera to punch without typing a PIN.
 
 ## Issuing a card
 
-On the admin page, «Προσωπικό» → the employee's «Ενέργειες ▾» → **«Κάρτα QR»**.
-Karta creates a new random code and shows the card image. You can then:
+On the admin page, «Προσωπικό» → the employee's «Ενέργειες ▾» → **«Έκδοση QR»** (issue
+QR). Karta creates a new random code and shows the card image. If they already have a card,
+the same item is called **«Κάρτα QR»** and shows that card, with no new code (without
+`PIN_KEY` it can't be shown again, so it asks whether you want a new one).
 
-- **print it**, or save the image and send it yourself; or
-- create a **«Σύνδεσμος για το κινητό»**: a personal link you send by Viber, WhatsApp
-  or SMS. The employee opens it, taps **«Αποθήκευση εικόνας»** and keeps the card in
-  their phone's photos. The page uses your business name («η προσωπική σου κάρτα
-  εργασίας για το …»).
+In the card window:
+
+| Button | What it does |
+|---|---|
+| **«Λήψη εικόνας»** | Download the card as a PNG image. |
+| **«Αποστολή»** | On a phone or tablet: send the image with any app. |
+| **«Εκτύπωση»** | Print the card. |
+| **«Νέα κάρτα»** | New code; the old card and its link stop at once. |
+| **«Ακύρωση κάρτας»** | Cancel the card with no replacement; they punch by PIN only. |
+| **«Κλείσιμο»** | Close the window. |
+| **«Σύνδεσμος για το κινητό»** | Create a personal link for the employee's phone (see below). |
+
+Send the link with the **Viber**, **WhatsApp**, **SMS** or **«Αποστολή…»** buttons, or
+with **«Αντιγραφή μηνύματος»** (copy message), which copies a ready-made message («Γεια σου
+…! Η κάρτα εργασίας σου για το …») to paste anywhere. The employee opens it, taps
+**«Αποθήκευση εικόνας»** and keeps the card in their phone's photos. The page uses your
+business name («η προσωπική σου κάρτα εργασίας για το …»).
+
+When you open the card again, it shows the link's status: «Ενεργός σύνδεσμος έως … ·
+άνοιξε (N×)» (opened N times) or «δεν έχει ανοίξει ακόμα» (not opened yet), with **«Νέος
+σύνδεσμος»** (new link) and **«Ακύρωση συνδέσμου»** (cancel link). (An old link's address
+isn't stored; to send it again, make a new one.)
 
 Rules for the link:
 
@@ -27,7 +46,8 @@ Rules for the link:
 
 - Issuing a new card makes the old one stop working immediately (lost phone, card shared
   with someone else…).
-- «Ενέργειες ▾» → cancel the card or the link to stop it with no replacement.
+- In the card window («Ενέργειες ▾» → «Κάρτα QR»), «Ακύρωση κάρτας» or «Ακύρωση
+  συνδέσμου» stops it with no replacement.
 
 ## The card on the phone (`/c/…`)
 

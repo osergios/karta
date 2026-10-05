@@ -271,7 +271,8 @@ On the admin page's **«Σήμερα»** tab there's a **«Πρώτα βήματ
 7. Phone notifications: in «Ρυθμίσεις» → «Ειδοποιήσεις στο κινητό» (ntfy app), with a
    test-notification button
 8. Backups off the machine ([step 8](#step-8-backups-important))
-9. A trial run with the staff (training mode)
+9. A trial run with the staff: everyone punches in «Δοκιμαστική» (test) mode
+   ([A trial run with the staff](Going-Live-EN#a-trial-run-with-the-staff))
 10. Going live on Ergani: «Ρυθμίσεις» → «Επιχείρηση και σύνδεση με το ΕΡΓΑΝΗ» →
     «Λειτουργία» ([Going live](Going-Live-EN))
 

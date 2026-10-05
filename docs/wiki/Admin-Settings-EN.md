@@ -2,6 +2,8 @@
 
 # Admin: «Ρυθμίσεις» (Settings)
 
+![Admin, settings: mode and Ergani connection](https://raw.githubusercontent.com/osergios/karta/main/docs/screenshots/admin-settings.png)
+
 ## «Επιχείρηση και σύνδεση με το ΕΡΓΑΝΗ» (business and Ergani connection)
 
 Anything saved here applies immediately (no restart) and **overrides** `.env`. A value
@@ -54,6 +56,20 @@ minimisation; the rest is discarded and never logged).
 | **«Ενημέρωση στοιχείων ωραρίου από ΕΡΓΑΝΗ»** | Refreshes each employee's declared schedule, weekly hours, break and flexible arrival from Ergani, shown next to their schedule for comparison. |
 | **«Υπηρεσίες ΕΡΓΑΝΗ»** | Lists the Ergani web services available to your user (useful when checking credentials). |
 
+### What «Έλεγχος ΕΡΓΑΝΗ» shows
+
+- **Employer:** whether the ΑΦΜ matches «Ρυθμίσεις», whether the business is enrolled in
+  the digital work card, and whether the branch Karta uses exists in Ergani.
+- **Anyone in Karta who isn't in Ergani's current staff** (e.g. left the job), with an
+  **«Απενεργοποίηση»** (deactivate) button next to them.
+- **Staff table:** each person's status, the **«Όνομα στο tablet»** (name on the tablet;
+  change it before importing, e.g. to add accents) and their declared schedule details.
+  New people in your branch are already ticked.
+- **«Εισαγωγή / ενημέρωση επιλεγμένων»** (import / update selected): adds the new people
+  and fixes the names that are spelled differently. It shows each new employee's PIN once.
+- In the Ergani test environment (`trial`) a warning appears, and import and deactivation
+  aren't offered.
+
 ## «Όρια και ειδοποιήσεις» (limits and alerts)
 
 The daily and weekly limits depend on the employment contract and on whether you work
@@ -71,6 +87,9 @@ The daily and weekly limits depend on the employment contract and on whether you
 | «Νόμιμη εβδομάδα, μετά υπερωρία (ώρες)» | 45 | Legal week (45 for a 5‑day week, 48 for 6‑day); beyond it is υπερωρία. |
 | «Ελάχιστη ανάπαυση (ώρες)» | 11 | Minimum rest between two working days. |
 
+With the **retrospective system** the two overtime‑deadline settings aren't shown: there's no
+deadline before the end.
+
 The shop‑screen reminders switch is on the [Today](Admin-Today-EN) tab. Festive
 decorations are under «Ωράρια & αργίες» →
 [«Αργίες και κλειστό κατάστημα»](Admin-Schedules-and-Holidays-EN#festive-decorations).
@@ -79,14 +98,16 @@ decorations are under «Ωράρια & αργίες» →
 
 The ntfy server and topic, and optionally a token. The page suggests a random topic: add
 it in the ntfy app («+»), then press «Αποθήκευση» (save) and «Δοκιμαστική ειδοποίηση»
-(test notification). See [Alerts and reminders](Alerts-and-Reminders-EN#setting-up-ntfy).
+(test notification). **«Απενεργοποίηση»** (turn off) clears the setting and stops phone
+notifications. See [Alerts and reminders](Alerts-and-Reminders-EN#setting-up-ntfy).
 
 ## «Αντίγραφα ασφαλείας» (backups)
 
 - The result of the last nightly backup: on the machine and on USB (from `backup.sh`),
   and in the cloud.
 - **Cloud:** connect to Google Drive, Dropbox or Backblaze B2 («Σύνδεση και πρώτο
-  ανέβασμα», connect and first upload, with an encryption password shown once),
+  ανέβασμα», connect and first upload, with an encryption password shown once: write it
+  down and press **«Τον σημείωσα»**, I've noted it),
   **«Ανέβασμα τώρα»** (upload now), **«Αποσύνδεση cloud»** (disconnect cloud), and
   **«Έχω ήδη αντίγραφα στο cloud»** (I already have backups in the cloud) for a new
   machine.
@@ -94,7 +115,8 @@ it in the ntfy app («+»), then press «Αποθήκευση» (save) and «Δ�
 - **«Αρχείο χτυπημάτων (Excel)»** (punch archive): every punch of a year, with its Ergani
   protocol number, for your records and for inspections.
 - **«Επαναφορά»** (restore) «Από αρχείο…» (from a file) or «Από το cloud…» (from the
-  cloud): first it shows what the backup contains, and then «Επαναφορά τώρα» (restore now)
+  cloud, where you pick a backup and press **«Έλεγχος αντιγράφου»**, check backup):
+  first it shows what the backup contains, and then «Επαναφορά τώρα» (restore now)
   puts it in place of the current database (which is kept as a copy).
 
 See [Backups and restore](Backups-EN).
@@ -108,7 +130,8 @@ What staff see on the shop screen, the phone QR card and the links:
 - **«Χρώματα» (colours):**
   - **«Έτοιμο θέμα»** (ready theme): Karta (turquoise), «Θάλασσα» (sea, blue), «Μπορντό»
     (burgundy), «Ελιά» (olive, green), «Τερακότα» (terracotta), «Γραφίτης» (graphite),
-    «Νύχτα» (night, dark). It fills in the colours, which you can then change one by one.
+    «Νύχτα» (night, dark). It fills in the colours, which you can then change one by one;
+    once you change one it reads «Δικά μου χρώματα» (my own colours).
   - **Main colour** (buttons, titles, QR card), **Background**, **Side panel**, **Text**,
     **«Προσέλευση» button** (clock in) and **«Αποχώρηση» button** (clock out). Text on the
     buttons automatically turns black or white, whichever reads better, and the page
@@ -120,7 +143,7 @@ What staff see on the shop screen, the phone QR card and the links:
     theme.
 - **Logo:** PNG, JPG or WebP up to 1 MB, ideally square with a transparent background.
   It's stored in the database, so it's included in your backups. With no logo, the name
-  is shown instead.
+  is shown instead. **«Αφαίρεση λογότυπου»** (remove logo) deletes it.
 
 The official employer details in the accountant's report always come from Ergani, not
 from here.
@@ -142,7 +165,8 @@ or remove it from the list.
 
 ## «Κινήσεις» (movements)
 
-The last 300 punches, with their status (see
+The last 300 punches, with how they were made («· PIN», «· QR», «· QR ΕΡΓΑΝΗ», «· από
+διαχείριση» = by the admin), their status (see
 [How punches reach Ergani](Ergani-Submissions-EN)) and protocol number. From here you can:
 
 - see **«Τι θα στελνόταν»**: the exact payload, in `dry_run`;

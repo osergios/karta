@@ -450,3 +450,26 @@
 90. **«Επιχείρηση» is one block.** ΑΦΜ, branch, employer id, the declaration system and the Ergani web-services user
     are saved together with one «Αποθήκευση» (new config group `company`, checked as a whole: a wrong value saves
     nothing), with «Δοκιμή σύνδεσης» next to it.
+91. **Training mode removed; staff practise in «Δοκιμαστική».** The «Λειτουργία εκπαίδευσης» button, the red
+    «ΕΚΠΑΙΔΕΥΣΗ» banner on the shop screen, `POST /admin/api/training` and the in-memory practice state are gone:
+    «Δοκιμαστική» already lets everyone punch without anything reaching Ergani, and «Διαγραφή δοκιμαστικών
+    κινήσεων» clears it afterwards. The first step «Δοκιμή με το προσωπικό» now ticks itself off with the first
+    non-production punch (or «Έγινε / Παράλειψη» as before). The old `training_until` / `training_used`
+    settings are simply no longer read.
+92. **«Σήμερα» shows the mode in one line.** «Οθόνη καταστήματος και αποστολή» has a single «Λειτουργία: …» line
+    with the same names as «Ρυθμίσεις» (Δοκιμαστική / Περίοδος προσαρμογής / Κανονική λειτουργία / Δοκιμαστικό
+    ΕΡΓΑΝΗ), what it means for Ergani, and the pending/uncertain counts if any. The long onboarding paragraph and
+    the «not sent to the real Ergani» note are gone; the «Πώς τα πάνε» table stays. The admin header uses the same
+    names (it said «Παραγωγή ΕΡΓΑΝΗ (eservices.yeka.gr)»).
+93. **Docs and screenshots.** New screenshots of «Σήμερα», «Προσωπικό», «Ωράρια & αργίες», «Ρυθμίσεις» (new) and the
+    shop screen. Every admin and shop-screen function is now in the wiki, in Greek and English: the modes and the
+    trial run with the staff (Going live), the alert badge, «Εντάξει», «Αναίρεση», «Οδηγίες» and the «Ξέχασαν
+    αποχώρηση» / «Τελείωσαν» sections (Today), the QR card window and phone-link buttons (QR cards), «Εμφάνιση PIN»,
+    «Ενεργοποίηση», «Κλειδωμένο PIN» and cancelling leave or day changes (Staff), the Ergani buttons on schedules,
+    local holidays and moved holidays (Schedules), the «Έλεγχος ΕΡΓΑΝΗ» results, logo, colours, ntfy and backup
+    buttons (Settings), and the result messages, QR scanning, keyboard and USB scanner (Shop screen). Wrong labels
+    fixed («Φεύγω, ενημέρωσε τη διαχείριση», «Είναι νωρίς, …», «Έκδοση QR»); the README no longer says alerts show
+    on the shop screen (only reminders do), and neither does the «Εκκαθάριση λίστας» confirmation.
+94. **Shop hours with the retrospective system.** The «Ωράριο καταστήματος» analysis said overtime «πρέπει να
+    δηλώνεται στο ΕΡΓΑΝΗ πριν γίνει» even with «Απολογιστικό» selected; it now says it is declared retrospectively,
+    by the end of the next month (like the employee schedules and the limits already did).
