@@ -51,6 +51,13 @@ def latest() -> dict:
         return {"tag": _latest["tag"], "url": _latest["url"]}
 
 
+def check_now() -> None:
+    """«Έλεγχος τώρα» in the admin page: asks GitHub right away instead of waiting for the next check."""
+    _fetch()
+    with _lock:
+        _latest["at"] = time.time()
+
+
 def _utc(raw: str | None):
     try:
         return datetime.fromisoformat(raw).replace(tzinfo=timezone.utc) if raw else None

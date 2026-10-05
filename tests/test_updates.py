@@ -46,3 +46,19 @@ def test_poll_is_read_only_most_of_the_time(capsys):
         db.put_setting(c, "updater_seen", stamp(40))
     updatemark.main(["poll"])
     assert db.setting("updater_seen") > stamp(1)               # refreshed
+
+
+def test_check_now_asks_github_right_away(client, admin, monkeypatch):
+    """«Έλεγχος τώρα»: the cached answer (refreshed every 6 hours) is replaced at once."""
+    asked = []
+
+    def fake_fetch():
+        asked.append(1)
+        with updates._lock:
+            updates._latest.update(tag="v99.0.0", url="https://example.com/r")
+    monkeypatch.setattr(updates, "_fetch", fake_fetch)
+    r = client.post("/admin/api/update/check")
+    assert r.status_code == 200 and asked == [1]
+    assert r.json()["latest"] == "99.0.0"
+    assert client.get("/admin/api/overview").json()["update"]["latest"] == "99.0.0"   # no second request
+    assert asked == [1]

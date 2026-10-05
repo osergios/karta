@@ -436,3 +436,8 @@
     comes 10′ after the end (instead of after the 5′ grace) to say someone stayed late. That alert, the daily-limit
     ones, a punch on a closed day and the monthly report say the hours are declared retrospectively instead of «μη
     δηλωμένη υπερωρία». The shop screen's reminders with sound and the limits on hours and rest are the same.
+88. **«Έλεγχος τώρα» and a truthful mode line.** «Ρυθμίσεις» → «Έκδοση και ενημέρωση» has a «Έλεγχος τώρα» button that
+    asks GitHub for the newest release right away (otherwise every 6 hours). In production during the onboarding
+    period, «Λειτουργία» no longer says «κάθε χτύπημα δηλώνεται στο πραγματικό ΕΡΓΑΝΗ»: it says the punches are
+    recorded and sent from the first mandatory day, as «Σήμερα» does. With the retrospective system, the shop
+    reminders box says the phone alert at the end of the day comes after 10′.

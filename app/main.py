@@ -1648,6 +1648,13 @@ def admin_update(admin: str = Depends(security.require_admin)):
     return {"ok": True}
 
 
+@app.post("/admin/api/update/check")
+def admin_update_check(admin: str = Depends(security.require_admin)):
+    """«Έλεγχος τώρα»: looks for a newer release right away (otherwise every few hours)."""
+    updates.check_now()
+    return updates.info()
+
+
 @app.post("/admin/api/kiosk/reload")
 def admin_kiosk_reload(admin: str = Depends(security.require_admin)):
     """The shop screen reloads itself within ~30″ (it waits if someone is in the middle of punching)."""
