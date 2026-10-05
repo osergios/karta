@@ -390,3 +390,7 @@
     Dependabot keeps both current). The release image is built with `provenance: mode=max` and an SBOM, and
     `actions/attest-build-provenance` signs it: `gh attestation verify oci://ghcr.io/osergios/karta:<version> --owner
     osergios`. cloudflared is pinned (`2026.9.3`); Dependabot's new `docker-compose` entry offers new versions.
+77. **Database migrations.** `app/db.py` keeps an ordered list of schema steps (`MIGRATIONS`) and applies the ones above
+    the database's `PRAGMA user_version` at start-up, in one transaction. Step 1 is empty: it marks today's schema as
+    version 1. Steps only add (`ALTER TABLE … ADD COLUMN` guarded by `PRAGMA table_info`), so going back to an older
+    version stays safe; a database made by a newer version is left alone. The old unused `schedules` table stays.
