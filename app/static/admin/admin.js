@@ -789,15 +789,36 @@
 
   // ---------- backups: nightly copy (machine/USB), encrypted cloud upload, downloads, restore ----------
   const dmyhm = iso => `${iso.slice(8, 10)}/${iso.slice(5, 7)} ${iso.slice(11, 16)}`;
+  // Greek capitals that look exactly like Latin ones, for comparing what someone typed on a Greek keyboard
+  const LOOKALIKE = { "Α": "A", "Β": "B", "Ε": "E", "Ζ": "Z", "Η": "H", "Ι": "I", "Κ": "K", "Μ": "M", "Ν": "N", "Ο": "O",
+                      "Ρ": "P", "Τ": "T", "Υ": "Y", "Χ": "X" };
+  const latin = t => t.trim().toUpperCase().replace(/\s+/g, "").replace(/[ΑΒΕΖΗΙΚΜΝΟΡΤΥΧ]/g, c => LOOKALIKE[c]);
+  const sameChars = (typed, want) => latin(typed) === latin(want);
+
   // The only way into the cloud backups if this machine is lost: it can't be recovered by anyone, so the panel stays
   // until the admin types its last 4 characters back.
   function showCloudPassword(pw, again = false) {
     const box = document.getElementById("cloudPass");
     const tail = pw.slice(-4);
-    const check = el("input", { type: "text", maxlength: "4", autocomplete: "off", spellcheck: "false", class: "pass-check",
-                                "aria-label": "Οι 4 τελευταίοι χαρακτήρες του κωδικού" });
-    const done = el("button", { class: "btn", type: "button", disabled: "", onclick: () => hide(box) }, "Τον σημείωσα");
-    check.addEventListener("input", () => { done.disabled = check.value.trim() !== tail; });
+    const check = el("input", { type: "text", maxlength: "8", autocomplete: "off", autocapitalize: "off", autocorrect: "off",
+                                spellcheck: "false", lang: "en", class: "pass-check", "aria-label": "Οι 4 τελευταίοι χαρακτήρες του κωδικού" });
+    const note = el("span", { class: "small", role: "status" });
+    // It only proves the password was looked at: capitals and Greek look-alike letters (a Greek keyboard, a phone that
+    // capitalises the first letter) must not make a correct answer fail without a word.
+    const same = () => sameChars(check.value, tail);
+    const done = el("button", { class: "btn", type: "button", onclick: () => {
+      if (same()) { hide(box); return; }
+      note.className = "small warn-text";
+      note.textContent = check.value.trim()
+        ? `Δεν ταιριάζει: γράψτε τους 4 τελευταίους χαρακτήρες όπως φαίνονται παραπάνω (${tail.length} λατινικοί χαρακτήρες).`
+        : "Γράψτε πρώτα τους 4 τελευταίους χαρακτήρες του κωδικού.";
+      check.focus();
+    } }, "Τον σημείωσα");
+    check.addEventListener("input", () => {
+      const ok = same();
+      note.className = ok ? "small ok-text" : "small";
+      note.textContent = ok ? "✓ Σωστά" : "";
+    });
     box.hidden = false;
     box.replaceChildren(
       el("h3", {}, "Κωδικός κρυπτογράφησης των αντιγράφων"),
@@ -808,13 +829,14 @@
         "ούτε κανείς άλλος. Αν χαλάσει ή χαθεί αυτό το μηχάνημα, είναι ο μόνος τρόπος να πάρετε πίσω το αρχείο χτυπημάτων, " +
         "που πρέπει να φυλάσσεται για χρόνια."),
       el("p", {}, el("strong", {}, "Γράψτε τον τώρα σε χαρτί (φυλάξτε το εκτός καταστήματος) ή σε διαχειριστή κωδικών."),
+        " Είναι λατινικοί χαρακτήρες, και τα κεφαλαία και τα πεζά μετράνε: γράψτε τον ακριβώς όπως φαίνεται.",
         again ? " Από εδώ φαίνεται μόνο όσο δουλεύει αυτό το μηχάνημα· όταν χαλάσει, μένει μόνο ό,τι έχετε γράψει."
               : " Εμφανίζεται μόνο αυτή τη φορά (μετά, μόνο όσο δουλεύει αυτό το μηχάνημα: «Εμφάνιση κωδικού κρυπτογράφησης»)."),
       el("div", { class: "backup-row" },
         el("button", { class: "btn ghost", type: "button", onclick: async () => {
           try { await navigator.clipboard.writeText(pw); toast("Ο κωδικός αντιγράφηκε"); } catch { toast("Επιλέξτε τον κωδικό και αντιγράψτε τον", true); }
         } }, "Αντιγραφή")),
-      el("label", { class: "pass-confirm" }, "Για επιβεβαίωση, γράψτε τους 4 τελευταίους χαρακτήρες:", check),
+      el("label", { class: "pass-confirm" }, "Για επιβεβαίωση, γράψτε τους 4 τελευταίους χαρακτήρες:", check, note),
       done);
     box.scrollIntoView({ behavior: "smooth", block: "center" });
   }

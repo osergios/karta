@@ -490,3 +490,8 @@
     cloud encryption password again (`POST /admin/api/cloud/password`, audited as `cloud_password_viewed`), in the
     same panel with the same warning and the same 4-character check. Not a new exposure: an admin can already
     download the whole database; the password matters when the machine is gone.
+98. **«Τον σημείωσα» works on any keyboard and says why when it doesn't.** The 4-character check compared exactly, so
+    Greek look-alike capitals (a Greek keyboard: Α, Ε, Κ, Υ…) or a phone capitalising the first letter made a correct
+    answer fail, and the disabled button gave no sign. The check now ignores case, spaces and Greek look-alikes
+    (it only proves the password was looked at); the button is always pressable and explains a mismatch; the field
+    has autocapitalize/autocorrect off; and the panel says the password itself is Latin characters, case-sensitive.

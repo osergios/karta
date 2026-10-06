@@ -246,6 +246,7 @@ body.env-trial .bar { box-shadow: inset 0 -4px 0 #e0a340; }
 .cloud-pass .pass { font: 600 1.4rem/1.3 ui-monospace, monospace; letter-spacing: .05em; user-select: all; word-break: break-all; }
 .cloud-pass .pass-warn { border-left: 4px solid var(--error); background: var(--bad-bg); color: var(--ink); padding: .55rem .75rem; border-radius: 6px; margin: .5rem 0; }
 .cloud-pass .pass-confirm { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin: .6rem 0; }
+.cloud-pass .ok-text { color: var(--accent); font-weight: 600; }
 .cloud-pass .pass-check { width: 6em; font: 600 1.1rem ui-monospace, monospace; padding: .35rem .5rem; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); }
 .btn.danger { background: var(--error); border-color: var(--error); color: #fff; }
 .mode-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .5rem; }
