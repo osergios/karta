@@ -20,6 +20,19 @@ def store(tmp_path):
     cloud._forget()
 
 
+def fetch_from_cloud(client, snapshot_id):
+    """«Έλεγχος αντιγράφου»: starts the download in the background, then asks until it is done (as the page does)."""
+    r = client.post("/admin/api/restore/cloud", json={"id": snapshot_id})
+    assert r.status_code == 200 and r.json()["state"] == "running", r.text
+    deadline = time.time() + 60
+    while time.time() < deadline:
+        st = client.get("/admin/api/restore/cloud").json()
+        if st["state"] != "running":
+            return st
+        time.sleep(0.1)
+    raise AssertionError("the download did not finish")
+
+
 def backup_bytes(client) -> bytes:
     r = client.get("/admin/api/backup.db")
     assert r.status_code == 200
@@ -133,8 +146,8 @@ def test_cloud_backup_is_encrypted_deduplicated_and_can_be_restored(client, admi
         cloud.connect("local", local_path=str(store))                    # a new repository over the old one: refused
     assert cloud.connect("local", local_path=str(store), password=password) is None
     add_employee(afm="900000002", display="Γιώργος")
-    r = client.post("/admin/api/restore/cloud", json={"id": cloud.list_backups()[0]["id"]})
-    assert r.status_code == 200 and r.json()["employees"] == 1, r.text
+    st = fetch_from_cloud(client, cloud.list_backups()[0]["id"])
+    assert st["state"] == "done" and st["info"]["employees"] == 1, st
     r = client.post("/admin/api/restore/apply", json={"confirm": True})
     assert db.one("SELECT COUNT(*) n FROM employees")["n"] == 1
     os.remove(os.path.join(os.path.dirname(config.DB_PATH), r.json()["kept"]))
@@ -188,18 +201,27 @@ def test_a_killed_backup_does_not_block_the_next_one(client, admin, employee, st
     big.unlink()
 
 
-def test_a_failing_unlock_does_not_stop_the_backup(client, admin, employee, store, monkeypatch):
+def test_a_night_is_one_restic_run_and_a_stale_lock_is_cleared(client, admin, employee, store, monkeypatch):
+    """Each restic run reaches Google Drive afresh (~40″): a night is the backup alone. Only when a run cut short
+    left the repository locked: unlock (stale locks only) and the same step once more."""
     calls = []
+    locked = [True]
 
     def fake_run(tool, *args, **kw):
         calls.append(args[0])
-        if args[0] == "unlock":
-            raise cloud.CloudError("unlock failed")
+        if args[0] == "backup" and locked[0]:
+            locked[0] = False
+            raise cloud.CloudError(cloud.LOCKED)
         return ""
     monkeypatch.setattr(cloud, "_run", fake_run)
     monkeypatch.setattr(cloud, "connected", lambda: True)
+    with db.tx() as c:
+        db.put_setting(c, "cloud_last_prune", datetime.now().strftime("%Y-%m-%dT%H:%M:%S"))
     cloud.run_backup()
-    assert calls[:2] == ["unlock", "backup"] and cloud.status()["state"] == "ok"
+    assert calls == ["backup", "unlock", "backup"] and cloud.status()["state"] == "ok"
+    calls.clear()
+    cloud.run_backup()
+    assert calls == ["backup"]                                             # a normal night: one run
 
 
 def _setup_files():
@@ -272,12 +294,12 @@ def test_a_new_machine_never_uploads_its_empty_database(client, admin, store):
     assert len(cloud.list_backups()) == 1                                  # no empty snapshot on top
     cloud.run_backup()                                                     # nor at night
     assert len(cloud.list_backups()) == 1
-    r = client.post("/admin/api/restore/cloud", json={"id": cloud.list_backups()[0]["id"]})
-    assert r.status_code == 200 and r.json()["employees"] == 1, r.text  # the newest is the real one
+    st = fetch_from_cloud(client, cloud.list_backups()[0]["id"])
+    assert st["state"] == "done" and st["info"]["employees"] == 1, st  # the newest is the real one
 
 
 @needs_rclone
-def test_a_cloud_restore_on_a_new_machine_brings_its_pin_key(client, admin, store, monkeypatch):
+def test_a_cloud_restore_on_a_new_machine_brings_its_pin_key(client, admin, store, monkeypatch, tmp_path):
     """The old machine's PIN_KEY travels inside the encrypted snapshot; the new machine (another key in its .env)
     takes it over on restore, so the Ergani password and the PINs open as before, with nothing to type."""
     old_key = base64.urlsafe_b64encode(os.urandom(32)).decode()
@@ -288,7 +310,8 @@ def test_a_cloud_restore_on_a_new_machine_brings_its_pin_key(client, admin, stor
         db.put_setting(c, "cfg.ERGANI_PASSWORD", security.seal_pin("ergani-secret", b"karta-cfg-ERGANI_PASSWORD"))
     password = cloud.connect("local", local_path=str(store))
     snap = cloud.list_backups()[0]["id"]
-    assert cloud.download_key(snap) == old_key
+    assert cloud.download(snap, str(tmp_path / "got.db")) == old_key     # the database and its key, in one run
+    assert (tmp_path / "got.db").read_bytes()[:15] == b"SQLite format 3"
 
     # the old machine is gone; a new one, with its own key and an empty database
     cloud._forget()
@@ -299,9 +322,9 @@ def test_a_cloud_restore_on_a_new_machine_brings_its_pin_key(client, admin, stor
     assert cloud.connect("local", local_path=str(store), password=password) is None
     key_file = config.restored_pin_key_path()
     try:
-        r = client.post("/admin/api/restore/cloud", json={"id": snap})
-        assert r.status_code == 200, r.text
-        assert r.json()["pin_key_ok"] is False and r.json()["pin_key_restored"] is True
+        st = fetch_from_cloud(client, snap)
+        assert st["state"] == "done", st
+        assert st["info"]["pin_key_ok"] is False and st["info"]["pin_key_restored"] is True
         r = client.post("/admin/api/restore/apply", json={"confirm": True})
         assert r.status_code == 200, r.text
         assert config.PIN_KEY == old_key                                   # used from now on
@@ -330,8 +353,8 @@ def test_a_backup_without_a_key_restores_as_before(client, admin):
 
 
 def test_old_snapshots_are_pruned_weekly_and_the_time_is_shown(client, admin, employee, monkeypatch):
-    """Every night: backup + forget (quick). The space is freed (prune: lists the whole repository, slow on Google
-    Drive) once a week. Each result keeps how long it took."""
+    """Every night: the backup. Once a week: forget + prune (lists the whole repository, slow on Google Drive).
+    Each result keeps how long it took."""
     calls = []
 
     def fake_run(tool, *args, **kw):
@@ -342,9 +365,9 @@ def test_old_snapshots_are_pruned_weekly_and_the_time_is_shown(client, admin, em
     prunes = lambda: [a for a in calls if a[0] == "forget" and "--prune" in a]      # noqa: E731
     cloud.run_backup()
     assert len(prunes()) == 1                                        # never pruned: now
-    assert [a for a in calls if a[0] == "forget"]
     cloud.run_backup()
-    assert len(prunes()) == 1                                        # the next night: forget only
+    assert len(prunes()) == 1                                        # the next night: the backup only
+    assert len([a for a in calls if a[0] == "forget"]) == 1
     with db.tx() as c:
         db.put_setting(c, "cloud_last_prune", "2026-01-01T00:00:00")
     cloud.run_backup()

@@ -564,3 +564,18 @@
      (`schedOpen`). Above them: «Αναζήτηση εργαζόμενου» (name or surname, accents ignored), «Μόνο όσοι θέλουν προσοχή»
      and «Κλείσιμο όλων». «Από κατάστημα» became «Αντιγραφή από…»: the shop hours, or a colleague's hours and break
      (what is on screen if their card is open, else what is saved); the flexible arrival is personal and isn't copied.
+
+# Faster cloud backups, a cloud restore check that doesn't time out (v1.8.1)
+
+113. **One restic run a night.** Each restic run starts rclone afresh, which on Google Drive takes some 40 seconds to
+     log in and find its folders, whatever the size of the database; a night was three runs (`unlock`, `backup`,
+     `forget`), about 2 minutes. Now a night is the backup alone; `forget --prune` stays weekly (the retention is the
+     same: at most a few extra daily snapshots until the weekly run). `unlock` runs only when restic reports the
+     repository locked by a run cut short, followed by the same step once more (`_restic_unlocked`).
+114. **«Έλεγχος αντιγράφου» no longer hangs.** Fetching a snapshot from the cloud took two restic runs (`dump` of the
+     database, `dump` of `pin-key`), over 100 seconds on Google Drive, longer than Cloudflare lets a page request
+     last, so the button kept waiting. Now one `restic restore --include /karta.db --include /pin-key` brings both
+     (`cloud.download` returns the key), in the background: `POST /admin/api/restore/cloud` starts it, `GET` reports
+     `running` (with seconds) / `done` (with the check) / `fail`, and the page shows «Κατεβαίνει και ελέγχεται το
+     αντίγραφο… 45″» until the check appears. Asking again for the same snapshot while it runs (a reloaded page)
+     keeps waiting for it.

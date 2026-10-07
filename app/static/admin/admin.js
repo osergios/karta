@@ -927,6 +927,19 @@
     if (!res.ok) throw new Error(data.detail || httpError(res.status));
     showRestore(data);
   }
+  // the download runs on the server (it can take minutes on Google Drive): ask every 3 seconds how it is going
+  async function waitCloudFetch(progress) {
+    progress.hidden = false;
+    for (;;) {
+      const st = await api("/admin/api/restore/cloud");
+      if (st.state === "done") { progress.hidden = true; showRestore(st.info); return; }
+      if (st.state === "fail") { progress.hidden = true; throw new Error(st.error || "Η λήψη απέτυχε"); }
+      if (st.state !== "running") { progress.hidden = true; throw new Error("Η λήψη διακόπηκε (η Karta ξεκίνησε ξανά)· πατήστε ξανά «Έλεγχος αντιγράφου»."); }
+      const t = st.seconds >= 60 ? `${Math.floor(st.seconds / 60)}′${String(st.seconds % 60).padStart(2, "0")}″` : `${st.seconds}″`;
+      progress.textContent = `Κατεβαίνει και ελέγχεται το αντίγραφο… ${t} (στο Google Drive μπορεί να πάρει 1–2 λεπτά)`;
+      await new Promise(r => setTimeout(r, 3000));
+    }
+  }
   async function restoreFromCloudList() {
     const box = document.getElementById("restorePanel");      // outside #backupBox: the refresh doesn't redraw it
     const { backups } = await api("/admin/api/cloud/backups");
@@ -934,12 +947,14 @@
     const sel = el("select", {}, ...backups.map(b => el("option", { value: b.id },
       `${b.time.slice(8, 10)}/${b.time.slice(5, 7)}/${b.time.slice(0, 4)} ${b.time.slice(11, 16)}`)));
     box.hidden = false;
+    const progress = el("p", { class: "small", hidden: "" });
     box.replaceChildren(el("h3", {}, "Επαναφορά από το cloud"),
       el("div", { class: "backup-row" }, sel,
         el("button", { class: "btn ghost", type: "button", onclick: act(async () => {
-          showRestore(await api("/admin/api/restore/cloud", { id: sel.value }));
+          await api("/admin/api/restore/cloud", { id: sel.value });
+          await waitCloudFetch(progress);
         }) }, "Έλεγχος αντιγράφου"),
-        el("button", { class: "link", type: "button", onclick: () => hide(box) }, "Ακύρωση")));
+        el("button", { class: "link", type: "button", onclick: () => hide(box) }, "Ακύρωση")), progress);
   }
   function renderBackup(d) {
     const box = document.getElementById("backupBox");
