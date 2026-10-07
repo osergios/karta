@@ -110,16 +110,31 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 .sched-card.salon { background: var(--salon); }
 .sched-head { display: flex; justify-content: space-between; align-items: baseline; gap: .5rem 1rem; flex-wrap: wrap; margin-bottom: .6rem; }
 .sched-actions .link { margin-right: 0; margin-left: 1rem; }
-.sched-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: .5rem; margin-bottom: .6rem; }
-.sched-days .day { display: flex; flex-direction: column; gap: .25rem; min-width: 0; font-size: .8rem; color: var(--ink-soft); }
-.sched-days input { width: 100%; min-width: 0; font: inherit; font-size: .85rem; color: var(--ink); padding: .45rem .5rem; border: 1px solid var(--line); border-radius: 6px; font-variant-numeric: tabular-nums; }
 .sched-card .analysis { max-width: none; }
-@media (max-width: 900px) { .sched-days { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+/* one week of hours: a row per day, start–end per part, «+ σπαστό» for a second part */
+.wk[hidden] { display: none; }
+.wk { display: flex; flex-direction: column; gap: .3rem; margin: .4rem 0 .7rem; }
+.wk-row { display: flex; align-items: center; gap: .4rem .8rem; flex-wrap: wrap; padding: .25rem .5rem; border-radius: 8px; border-left: 3px solid transparent; }
+.wk-row.warn { background: var(--warn-bg); border-left-color: #c77d1a; }
+.wk-row.bad { background: var(--bad-bg); border-left-color: var(--error); }
+.wk-day { flex: 0 0 2.6rem; font-weight: 600; font-size: .9rem; }
+.wk-segs { display: flex; align-items: center; gap: .4rem .9rem; flex-wrap: wrap; flex: 1; min-width: 0; }
+.wk-seg { display: inline-flex; align-items: center; gap: .25rem; }
+.wk-seg + .wk-seg { padding-left: .9rem; border-left: 2px solid var(--line); }
+.wk input.tm { width: 4.6rem; font: inherit; font-size: .95rem; text-align: center; padding: .35rem .3rem; border: 1px solid var(--line); border-radius: 6px; font-variant-numeric: tabular-nums; color: var(--ink); background: var(--surface); }
+.wk-dash { color: var(--ink-soft); }
+.wk-x { background: none; border: 0; color: var(--ink-soft); font-size: .85rem; padding: .3rem .4rem; border-radius: 6px; }
+.wk-add { background: none; border: 1px dashed var(--accent); color: var(--accent); font-size: .85rem; font-weight: 500; padding: .25rem .6rem; border-radius: 6px; white-space: nowrap; }
+.wk-off { color: var(--ink-soft); font-style: italic; min-width: 4rem; }
+.wk-note { font-size: .82rem; color: var(--ink-soft); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.wk-row.bad .wk-note { color: var(--error); font-weight: 600; }
+.wk-opts { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1.4rem; padding: .6rem .7rem; background: var(--page); border-radius: 8px; font-size: .9rem; }
+.wk-opts label { display: inline-flex; align-items: center; gap: .35rem; }
+.wk-opts select { font: inherit; padding: .3rem .4rem; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); }
+.wk-radios { display: inline-flex; gap: .4rem 1rem; flex-wrap: wrap; }
+.wk-radios label:has(input:disabled) { opacity: .5; }
+.wk-hint { font-size: .82rem; color: var(--ink-soft); margin: .4rem .2rem 0; line-height: 1.45; }
 
-.brk { display: flex; align-items: center; gap: .25rem; margin-top: .3rem; font-size: .75rem; color: var(--ink-soft); }
-.brk span { flex: 1; text-align: center; white-space: nowrap; font-variant-numeric: tabular-nums; }
-.brk button { width: 1.9rem; height: 1.7rem; line-height: 1; font-size: 1rem; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
-.brk button:disabled { opacity: .35; cursor: default; }
 
 .er-line { padding: .45rem .7rem; margin: .5rem 0; border-radius: 8px; border-left: 4px solid var(--accent); background: var(--accent-pale); line-height: 1.45; }
 .er-line.warn { border-left-color: #c77d1a; background: var(--warn-bg); }
@@ -142,9 +157,6 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 #erganiExtra summary { cursor: pointer; color: var(--accent); }
 
 /* split shifts: the parts under the day field */
-.seg-cap { white-space: pre-line; font-size: .75rem; color: var(--accent); font-weight: 500; margin-top: 3px; line-height: 1.3; }
-.seg-cap[hidden] { display: none; }
-.sched-days .day.split input { font-size: .72rem; padding-left: .3rem; padding-right: .3rem; }
 
 /* personal QR card */
 .qr-panel { display: flex; gap: 1.5rem; align-items: flex-start; margin: 1rem 0 0; padding: 1.25rem; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 10px; }
@@ -269,6 +281,8 @@ body.env-trial .bar { box-shadow: inset 0 -4px 0 #e0a340; }
 /* «Σήμερα» */
 #todayBox h3 { font-size: 1rem; margin: 1.2rem 0 .5rem; color: var(--ink); }
 #todayBox h3:first-child { margin-top: .2rem; }
+.today-row.inactive .tr-main { opacity: .6; }
+.inactive-list > summary { cursor: pointer; margin: 1rem 0 .5rem; font-weight: 600; }
 .today-row { display: flex; justify-content: space-between; align-items: center; gap: .6rem 1rem; flex-wrap: wrap; padding: .75rem .9rem; margin-bottom: .5rem; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
 .tr-main { min-width: 0; flex: 1 1 16rem; }
 .tr-main strong { font-size: 1.05rem; }
@@ -276,12 +290,6 @@ body.env-trial .bar { box-shadow: inset 0 -4px 0 #e0a340; }
 .muted { color: var(--ink-soft); }
 
 /* employee cards */
-.emp-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: .8rem; margin: .5rem 0 1rem; }
-.emp-card { display: flex; flex-direction: column; gap: .3rem; padding: .9rem 1rem; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
-.emp-card.inactive > :not(.emp-actions) { opacity: .6; }
-.emp-head { display: flex; justify-content: space-between; align-items: center; gap: .5rem; }
-.emp-head strong { font-size: 1.1rem; }
-.emp-actions { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; margin-top: .5rem; }
 .pill { font-size: .8rem; font-weight: 600; padding: .15rem .6rem; border-radius: 999px; background: var(--page); color: var(--ink-soft); white-space: nowrap; }
 .pill.in { background: var(--accent-pale); color: var(--accent); }
 .pill.leave { background: var(--warn-bg); color: var(--warn-ink); }
@@ -324,8 +332,7 @@ body:has(.qr-panel:not([hidden])) { overflow: hidden; }
   .tabs .t-short { display: block; }
   .tabs .t-badge { position: absolute; top: .2rem; left: 55%; }
   .toast { bottom: calc(5.5rem + env(safe-area-inset-bottom)); max-width: calc(100vw - 2rem); }
-  .emp-list { grid-template-columns: 1fr; }
-  .today-row { flex-direction: column; align-items: stretch; }
+    .today-row { flex-direction: column; align-items: stretch; }
   .tr-main { flex: none; }
   .tr-actions { justify-content: flex-start; }
   /* the menu opens as a sheet from the bottom */
@@ -347,7 +354,6 @@ body:has(.qr-panel:not([hidden])) { overflow: hidden; }
   table.cardify td:empty { display: none; }
   .scroll { overflow: visible; }
   .grid { padding: .8rem; }
-  .sched-days { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .brand-form input[type=text] { min-width: 0; width: 100%; }
   .brand-form label { width: 100%; }
 }
@@ -372,7 +378,6 @@ details.help > p { margin: 0; max-width: 75ch; color: var(--ink-soft); font-size
   .btn.ghost:hover { background: var(--accent-pale); }
   .btn.danger:hover { background: #7f2020; }
   .menu-list .link:hover { background: var(--page); }
-  .brk button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
 }
 button:disabled { cursor: default; }
 .btn:disabled { opacity: .6; }
@@ -387,8 +392,9 @@ button:disabled { cursor: default; }
   .link { display: inline-flex; align-items: center; min-height: 44px; }
   details.help > summary, details:not(.menu) > summary { min-height: 44px; display: inline-flex; align-items: center; }
   .menu-list .link { min-height: 48px; }
-  .brk button { width: 2.75rem; height: 2.6rem; font-size: 1.15rem; }
   .dep-opt, .hol-cb { min-height: 44px; }
+  .wk-add, .wk-x { min-height: 44px; min-width: 44px; }
+  body.admin .wk input.tm { width: 5.2rem; }
   input[type=checkbox], input[type=radio] { width: 1.35rem; height: 1.35rem; }
   /* 16 px text in fields: smaller makes iPhone/iPad zoom the page on every tap into a field */
   body.admin input:not([type=checkbox]):not([type=radio]):not([type=color]), body.admin select, body.admin textarea { font-size: 16px; min-height: 44px; }

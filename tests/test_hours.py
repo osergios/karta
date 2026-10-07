@@ -69,7 +69,7 @@ def test_greek_public_holidays(client):
 def test_schedule_api_saves_and_validates(client, admin, clock, employee):
     set_schedule(client, employee, {"1": "09:00-17:00/30", "3": "10:00-14:00+17:00-21:00"})
     sched = hours.schedule_for(employee, date(2026, 10, 6))        # Tuesday
-    assert sched.label() == "09:00–17:00 /30′"
+    assert sched.label() == "09:00–17:00 · διάλ. 30′"
     assert sched.start == datetime(2026, 10, 6, 9, 0)
     assert hours.schedule_for(employee, date(2026, 10, 5)) is None  # Monday: day off
 

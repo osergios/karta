@@ -41,6 +41,17 @@ def test_arrival_then_departure_in_dry_run(kiosk, admin, clock, employee):
     assert r.json()["movement"]["type"] == "DEPARTURE"
 
 
+def test_the_admin_page_shows_the_last_punch(kiosk, admin, clock, employee):
+    set_schedule(kiosk, employee, WORKDAYS)
+    emp = lambda: kiosk.get("/admin/api/overview").json()["employees"][0]
+    assert (emp()["last_movement_at"], emp()["last_type"]) == (None, None)
+    assert punch(kiosk, employee, "ARRIVAL").status_code == 200
+    assert (emp()["last_movement_at"], emp()["last_type"]) == ("2026-10-06T10:00:00", "ARRIVAL")
+    clock.advance(hours=7, seconds=12)
+    assert punch(kiosk, employee, "DEPARTURE").status_code == 200
+    assert (emp()["last_movement_at"], emp()["last_type"]) == ("2026-10-06T17:00:12", "DEPARTURE")
+
+
 def test_the_wrong_action_is_refused(kiosk, admin, clock, employee):
     set_schedule(kiosk, employee, WORKDAYS)
     assert punch(kiosk, employee, "DEPARTURE").status_code == 409   # not in yet

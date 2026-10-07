@@ -526,3 +526,34 @@
      `RCLONE_DRIVE_USE_TRASH=false`, so what restic deletes on Google Drive is deleted, not moved to the trash (it
      applies to existing connections too). Each result keeps how long it took (`seconds` in `cloud_status`), shown
      as «07/10 23:41 ✓ (1′20″)» in «Αντίγραφα ασφαλείας».
+
+# Admin page: «Σήμερα» holds everyone, a schedule editor for people (v1.8.0)
+
+104. **«Προσωπικό» merged into «Σήμερα».** «Σήμερα» already listed everyone working today with the «Ενέργειες ▾»
+     menu, so the two tabs showed the same people twice. Now «Σήμερα» is the only list: «Τελείωσαν» and «Εκτός
+     σήμερα» are rows with the menu (they were a line of names), inactive employees are in a collapsible «Ανενεργοί
+     (N)», and each row shows the official name and ΑΦΜ, leaves, upcoming day changes, a locked PIN and many forgotten
+     punches. Four tabs instead of five; old `#people` links open «Σήμερα». `renderPeople` / `empFacts` are gone.
+105. **The exact time of the last punch** on every row: «Τελευταίο χτύπημα: προσέλευση σήμερα 08:57:12» (the date
+     when it was another day; «Δεν έχει χτυπήσει ακόμα κάρτα»). `last_type` joins `last_movement_at` in the overview.
+106. **Schedules without typing codes.** Each day is a row of start–end fields («10», «1000», «10.00» become 10:00),
+     «✕» for a day off, «+ ώρες» to add hours again (copied from the nearest earlier working day), and «+ σπαστό» to
+     add a second (or third) part to the day: a split shift with 4 punches, which the server already handled. Net hours
+     sit at the end of each row; rows with a problem turn orange/red. Same for the shop hours. `weekRows`, `normTime`.
+107. **One break per employee, for the whole week.** A «Διάλειμμα» select (χωρίς / 15′ / 20′ / 30′ / 45′ / 60′) and
+     «μέσα στις ώρες» / «εκτός ωραρίου (μετά τη λήξη)», instead of a −/+ stepper on every day and «Διάλειμμα 30′
+     παντού». It goes on every day with more than 4 hours of work in a row; on a split shift only if one part is
+     longer than 4 hours (`analyse` checks the longest part, not the whole day). The hint says that neither kind needs a
+     punch, when an outside break means leaving, and that a break with punches is entered as a split shift. The
+     existing schedules show the break most of their days have (`weekBreak`). Stored as before (`/30`, `/+30`).
+108. **«Ευέλικτη προσέλευση» moved to the schedule card** (a select, saved with «Αποθήκευση» through the same
+     `/flex` endpoint; it applies right away) and left the «Ενέργειες» menu.
+109. **«Χρήση στοιχείων ΕΡΓΑΝΗ»** replaces «Συμπλήρωση ωρών από ΕΡΓΑΝΗ» and «Διάλειμμα … εκτός ωραρίου (από ΕΡΓΑΝΗ)»:
+     one button fills what Ergani gave (hours when readable, break minutes and kind, flexible arrival). The analysis
+     warns once per card when the break or the flexible arrival differ from Ergani, instead of «γράψε /+30» on every
+     day. Saving refuses invalid hours naming the day, says «Καμία αλλαγή» when nothing changed, and saves only the
+     flexible arrival (no «ισχύει από» question) when only that changed.
+110. **«Υπερωρία / αλλαγή ημέρας…» uses the same row** (start–end, «+ σπαστό») instead of a text field; the break of
+     that weekday (else of the week) is added to parts longer than 4 hours, and the panel shows it.
+111. **Readable schedule labels:** «09:00–17:00 · διάλ. 30′» and «· διάλ. 20′ εκτός ωραρίου» instead of «/30′» and
+     «/+20′» (`Sched.label`).
