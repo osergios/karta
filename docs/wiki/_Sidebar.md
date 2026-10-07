@@ -9,6 +9,7 @@
 - [Δικός σας reverse proxy](Reverse-Proxy)
 - [Έναρξη λειτουργίας](Going-Live)
 - [Αντίγραφα ασφαλείας](Backups)
+- [Ανάκτηση μετά από καταστροφή](Disaster-Recovery)
 
 **Οθόνη καταστήματος**
 - [Οθόνη καταστήματος](Kiosk)
@@ -39,6 +40,7 @@
 [Reverse proxy](Reverse-Proxy-EN) ·
 [Going live](Going-Live-EN) ·
 [Backups](Backups-EN) ·
+[Disaster recovery](Disaster-Recovery-EN) ·
 [Shop screen](Kiosk-EN) ·
 [QR cards](QR-Cards-EN) ·
 [Today](Admin-Today-EN) ·

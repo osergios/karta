@@ -500,3 +500,14 @@
     take longer. Karta now runs restic with `-o rclone.timeout=5m`, explains such errors in Greek («Το cloud άργησε
     να απαντήσει…»), and after a failed upload tries again an hour later (and hourly until it works) instead of
     waiting until the last good one is 36 hours old.
+100. **A new machine never uploads its empty database over the real backups.** Connecting a new installation to the
+     existing cloud backups (to restore them) took a first snapshot right away, of the new, empty database: it became
+     the newest entry in «Επαναφορά» → «Από το cloud…», the one anyone would pick. Karta now takes no cloud snapshot
+     while the database has no employees (`cloud.empty()`), and the connect message then says what to do next. The
+     nightly `backup.sh` (written by `./setup.sh`) skips such a database too, so it can't become the newest copy on
+     the machine or the USB, nor replace `karta.env` (with the old `PIN_KEY`) there.
+101. **Disaster recovery, step by step.** New wiki page (GR/EN): the machine is gone (a deleted VPS, a broken PC or
+     Raspberry Pi), you have the encryption password; one path for both, with the VPS / local differences: what to
+     have, until Karta is back, new machine, setup assistant with the same answers, old `PIN_KEY`, connect to the
+     existing backups, check and restore, Ergani password and test, the shop screen, punches during the gap, and the
+     simpler USB path. Linked from Backups, the sidebar and Home.

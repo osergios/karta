@@ -139,23 +139,11 @@ restart. If the backup was made with a different `PIN_KEY`, the page tells you: 
 Ergani password and the PINs aren't shown until you put the old `PIN_KEY` in `.env` (it's
 in the backups' `karta.env`) or enter them again.
 
-### On a new machine, from the cloud
+### On a new machine (the old one is gone)
 
-The cloud snapshot holds **only the database**, not `karta.env` or `PIN_KEY`. If your
-Karta is on a VPS, or your only backup is in the cloud, keep a copy of `.env` (at least
-`PIN_KEY`) in a password manager. Without the old `PIN_KEY`, after the restore the Ergani
-password and the ntfy token must be typed again in «Ρυθμίσεις», and PINs and QR cards
-can't be shown until you issue new ones. PINs and QR cards still work on the shop screen.
-
-1. Install Karta with [Easy installation](Easy-Installation-EN) (`./setup.sh`: same
-   address and a Cloudflare API key, old or new; the assistant reuses the tunnel). If you
-   have the old `PIN_KEY`, put it in `.env` and restart (`cd ~/karta && docker compose up -d`)
-   before restoring.
-2. On the admin page: «Αντίγραφα ασφαλείας» → **«Έχω ήδη αντίγραφα στο cloud»** (I already
-   have backups in the cloud): same provider, a new access code (`rclone authorize`), and
-   the **encryption password** you wrote down → «Σύνδεση στα υπάρχοντα αντίγραφα» (connect
-   to the existing backups).
-3. «Επαναφορά» → «Από το cloud…» → the most recent one → «Επαναφορά τώρα».
+Step by step, for a VPS and for a local machine: **[Disaster recovery](Disaster-Recovery-EN)**.
+You need the encryption password and, if you have it, the `.env` (or just its `PIN_KEY`):
+the cloud snapshot holds **only the database**.
 
 ### From the terminal: `./setup.sh restore`
 

@@ -167,11 +167,11 @@ def test_connect_reports_the_first_backup(client, admin, monkeypatch):
     monkeypatch.setattr(cloud, "status", lambda: {"state": "fail", "error": "δεν απαντά το cloud"})
     r = client.post("/admin/api/cloud/connect", json={"provider": "drive", "token": "{}"})
     assert r.json() == {"ok": True, "password": "secret-password-1234", "first_backup": "fail",
-                        "error": "δεν απαντά το cloud"}
+                        "error": "δεν απαντά το cloud", "empty": True}
 
 
 @needs_rclone
-def test_a_killed_backup_does_not_block_the_next_one(client, admin, store):
+def test_a_killed_backup_does_not_block_the_next_one(client, admin, employee, store):
     cloud.connect("local", local_path=str(store))
     big = store.parent / "big.bin"
     big.write_bytes(os.urandom(200_000_000))
@@ -188,7 +188,7 @@ def test_a_killed_backup_does_not_block_the_next_one(client, admin, store):
     big.unlink()
 
 
-def test_a_failing_unlock_does_not_stop_the_backup(client, admin, store, monkeypatch):
+def test_a_failing_unlock_does_not_stop_the_backup(client, admin, employee, store, monkeypatch):
     calls = []
 
     def fake_run(tool, *args, **kw):
@@ -256,3 +256,21 @@ def test_the_encryption_password_can_be_shown_again(client, admin, monkeypatch):
     assert db.one("SELECT action FROM audit ORDER BY id DESC LIMIT 1")["action"] == "cloud_password_viewed"
     main.app.dependency_overrides.clear()
     assert client.post("/admin/api/cloud/password").status_code in (401, 403)     # admins only
+
+
+@needs_rclone
+def test_a_new_machine_never_uploads_its_empty_database(client, admin, store):
+    """Disaster recovery: the new installation connects to the old backups before restoring them. Its empty
+    database must not become the newest snapshot (the one «Επαναφορά» → «Από το cloud…» offers first)."""
+    emp = add_employee()
+    password = cloud.connect("local", local_path=str(store))
+    assert len(cloud.list_backups()) == 1
+    cloud._forget()
+    with db.tx() as c:                                                     # the new machine: nothing yet
+        c.execute("DELETE FROM employees WHERE id=?", (emp,))
+    assert cloud.connect("local", local_path=str(store), password=password) is None
+    assert len(cloud.list_backups()) == 1                                  # no empty snapshot on top
+    cloud.run_backup()                                                     # nor at night
+    assert len(cloud.list_backups()) == 1
+    r = client.post("/admin/api/restore/cloud", json={"id": cloud.list_backups()[0]["id"]})
+    assert r.status_code == 200 and r.json()["employees"] == 1, r.text  # the newest is the real one

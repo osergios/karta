@@ -894,7 +894,9 @@
       const r = await api("/admin/api/cloud/connect", { provider: provider.value, token: token.value.trim(), account: account.value.trim(),
         key: key.value.trim(), bucket: bucket.value.trim(), password: existing ? password.value : null });
       if (r.password) showCloudPassword(r.password);
-      if (r.first_backup !== "ok") toast(`Το cloud ρυθμίστηκε, αλλά το πρώτο αντίγραφο απέτυχε: ${r.error || "άγνωστο σφάλμα"}`, true);
+      if (r.empty) toast(existing ? "Συνδέθηκε με τα υπάρχοντα αντίγραφα· τώρα: «Επαναφορά» → «Από το cloud…»."
+                                  : "Το cloud ρυθμίστηκε· το πρώτο αντίγραφο ανεβαίνει μόλις προστεθούν εργαζόμενοι.");
+      else if (r.first_backup !== "ok") toast(`Το cloud ρυθμίστηκε, αλλά το πρώτο αντίγραφο απέτυχε: ${r.error || "άγνωστο σφάλμα"}`, true);
       else toast(existing ? "Συνδέθηκε με τα υπάρχοντα αντίγραφα· τώρα μπορείτε να κάνετε επαναφορά από το cloud."
                           : "Το cloud ρυθμίστηκε και το πρώτο αντίγραφο ανέβηκε ✓");
     });

@@ -99,6 +99,11 @@ keep() {  # keep DIR N: delete the oldest copies beyond N
   ls -1 "$1"/karta-*.db 2>/dev/null | sort -r | tail -n +"$(( $2 + 1 ))" | while read -r f; do rm -f -- "$f"; done
 }
 
+# a new installation (no employees yet, e.g. a new machine before the restore): nothing to keep, and an empty copy
+# must not become the newest one here or on the USB (nor replace karta.env, which has the old PIN_KEY)
+docker compose exec -T karta python -c "import sqlite3, sys; c = sqlite3.connect('/data/workcard.db'); sys.exit(0 if c.execute('SELECT 1 FROM employees LIMIT 1').fetchone() else 3)" >/dev/null 2>&1
+if [ $? -eq 3 ]; then echo "skipped: no employees yet (new installation)"; exit 0; fi
+
 local_state=fail; usb_state=-
 if docker compose exec -T karta python -c "import sqlite3; s=sqlite3.connect('/data/workcard.db'); d=sqlite3.connect('/data/backup.db'); s.backup(d); d.close()" \
    && docker compose cp karta:/data/backup.db "backups/daily/karta-$today.db" >/dev/null \

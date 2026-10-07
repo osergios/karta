@@ -282,6 +282,11 @@ def snapshot(path: str) -> None:
         dst.close()
 
 
+def empty() -> bool:
+    """A database with no employees at all: a new installation, nothing worth keeping yet."""
+    return db.one("SELECT 1 FROM employees LIMIT 1") is None
+
+
 def run_backup(now: datetime | None = None) -> None:
     """Tonight's snapshot (or one asked for in the admin page)."""
     if not _running.acquire(blocking=False):
@@ -295,6 +300,11 @@ def run_backup(now: datetime | None = None) -> None:
 def _backup() -> None:
     """A snapshot, then the old ones are thinned out (30 daily, 24 monthly, yearly for good). The caller holds
     _running."""
+    if empty():
+        # A new installation (no employees yet), e.g. a new machine that has just connected to the existing backups
+        # to restore them: its empty database must never become the newest snapshot in the list.
+        log.info("Cloud backup skipped: the database has no employees yet")
+        return
     folder = os.path.join(data_dir(), "cloud-snapshot")
     try:
         os.makedirs(folder, exist_ok=True)
