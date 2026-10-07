@@ -7,7 +7,7 @@ printed) and show to the shop screen's camera to punch without typing a PIN.
 
 ## Issuing a card
 
-On the admin page, «Προσωπικό» → the employee's «Ενέργειες ▾» → **«Έκδοση QR»** (issue
+On the admin page, «Σήμερα» → the employee's «Ενέργειες ▾» → **«Έκδοση QR»** (issue
 QR). Karta creates a new random code and shows the card image. If they already have a card,
 the same item is called **«Κάρτα QR»** and shows that card, with no new code (without
 `PIN_KEY` it can't be shown again, so it asks whether you want a new one).

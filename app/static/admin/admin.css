@@ -108,6 +108,26 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 .sched-list { display: flex; flex-direction: column; gap: .9rem; }
 .sched-card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: .9rem 1rem .5rem; }
 .sched-card.salon { background: var(--salon); }
+/* folded cards: one line per person until opened */
+details.sched-card { padding: 0; }
+details.sched-card > summary { display: flex; align-items: baseline; gap: .3rem 1rem; flex-wrap: wrap; padding: .75rem 1rem; cursor: pointer; list-style: none; }
+details.sched-card > summary::-webkit-details-marker { display: none; }
+details.sched-card > summary::before { content: "▸"; color: var(--accent); width: .8rem; flex: 0 0 auto; transition: transform .15s; }
+details.sched-card[open] > summary::before { transform: rotate(90deg); }
+details.sched-card[open] > summary { border-bottom: 1px solid var(--line); margin-bottom: .7rem; }
+details.sched-card > :not(summary) { margin-left: 1rem; margin-right: 1rem; }
+details.sched-card > :last-child { margin-bottom: .8rem; }
+.sum-name { flex: 0 0 auto; }
+.sum-week { flex: 1 1 18rem; min-width: 0; font-size: .88rem; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.sum-badge { flex: 0 0 auto; font-size: .82rem; font-weight: 600; padding: .1rem .5rem; border-radius: 999px; background: var(--accent-pale); color: var(--accent); }
+.sum-badge.warn { background: var(--warn-bg); color: var(--warn-ink); }
+.sum-badge.bad { background: var(--bad-bg); color: var(--error); }
+.sched-tools[hidden] { display: none; }
+.sched-tools { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1.2rem; margin: 0 0 .8rem; }
+.sched-tools input[type=search] { font: inherit; padding: .45rem .6rem; border: 1px solid var(--line); border-radius: 8px; min-width: 14rem; background: var(--surface); color: var(--ink); }
+.sched-tools label { display: inline-flex; align-items: center; gap: .35rem; font-size: .9rem; }
+@media (max-width: 760px) { .sum-badge { order: 2; margin-left: auto; } .sum-week { order: 3; flex-basis: 100%; } }
+.copy-from { font: inherit; font-size: .9rem; padding: .3rem .4rem; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); }
 .sched-head { display: flex; justify-content: space-between; align-items: baseline; gap: .5rem 1rem; flex-wrap: wrap; margin-bottom: .6rem; }
 .sched-actions .link { margin-right: 0; margin-left: 1rem; }
 .sched-card .analysis { max-width: none; }

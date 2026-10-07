@@ -557,3 +557,10 @@
      that weekday (else of the week) is added to parts longer than 4 hours, and the panel shows it.
 111. **Readable schedule labels:** «09:00–17:00 · διάλ. 30′» and «· διάλ. 20′ εκτός ωραρίου» instead of «/30′» and
      «/+20′» (`Sched.label`).
+112. **«Ωράρια» for many people: folded cards, search, copy from a colleague.** Every card (the shop's too) is a
+     `<details>` that shows one line: name, «ισχύει από», the week in one line (`weekText`, e.g. «Δευ–Παρ 09:00–17:00 ·
+     διάλ. 30′ · 37ω 30λ/εβδ.») and ✓ / ⚠ N from `analyse`. The editor is built only when a card is first opened, so
+     hundreds of employees cost hundreds of lines, not thousands of fields; open cards stay open after a save
+     (`schedOpen`). Above them: «Αναζήτηση εργαζόμενου» (name or surname, accents ignored), «Μόνο όσοι θέλουν προσοχή»
+     and «Κλείσιμο όλων». «Από κατάστημα» became «Αντιγραφή από…»: the shop hours, or a colleague's hours and break
+     (what is on screen if their card is open, else what is saved); the flexible arrival is personal and isn't copied.
