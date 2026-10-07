@@ -124,7 +124,11 @@ def save(group: str, values: dict, admin: str) -> None:
     for name in names:
         v = values.get(name)
         if v is None and name in SECRETS:
-            continue                         # "unchanged"
+            # "unchanged". A secret that exists only in .env goes into the database too (encrypted): only the
+            # database is in the backups, so a new machine restored from them would not have it.
+            if source(name) == "env" and config.PIN_KEY:
+                clean[name] = config.ENV_VALUES[name]
+            continue
         clean[name] = CHECKS[name](str(v or "").strip())
     if group == "ntfy" and bool(clean.get("NTFY_URL")) != bool(clean.get("NTFY_TOPIC")):
         raise ConfigError("Συμπλήρωσε και τον server και το θέμα, ή άφησέ τα και τα δύο κενά.")
@@ -143,6 +147,26 @@ def save(group: str, values: dict, admin: str) -> None:
     db.audit(admin, "config", f"{group}: " + ", ".join(n for n in clean if n not in SECRETS or clean[n]))
 
 
+def env_only() -> list[str]:
+    """Settings that exist only in .env: the backups (the database) don't have them."""
+    return [n for n in config.EDITABLE if source(n) == "env"]
+
+
+def adopt_env(admin: str) -> list[str]:
+    """Copies the settings that exist only in .env into the database (secrets encrypted), so that they are in the
+    backups too. They take effect as they are: same values."""
+    names = env_only()
+    if any(n in SECRETS for n in names) and not config.PIN_KEY:
+        raise ConfigError("Για να φυλαχτούν κωδικοί στη βάση χρειάζεται PIN_KEY στο .env (το βάζει ο οδηγός ρύθμισης).")
+    with db.tx() as c:
+        for n in names:
+            v = config.ENV_VALUES[n]
+            db.put_setting(c, PREFIX + n, security.seal_pin(v, _aad(n)) if n in SECRETS else v)
+    load()
+    db.audit(admin, "config_adopt_env", ", ".join(names))
+    return names
+
+
 def view() -> dict:
     """What the admin page shows: values with their source; secrets only as set / not set."""
     out = {}
@@ -155,6 +179,7 @@ def view() -> dict:
             out[group][n] = {"set": bool(v), "source": source(n)} if n in SECRETS else {"value": v, "source": source(n)}
     out["mode"] = {"value": config.ERGANI_MODE, "source": source("ERGANI_MODE")}
     out["can_store_secrets"] = bool(config.PIN_KEY)
+    out["env_only"] = env_only()
     out["problems"] = config.problems()
     return out
 

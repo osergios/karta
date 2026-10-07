@@ -595,3 +595,32 @@
      again) or no machine is connected to it and its route or the address's DNS record points to it (a new machine after
      a disaster, as the recovery guide says). Otherwise the installation gets a tunnel of its own, «karta-<address>»
      (`tunnel_for`, `tunnel_id_of`).
+
+# Fixes from a recovery rehearsal (v1.8.4)
+
+A full recovery on a second machine (a Raspberry Pi restoring the production VPS's Google Drive backups) worked —
+database, encryption password, PIN_KEY — and showed these:
+
+117. **Slow cloud steps in the background.** Connecting to the cloud and the list of backups ran in one page request;
+     on Google Drive (and on a Pi) they can last longer than Cloudflare lets a request live (100 seconds): the page
+     waited forever while the step went on, and a second try said «Ένα ανέβασμα τρέχει ήδη». Now they work like
+     «Έλεγχος αντιγράφου»: `POST` starts the step, `GET` reports `running` (seconds) / `done` (result) / `fail`, and the
+     page shows «Σύνδεση στα υπάρχοντα αντίγραφα… 45″». One class for the three (`CloudJob` in main.py); the new
+     encryption password is handed over once. A malformed access code is still refused at once.
+118. **Settings only in `.env` go into the backups.** The Ergani password and the mode were in the VPS's `.env`
+     (installed by hand), so the backups — the database — didn't have them: the restored machine had no password and
+     stayed in «Δοκιμαστική». «Ρυθμίσεις» now lists the settings that exist only in `.env` («Μόνο στο .env, όχι στα
+     αντίγραφα: …») with a button «Να μπουν στα αντίγραφα» that copies them into the database, passwords encrypted
+     (`appconfig.env_only` / `adopt_env`, `POST /admin/api/config/adopt-env`). «Αποθήκευση» with the password field left
+     empty also keeps a password that is only in `.env` in the database. The restore check says when the backup has
+     no Ergani password (`ergani_password`).
+119. **A restored onboarding date no longer blocks «Έναρξη».** The «Περίοδος προσαρμογής» dates live in the database,
+     the mode can live in `.env`: the restored machine was in «Δοκιμαστική» with a period «running», and «Έναρξη» only
+     moved its date — no ΑΦΜ question, no mode switch, nothing visible. A period counts only in real operation now
+     (page), and starting one from «Δοκιμαστική» starts it today (server).
+120. **«Δοκιμαστική» says what it doesn't count.** Each mode counts only its own punches, so in «Δοκιμαστική» a restored
+     machine showed nobody in and reports with 0. «Σήμερα» and «Αναφορές» now say how many real punches (today / in
+     total) aren't counted there (`other_mode` in the overview).
+121. **Questions inside the page.** The 29 `confirm()` and 4 `prompt()` of the admin page are now a `<dialog>` in the page
+     (`askBox`): the browser's own windows can be switched off for a site («Να μην επιτρέπεται… άλλα παράθυρα
+     διαλόγου») and then fail without a word. Esc or «Άκυρο» cancels.

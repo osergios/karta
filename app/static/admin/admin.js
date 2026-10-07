@@ -53,6 +53,29 @@
     }
     return data;
   }
+  // A question inside the page (<dialog>), instead of the browser's confirm() / prompt(): those can be switched off
+  // («Να μην επιτρέπεται σε αυτή τη σελίδα να δημιουργεί άλλα παράθυρα διαλόγου») and then fail without a word.
+  // askBox(text) -> true / false;  askBox(text, { input: true, value }) -> the text typed, or null.
+  function askBox(text, opt = {}) {
+    return new Promise(resolve => {
+      const dlg = el("dialog", { class: "ask" });
+      const inp = opt.input ? el("input", { type: "text", value: opt.value || "", autocomplete: "off",
+                                            ...(opt.inputmode ? { inputmode: opt.inputmode } : {}) }) : null;
+      let answered = false;
+      const done = v => { if (answered) return; answered = true; dlg.close(); dlg.remove(); resolve(v); };
+      const form = el("form", {},
+        el("p", { class: "ask-text" }, text), inp,
+        el("div", { class: "ask-actions" },
+          el("button", { type: "button", class: "btn ghost", onclick: () => done(opt.input ? null : false) }, "Άκυρο"),
+          el("button", { type: "submit", class: "btn" + (opt.danger ? " danger" : "") }, opt.ok || (opt.input ? "OK" : "Συνέχεια"))));
+      form.addEventListener("submit", ev => { ev.preventDefault(); done(opt.input ? inp.value : true); });
+      dlg.addEventListener("cancel", ev => { ev.preventDefault(); done(opt.input ? null : false); });    // Esc
+      dlg.append(form);
+      document.body.append(dlg);
+      dlg.showModal();
+      (inp || form.querySelector("button[type=submit]")).focus();
+    });
+  }
   function showPin(r, viewing = false) {
     const box = document.getElementById("pin");
     box.hidden = false;
@@ -120,11 +143,11 @@
           canShare ? el("button", { class: "btn ghost", onclick: async () => { try { await navigator.share({ files: [file], title: fname }); } catch { /* cancelled */ } } }, "Αποστολή") : null,
           el("button", { class: "btn ghost", onclick: () => printCard(url) }, "Εκτύπωση"),
           el("button", { class: "link", onclick: act(async () => {
-            if (!confirm(`Νέα κάρτα QR για ${employee.display_name}; Η τωρινή θα σταματήσει να ισχύει.`)) return;
+            if (!await askBox(`Νέα κάρτα QR για ${employee.display_name}; Η τωρινή θα σταματήσει να ισχύει.`)) return;
             await showQrCard(await api(`/admin/api/employees/${employee.id}/qr`, {}), { ...employee, link: null }); toast("Νέα κάρτα QR — η παλιά (και ο σύνδεσμός της) δεν ισχύει πια");
           }) }, "Νέα κάρτα"),
           el("button", { class: "link danger", onclick: act(async () => {
-            if (!confirm(`Ακύρωση της κάρτας QR του/της ${employee.display_name}; Θα χτυπά μόνο με PIN.`)) return;
+            if (!await askBox(`Ακύρωση της κάρτας QR του/της ${employee.display_name}; Θα χτυπά μόνο με PIN.`)) return;
             await api(`/admin/api/employees/${employee.id}/qr/revoke`, {}); close(); toast("Η κάρτα QR ακυρώθηκε");
           }) }, "Ακύρωση κάρτας"),
           el("button", { class: "link", onclick: close }, "Κλείσιμο")),
@@ -199,7 +222,7 @@
       const what = how === "forgot" ? "Κλείνει ΜΟΝΟ στην κάρτα — δεν στέλνεται στο ΕΡΓΑΝΗ."
         : how === "tech" ? "Στέλνεται στο ΕΡΓΑΝΗ ως εκπρόθεσμη και δεν αναιρείται."
         : onb ? "Περίοδος προσαρμογής: καταγράφεται στην κάρτα, δεν στέλνεται στο ΕΡΓΑΝΗ." : "Στέλνεται στο ΕΡΓΑΝΗ τώρα και δεν αναιρείται.";
-      if (!confirm(`Αποχώρηση για ${e.display_name} ${label};\n\n${what}`)) return;
+      if (!await askBox(`Αποχώρηση για ${e.display_name} ${label};\n\n${what}`)) return;
       const r = await api(`/admin/api/employees/${e.id}/depart`, body);
       hide(box);
       toast(`Αποχώρηση ${r.name} ${r.movement.movement_at.slice(11, 16)}: ${STATUS[r.movement.status] || r.movement.status}`);
@@ -242,7 +265,7 @@
         el("button", { class: "btn", onclick: act(async () => {
           if (!from.value || !to.value) { toast("Γράψε από–έως", true); return; }
           if (!note.value.trim()) { toast("Γράψε μια σημείωση", true); return; }
-          if (!confirm(`Βάρδια ${e.display_name} ${day.value.slice(8, 10)}/${day.value.slice(5, 7)} ${from.value}–${to.value} μόνο στην κάρτα;\n\nΔεν στέλνεται στο ΕΡΓΑΝΗ.`)) return;
+          if (!await askBox(`Βάρδια ${e.display_name} ${day.value.slice(8, 10)}/${day.value.slice(5, 7)} ${from.value}–${to.value} μόνο στην κάρτα;\n\nΔεν στέλνεται στο ΕΡΓΑΝΗ.`)) return;
           await api(`/admin/api/employees/${e.id}/local-shift`, { day: day.value, start: from.value, end: to.value, note: note.value.trim() });
           close(); toast("Η βάρδια καταχωρήθηκε μόνο στην κάρτα");
         }) }, "Καταχώρηση"),
@@ -264,7 +287,7 @@
     const list = (e.leaves || []).map(l => el("div", { class: "leave-row" },
       `${dmy(l.start_date)} – ${dmy(l.end_date)} · ${l.label || LEAVE_KINDS[l.kind] || "Άδεια"} `,
       el("button", { class: "link danger", onclick: act(async () => {
-        if (!confirm(`Ακύρωση της άδειας ${dmy(l.start_date)}–${dmy(l.end_date)} για ${e.display_name};`)) return;
+        if (!await askBox(`Ακύρωση της άδειας ${dmy(l.start_date)}–${dmy(l.end_date)} για ${e.display_name};`)) return;
         await api(`/admin/api/leaves/${l.id}/delete`, {}); close(); toast("Η άδεια ακυρώθηκε");
       }) }, "Ακύρωση")));
     box.replaceChildren(el("div", { class: "qr-side" },
@@ -303,7 +326,7 @@
     const list = (e.early_leaves || []).map(m => el("div", { class: "leave-row" },
       `${dmy(m.day)} · ${EARLY_REASONS[m.reason] || m.reason}${m.note ? " · " + m.note : ""} `,
       el("button", { class: "link danger", onclick: act(async () => {
-        if (!confirm(`Διαγραφή της σημείωσης ${dmy(m.day)} για ${e.display_name};`)) return;
+        if (!await askBox(`Διαγραφή της σημείωσης ${dmy(m.day)} για ${e.display_name};`)) return;
         await api(`/admin/api/employees/${e.id}/early-leave/${m.day}/delete`, {}); close(); toast("Η σημείωση διαγράφηκε");
       }) }, "Διαγραφή")));
     box.replaceChildren(el("div", { class: "qr-side" },
@@ -382,7 +405,7 @@
     const list = (e.day_changes || []).map(c => el("div", { class: "leave-row" },
       `${dmy(c.day)} · ${CHANGE_KINDS[c.kind]}${c.text ? " · " + c.text : ""}${c.note ? " · " + c.note : ""} `,
       el("button", { class: "link danger", onclick: act(async () => {
-        if (!confirm(`Ακύρωση της αλλαγής ${dmy(c.day)} για ${e.display_name}; Ισχύει ξανά το κανονικό ωράριο.`)) return;
+        if (!await askBox(`Ακύρωση της αλλαγής ${dmy(c.day)} για ${e.display_name}; Ισχύει ξανά το κανονικό ωράριο.`)) return;
         await api(`/admin/api/employees/${e.id}/day-change/${c.day}/delete`, {}); close(); toast("Η αλλαγή ακυρώθηκε");
       }) }, "Ακύρωση")));
     box.replaceChildren(el("div", { class: "qr-side" },
@@ -397,7 +420,7 @@
           if (kind.value !== "off") { const sp = parseSpan(textOf()); if (!sp || sp.error) { toast("Γράψε σωστά τις ώρες της ημέρας", true); return; } }
           const t = e.today;
           if (day.value === today && t && t.ot_passed && kind.value !== "off" &&
-              !confirm(`Η προθεσμία ήταν ${t.ot_by}.\n\nΠέρασέ την ΜΟΝΟ αν η αλλαγή δηλώθηκε στο ΕΡΓΑΝΗ πριν τις ${t.ot_by}. Αλλιώς ${e.display_name} πρέπει να φύγει έως ${t.end}.\n\nΣυνέχεια;`)) return;
+              !await askBox(`Η προθεσμία ήταν ${t.ot_by}.\n\nΠέρασέ την ΜΟΝΟ αν η αλλαγή δηλώθηκε στο ΕΡΓΑΝΗ πριν τις ${t.ot_by}. Αλλιώς ${e.display_name} πρέπει να φύγει έως ${t.end}.\n\nΣυνέχεια;`)) return;
           const r = await api(`/admin/api/employees/${e.id}/day-change`, { day: day.value, kind: kind.value, text: kind.value === "off" ? "" : textOf(), note: note.value.trim() });
           close(); toast(`${e.display_name} ${dmy(day.value)}: ${kind.value === "off" ? "ρεπό" : r.text}` + (r.late_after ? ` — καταχωρήθηκε μετά την προθεσμία ${r.late_after}` : ""), !!r.late_after);
         }) }, "Καταχώρηση"),
@@ -418,7 +441,7 @@
       ...(closures.length ? closures.map(c => el("div", { class: "leave-row" },
         `${dmy(c.start_date)}${c.end_date !== c.start_date ? "–" + dmy(c.end_date) : ""} · ${c.reason} `,
         el("button", { class: "link danger", onclick: act(async () => {
-          if (!confirm(`Ακύρωση του κλεισίματος ${dmy(c.start_date)}–${dmy(c.end_date)} (${c.reason});`)) return;
+          if (!await askBox(`Ακύρωση του κλεισίματος ${dmy(c.start_date)}–${dmy(c.end_date)} (${c.reason});`)) return;
           await api(`/admin/api/closures/${c.id}/delete`, {}); toast("Το κλείσιμο ακυρώθηκε");
         }) }, "Ακύρωση"))) : [el("p", { class: "small" }, "Κανένα προγραμματισμένο κλείσιμο.")]),
       el("div", { class: "leave-form" }, el("label", {}, "Από ", cFrom), el("label", {}, "Έως (τελευταία κλειστή ημέρα) ", cTo), cWhy,
@@ -455,7 +478,7 @@
       d.local_holidays.length ? null : el("p", { class: "small" }, "Καμία ακόμα. Πρόσθεσε π.χ. τη γιορτή του πολιούχου της πόλης σου, αν κλείνετε τότε."),
       ...d.local_holidays.map((x, i) => el("div", { class: "leave-row" }, `${x.md.slice(3, 5)}/${x.md.slice(0, 2)} · ${x.name} `,
         el("button", { class: "link danger", onclick: act(async () => {
-          if (!confirm(`Αφαίρεση της τοπικής αργίας «${x.name}»;`)) return;
+          if (!await askBox(`Αφαίρεση της τοπικής αργίας «${x.name}»;`)) return;
           await saveLocal(d.local_holidays.filter((_, j) => j !== i)); toast("Η τοπική αργία αφαιρέθηκε");
         }) }, "Αφαίρεση"))),
       el("div", { class: "leave-form" }, lMd, lName,
@@ -583,7 +606,7 @@
         el("div", {}, el("div", { class: "small" }, b.has_logo ? "Λογότυπο (PNG, JPG ή WebP, έως 1 MB· καλύτερα τετράγωνο με διάφανο φόντο):" : "Χωρίς λογότυπο: η οθόνη δείχνει την επωνυμία. Ανέβασε PNG, JPG ή WebP έως 1 MB (καλύτερα τετράγωνο με διάφανο φόντο):"),
           file,
           b.has_logo ? el("button", { class: "link danger", onclick: act(async () => {
-            if (!confirm("Αφαίρεση του λογότυπου;")) return;
+            if (!await askBox("Αφαίρεση του λογότυπου;")) return;
             await api("/admin/api/brand/logo/delete", {}); toast("Το λογότυπο αφαιρέθηκε");
           }) }, "Αφαίρεση λογότυπου") : "")));
   }
@@ -639,6 +662,14 @@
       }) }, "Αποθήκευση"),
       u.result);
   }
+  // the settings' names as the admin page calls them
+  const ENV_NAMES = {
+    ERGANI_MODE: "λειτουργία", EMPLOYER_AFM: "ΑΦΜ", BRANCH_NUMBER: "παράρτημα", ERGANI_EMPLOYER_ID: "κωδικός εργοδότη",
+    TIME_DECLARATION: "σύστημα δηλώσεων", ERGANI_USERNAME: "χρήστης ΕΡΓΑΝΗ", ERGANI_PASSWORD: "κωδικός ΕΡΓΑΝΗ",
+    ERGANI_USER_TYPE: "τύπος χρήστη ΕΡΓΑΝΗ", ERGANI_TRIAL_USERNAME: "χρήστης δοκιμαστικού ΕΡΓΑΝΗ",
+    ERGANI_TRIAL_PASSWORD: "κωδικός δοκιμαστικού ΕΡΓΑΝΗ", ERGANI_TRIAL_USER_TYPE: "τύπος χρήστη δοκιμαστικού ΕΡΓΑΝΗ",
+    NTFY_URL: "server ειδοποιήσεων", NTFY_TOPIC: "θέμα ειδοποιήσεων", NTFY_TOKEN: "token ειδοποιήσεων",
+  };
   function renderConfig(d) {
     const box = document.getElementById("cfgBox");
     if (editing(box)) return;
@@ -653,17 +684,19 @@
     decl.value = B.TIME_DECLARATION.value || "advance";
     const ergUser = erganiUser(C, "ergani", "production", ["ERGANI_USERNAME", "ERGANI_PASSWORD", "ERGANI_USER_TYPE"], "01");
     const mode = C.mode.value;
-    const onboard = d.onboarding && d.onboarding.active ? d.onboarding : null;   // nothing is sent until its end
+    // nothing is sent until its end. Only in real operation: a restored database can bring the period's date to a
+    // machine still in «Δοκιμαστική» (the mode kept in .env), and «Έναρξη» must then switch the mode, not just the date
+    const onboard = C.mode.value === "production" && d.onboarding && d.onboarding.active ? d.onboarding : null;
     // «Λειτουργία»: Δοκιμαστική · Περίοδος προσαρμογής (production with a date) · Κανονική λειτουργία; trial for the advanced
     const cur = mode === "production" ? (onboard ? "onboarding" : "production") : mode;
     const today = todayAthens();
     const until = el("input", { type: "date", min: isoPlus(today, 1), max: isoPlus(today, 366), value: onboard ? onboard.until : "",
                                 "aria-label": "Υποχρεωτική χρήση από" });
-    const askAfm = text => { const t = prompt(`${text}\n\nΓια επιβεβαίωση γράψε το ΑΦΜ της επιχείρησης:`); return t === null ? null : t.trim(); };
+    const askAfm = async text => { const t = await askBox(`${text}\n\nΓια επιβεβαίωση γράψε το ΑΦΜ της επιχείρησης:`, { input: true, inputmode: "numeric" }); return t === null ? null : t.trim(); };
     const setMode = async (m, afm, onboarding_until, done) => { await api("/admin/api/mode", { mode: m, afm, onboarding_until }); toast(done); };
     const choose = {
       dry_run: async () => {
-        if (!confirm("Δοκιμαστική λειτουργία; Τα νέα χτυπήματα καταγράφονται μόνο στην Karta και δεν στέλνονται στο ΕΡΓΑΝΗ." +
+        if (!await askBox("Δοκιμαστική λειτουργία; Τα νέα χτυπήματα καταγράφονται μόνο στην Karta και δεν στέλνονται στο ΕΡΓΑΝΗ." +
             (onboard ? "\n\nΗ περίοδος προσαρμογής τελειώνει." : ""))) return;
         await setMode("dry_run", "", null, "Δοκιμαστική λειτουργία");
       },
@@ -677,24 +710,24 @@
         const text = `Περίοδος προσαρμογής έως και ${fmtDayLong(isoPlus(until.value, -1))};\n\nΤα χτυπήματα καταγράφονται κανονικά αλλά ΔΕΝ στέλνονται ` +
           `στο ΕΡΓΑΝΗ. Από ${fmtDayLong(until.value)} στέλνονται μόνα τους, χωρίς να κάνεις τίποτα.\n\nΜόνο αν η κάρτα δεν είναι ακόμα υποχρεωτική για την επιχείρηση.`;
         let afm = "";
-        if (mode === "production") { if (!confirm(text)) return; }
-        else { afm = askAfm(`${text} Πρώτα γίνεται δοκιμή σύνδεσης στο ΕΡΓΑΝΗ.`); if (afm === null) return; }
+        if (mode === "production") { if (!await askBox(text)) return; }
+        else { afm = await askAfm(`${text} Πρώτα γίνεται δοκιμή σύνδεσης στο ΕΡΓΑΝΗ.`); if (afm === null) return; }
         await setMode("production", afm, until.value, `Περίοδος προσαρμογής: υποχρεωτική ${fmtDayLong(until.value)}`);
       },
       production: async () => {
         let afm = "";
         if (mode === "production") {    // in the onboarding period: it ends now
           const inside = d.employees.filter(e => e.inside && e.last_status === "onboarding").map(e => e.display_name);
-          if (!confirm("Τέλος της περιόδου προσαρμογής τώρα;\n\nΑπό αυτή τη στιγμή κάθε νέα προσέλευση στέλνεται στο ΕΡΓΑΝΗ." +
+          if (!await askBox("Τέλος της περιόδου προσαρμογής τώρα;\n\nΑπό αυτή τη στιγμή κάθε νέα προσέλευση στέλνεται στο ΕΡΓΑΝΗ." +
               (inside.length ? `\n\n${inside.join(", ")}: είναι ήδη μέσα — η αποχώρησή τους μένει μόνο στην κάρτα (όπως η προσέλευση), ώστε να μη σταλεί αποχώρηση χωρίς προσέλευση.` : ""))) return;
         } else {
-          afm = askAfm("ΠΡΟΣΟΧΗ: από εδώ και πέρα κάθε χτύπημα δηλώνεται στο πραγματικό ΕΡΓΑΝΗ και έχει νομική ισχύ. Πρώτα γίνεται δοκιμή σύνδεσης.");
+          afm = await askAfm("ΠΡΟΣΟΧΗ: από εδώ και πέρα κάθε χτύπημα δηλώνεται στο πραγματικό ΕΡΓΑΝΗ και έχει νομική ισχύ. Πρώτα γίνεται δοκιμή σύνδεσης.");
           if (afm === null) return;
         }
         await setMode("production", afm, null, "Κανονική λειτουργία: τα χτυπήματα στέλνονται στο ΕΡΓΑΝΗ");
       },
       trial: async () => {
-        const afm = askAfm("Τα χτυπήματα θα στέλνονται στο περιβάλλον δοκιμών του ΕΡΓΑΝΗ (χωρίς νομική ισχύ). Πρώτα γίνεται δοκιμή σύνδεσης.");
+        const afm = await askAfm("Τα χτυπήματα θα στέλνονται στο περιβάλλον δοκιμών του ΕΡΓΑΝΗ (χωρίς νομική ισχύ). Πρώτα γίνεται δοκιμή σύνδεσης.");
         if (afm === null) return;
         await setMode("trial", afm, null, "Δοκιμαστικό ΕΡΓΑΝΗ");
       },
@@ -732,6 +765,13 @@
       cur === "trial" ? null : el("div", { class: "mode-actions" },
         el("button", { class: "btn ghost", type: "button", onclick: act(choose.trial) }, "Πέρασμα σε δοκιμαστικό ΕΡΓΑΝΗ")));
     box.replaceChildren(
+      ...(C.env_only && C.env_only.length ? [el("div", { class: "an-line warn" },
+        el("strong", {}, "Μόνο στο .env, όχι στα αντίγραφα: "), [...new Set(C.env_only.map(n => ENV_NAMES[n] || n))].join(" · "),
+        ". Σε επαναφορά σε νέο μηχάνημα θα έλειπαν. ",
+        el("button", { class: "btn small-btn", type: "button", onclick: act(async () => {
+          const r = await api("/admin/api/config/adopt-env", {});
+          toast(`Αποθηκεύτηκαν στη βάση (κρυπτογραφημένα όσα είναι κωδικοί): μπαίνουν από τώρα στα αντίγραφα (${r.saved.length})`);
+        }) }, "Να μπουν στα αντίγραφα"))] : []),
       ...(C.problems.length ? [el("div", { class: "an-line bad" }, el("strong", {}, "Χρειάζεται συμπλήρωση: "), C.problems.join(" · "),
         mode !== "dry_run" ? " — μέχρι τότε τα χτυπήματα περιμένουν και δεν στέλνονται." : "")] : []),
       el("div", { class: "cfg-group" },
@@ -788,7 +828,7 @@
           await api("/admin/api/ntfy/test", {}); toast("Στάλθηκε δοκιμαστική ειδοποίηση στο κινητό");
         }) }, "Δοκιμαστική ειδοποίηση") : null,
         on ? el("button", { class: "link danger", type: "button", onclick: act(async () => {
-          if (!confirm("Απενεργοποίηση των ειδοποιήσεων στο κινητό;")) return;
+          if (!await askBox("Απενεργοποίηση των ειδοποιήσεων στο κινητό;")) return;
           await api("/admin/api/config", { group: "ntfy", values: { NTFY_URL: "", NTFY_TOPIC: "", NTFY_TOKEN: "" } });
         }) }, "Απενεργοποίηση") : null));
   }
@@ -854,16 +894,19 @@
       : info.pin_key_ok === false
       ? el("p", { class: "warn-text" }, "Προσοχή: το αντίγραφο φτιάχτηκε με άλλο PIN_KEY. Μετά την επαναφορά ο κωδικός ΕΡΓΑΝΗ και τα PIN δεν θα εμφανίζονται: βάλτε στο .env το PIN_KEY της παλιάς εγκατάστασης (υπάρχει στο karta.env των αντιγράφων) ή ξαναγράψτε τον κωδικό ΕΡΓΑΝΗ και δώστε νέα PIN.")
       : null;
+    const noPassword = info.ergani_password === false && info.punches > 0          // a business that sends to Ergani
+      ? el("p", { class: "warn-text" }, "Το αντίγραφο δεν έχει τον κωδικό ΕΡΓΑΝΗ (στο παλιό μηχάνημα ήταν μόνο στο .env). Μετά την επαναφορά: «Ρυθμίσεις» → «Επιχείρηση και σύνδεση με το ΕΡΓΑΝΗ», γράψτε τον και «Αποθήκευση». Ελέγξτε και τη «Λειτουργία».")
+      : null;
     box.replaceChildren(
       el("h3", {}, "Επαναφορά από αντίγραφο"),
       el("p", {}, `${info.business || "(χωρίς όνομα επιχείρησης)"} · ${info.employees} ενεργοί εργαζόμενοι · ${info.punches} πραγματικά χτυπήματα` +
         (info.test_punches ? ` (και ${info.test_punches} δοκιμαστικά)` : "") +
         (info.last_punch ? ` · τελευταίο χτύπημα ${info.last_punch.slice(8, 10)}/${info.last_punch.slice(5, 7)}/${info.last_punch.slice(0, 4)} ${info.last_punch.slice(11, 16)}` : "")),
-      ...(warn ? [warn] : []),
+      ...(warn ? [warn] : []), ...(noPassword ? [noPassword] : []),
       el("p", { class: "small" }, "Η τωρινή βάση θα αντικατασταθεί από αυτό το αντίγραφο. Πριν από αυτό κρατιέται αντίγραφό της (before-restore-…db, δίπλα στη βάση)."),
       el("div", { class: "backup-row" },
         el("button", { class: "btn danger", type: "button", onclick: act(async () => {
-          if (!confirm("Επαναφορά τώρα; Ό,τι έγινε μετά από αυτό το αντίγραφο δεν θα φαίνεται πια.")) return;
+          if (!await askBox("Επαναφορά τώρα; Ό,τι έγινε μετά από αυτό το αντίγραφο δεν θα φαίνεται πια.")) return;
           const r = await api("/admin/api/restore/apply", { confirm: true });
           hide(box); toast(`Η επαναφορά έγινε (η προηγούμενη βάση κρατήθηκε ως ${r.kept}).`);
           editorsFor = null;
@@ -898,9 +941,11 @@
       oauthHelp.querySelector(".cmd-mac").textContent = `./rclone authorize "${provider.value}"`;
     };
     provider.addEventListener("change", sync); sync();
+    const progress = el("p", { class: "small", hidden: "" });
     const send = existing => act(async () => {
-      const r = await api("/admin/api/cloud/connect", { provider: provider.value, token: token.value.trim(), account: account.value.trim(),
-        key: key.value.trim(), bucket: bucket.value.trim(), password: existing ? password.value : null });
+      const r = await cloudJob("/admin/api/cloud/connect", { provider: provider.value, token: token.value.trim(), account: account.value.trim(),
+        key: key.value.trim(), bucket: bucket.value.trim(), password: existing ? password.value : null },
+        progress, existing ? "Σύνδεση στα υπάρχοντα αντίγραφα" : "Σύνδεση και πρώτο ανέβασμα");
       if (r.password) showCloudPassword(r.password);
       if (r.empty) toast(existing ? "Συνδέθηκε με τα υπάρχοντα αντίγραφα· τώρα: «Επαναφορά» → «Από το cloud…»."
                                   : "Το cloud ρυθμίστηκε· το πρώτο αντίγραφο ανεβαίνει μόλις προστεθούν εργαζόμενοι.");
@@ -917,7 +962,7 @@
       el("p", { class: "small warn-text" }, "Θα σας δοθεί ένας κωδικός κρυπτογράφησης, μία φορά. Κρατήστε τον οπωσδήποτε: χωρίς αυτόν " +
         "τα αντίγραφα στο cloud δεν ανοίγουν και δεν υπάρχει τρόπος ανάκτησης."),
       el("div", { class: "backup-row" }, el("button", { class: "btn", type: "button", onclick: send(false) }, "Σύνδεση και πρώτο ανέβασμα")),
-      existingBox);
+      existingBox, progress);
   }
   async function restoreFromFile(file) {
     if (!file) return;
@@ -927,23 +972,35 @@
     if (!res.ok) throw new Error(data.detail || httpError(res.status));
     showRestore(data);
   }
-  // the download runs on the server (it can take minutes on Google Drive): ask every 3 seconds how it is going
-  async function waitCloudFetch(progress) {
-    progress.hidden = false;
-    for (;;) {
-      const st = await api("/admin/api/restore/cloud");
-      if (st.state === "done") { progress.hidden = true; showRestore(st.info); return; }
-      if (st.state === "fail") { progress.hidden = true; throw new Error(st.error || "Η λήψη απέτυχε"); }
-      if (st.state !== "running") { progress.hidden = true; throw new Error("Η λήψη διακόπηκε (η Karta ξεκίνησε ξανά)· πατήστε ξανά «Έλεγχος αντιγράφου»."); }
-      const t = st.seconds >= 60 ? `${Math.floor(st.seconds / 60)}′${String(st.seconds % 60).padStart(2, "0")}″` : `${st.seconds}″`;
-      progress.textContent = `Κατεβαίνει και ελέγχεται το αντίγραφο… ${t} (στο Google Drive μπορεί να πάρει 1–2 λεπτά)`;
-      await new Promise(r => setTimeout(r, 3000));
+  // Slow steps with the cloud run on the server (minutes on Google Drive; a page request may last only 100 seconds
+  // behind Cloudflare): start it, then ask every 3 seconds how it is going, showing how long it has been.
+  async function cloudJob(path, body, progress, what) {
+    await api(path, body);
+    if (progress) progress.hidden = false;
+    try {
+      for (;;) {
+        const st = await api(path);
+        if (st.state === "done") return st.result;
+        if (st.state === "fail") throw new Error(st.error || "Το cloud δεν απάντησε");
+        if (st.state !== "running") throw new Error("Διακόπηκε (η Karta ξεκίνησε ξανά)· δοκιμάστε ξανά.");
+        const t = st.seconds >= 60 ? `${Math.floor(st.seconds / 60)}′${String(st.seconds % 60).padStart(2, "0")}″` : `${st.seconds}″`;
+        if (progress) progress.textContent = `${what}… ${t} (στο Google Drive μπορεί να πάρει 1–2 λεπτά)`;
+        await new Promise(r => setTimeout(r, 3000));
+      }
+    } finally {
+      if (progress) progress.hidden = true;
     }
   }
   async function restoreFromCloudList() {
     const box = document.getElementById("restorePanel");      // outside #backupBox: the refresh doesn't redraw it
-    const { backups } = await api("/admin/api/cloud/backups");
-    if (!backups.length) { toast("Δεν βρέθηκαν αντίγραφα στο cloud", true); return; }
+    const loading = el("p", { class: "small" });
+    box.hidden = false;
+    box.replaceChildren(el("h3", {}, "Επαναφορά από το cloud"), loading);
+    box.scrollIntoView({ behavior: "smooth", block: "center" });
+    let backups;
+    try { backups = await cloudJob("/admin/api/cloud/backups", {}, loading, "Φορτώνει η λίστα των αντιγράφων"); }
+    catch (e) { hide(box); throw e; }
+    if (!backups.length) { hide(box); toast("Δεν βρέθηκαν αντίγραφα στο cloud", true); return; }
     const sel = el("select", {}, ...backups.map(b => el("option", { value: b.id },
       `${b.time.slice(8, 10)}/${b.time.slice(5, 7)}/${b.time.slice(0, 4)} ${b.time.slice(11, 16)}`)));
     box.hidden = false;
@@ -951,8 +1008,7 @@
     box.replaceChildren(el("h3", {}, "Επαναφορά από το cloud"),
       el("div", { class: "backup-row" }, sel,
         el("button", { class: "btn ghost", type: "button", onclick: act(async () => {
-          await api("/admin/api/restore/cloud", { id: sel.value });
-          await waitCloudFetch(progress);
+          showRestore(await cloudJob("/admin/api/restore/cloud", { id: sel.value }, progress, "Κατεβαίνει και ελέγχεται το αντίγραφο"));
         }) }, "Έλεγχος αντιγράφου"),
         el("button", { class: "link", type: "button", onclick: () => hide(box) }, "Ακύρωση")), progress);
   }
@@ -984,7 +1040,7 @@
                 showCloudPassword((await api("/admin/api/cloud/password", {})).password, true);
               }) }, "Εμφάνιση κωδικού κρυπτογράφησης"),
               el("button", { class: "link danger", type: "button", onclick: act(async () => {
-                if (!confirm("Να σταματήσουν τα ανεβάσματα στο cloud; Όσα έχουν ήδη ανέβει μένουν εκεί.")) return;
+                if (!await askBox("Να σταματήσουν τα ανεβάσματα στο cloud; Όσα έχουν ήδη ανέβει μένουν εκεί.")) return;
                 await api("/admin/api/cloud/disconnect", {});
               }) }, "Αποσύνδεση cloud")))
         : el("div", {},
@@ -1046,7 +1102,7 @@
       `Υπάρχει νέα έκδοση: ${U.latest}. `, notes,
       U.updater
         ? el("div", { class: "backup-row" }, el("button", { class: "btn", type: "button", onclick: act(async () => {
-            if (!confirm(`Ενημέρωση στην έκδοση ${U.latest}; Η Karta θα είναι εκτός για περίπου ένα λεπτό (οι οθόνες του καταστήματος περιμένουν και συνεχίζουν). Πρώτα γίνεται αντίγραφο ασφαλείας.`)) return;
+            if (!await askBox(`Ενημέρωση στην έκδοση ${U.latest}; Η Karta θα είναι εκτός για περίπου ένα λεπτό (οι οθόνες του καταστήματος περιμένουν και συνεχίζουν). Πρώτα γίνεται αντίγραφο ασφαλείας.`)) return;
             await api("/admin/api/update", {}); toast("Η ενημέρωση θα ξεκινήσει μέσα σε δύο λεπτά");
           }) }, "Ενημέρωση τώρα"))
         : el("div", { class: "small" }, "Ενημερώστε μία φορά από το μηχάνημα με ", el("code", {}, "cd ~/karta && ./setup.sh update"),
@@ -1534,7 +1590,7 @@
           if (!same) {
             const vf = document.getElementById("schedFrom").value || todayAthens();
             const when = vf === todayAthens() ? "από σήμερα" : `από ${dmy(vf)}/${vf.slice(0, 4)}`;
-            if (!confirm(`Αποθήκευση ωραρίου για ${e.display_name} — ισχύει ${when};\n\nΟι ημέρες πριν μετρούν με το ωράριο που ίσχυε τότε.`)) return;
+            if (!await askBox(`Αποθήκευση ωραρίου για ${e.display_name} — ισχύει ${when};\n\nΟι ημέρες πριν μετρούν με το ωράριο που ίσχυε τότε.`)) return;
             const days = {}; values.forEach((v, i) => { days[String(i)] = v; });
             await api(`/admin/api/schedules/${e.id}`, { days, valid_from: vf });
           }
@@ -1649,7 +1705,7 @@
       e.active && !e.inside ? el("button", { class: e.today && e.today.left && !e.today.left.reason ? "link strong" : "link", onclick: () => showEarlyLeave(e) }, "Έφυγε νωρίτερα…") : null,
       e.active && !e.inside ? el("button", { class: "link", onclick: () => showLocalShift(e, d.schedules[String(e.id)]) }, "Ξεχασμένη βάρδια…") : null,
       e.active && !e.inside && !e.early_allowed_today ? el("button", { class: "link", onclick: act(async () => {
-        if (!confirm(`Νωρίτερη προσέλευση σήμερα για ${e.display_name};\n\nΚάν' το ΜΟΝΟ αφού δηλώσεις στο ΕΡΓΑΝΗ την αλλαγή ωραρίου (νωρίτερη έναρξη). Ισχύει μόνο για σήμερα.`)) return;
+        if (!await askBox(`Νωρίτερη προσέλευση σήμερα για ${e.display_name};\n\nΚάν' το ΜΟΝΟ αφού δηλώσεις στο ΕΡΓΑΝΗ την αλλαγή ωραρίου (νωρίτερη έναρξη). Ισχύει μόνο για σήμερα.`)) return;
         await api(`/admin/api/employees/${e.id}/allow-early`, {}); toast(`${e.display_name}: επιτρέπεται νωρίτερη προσέλευση σήμερα`);
       }) }, "Νωρίτερη προσέλευση σήμερα") : null,
       e.active && !e.inside && e.today && !e.today.over ? el("button", { class: "link", onclick: act(async () => {
@@ -1659,12 +1715,12 @@
 
       e.active ? el("button", { class: "link", onclick: act(async () => {
         if (e.qr && e.qr_viewable) return showQrCard(await api(`/admin/api/employees/${e.id}/qr`), e);
-        if (e.qr && !confirm(`Η κάρτα QR του/της ${e.display_name} δεν μπορεί να ξαναεμφανιστεί. Έκδοση νέας; Η παλιά θα σταματήσει να ισχύει.`)) return;
+        if (e.qr && !await askBox(`Η κάρτα QR του/της ${e.display_name} δεν μπορεί να ξαναεμφανιστεί. Έκδοση νέας; Η παλιά θα σταματήσει να ισχύει.`)) return;
         await showQrCard(await api(`/admin/api/employees/${e.id}/qr`, {}), e);
       }) }, e.qr ? "Κάρτα QR" : "Έκδοση QR") : null,
       sep(),
       el("button", { class: "link", onclick: act(async () => {
-        if (!confirm(`Νέο PIN για ${e.display_name}; Το τωρινό PIN θα σταματήσει να ισχύει.`)) return;
+        if (!await askBox(`Νέο PIN για ${e.display_name}; Το τωρινό PIN θα σταματήσει να ισχύει.`)) return;
         showPin(await api(`/admin/api/employees/${e.id}/pin`, {}));
       }) }, "Νέο PIN"),
       d.pin_view ? el("button", { class: "link", onclick: act(async () => {
@@ -1672,13 +1728,13 @@
         showPin({ name: r.name, pin: r.pin }, true);
       }) }, "Εμφάνιση PIN") : null,
       el("button", { class: "link", onclick: act(async () => {
-        const pin = prompt(`Δικό σου PIN για ${e.display_name} (6 ψηφία):`);
+        const pin = await askBox(`Δικό σου PIN για ${e.display_name} (6 ψηφία):`, { input: true, inputmode: "numeric" });
         if (pin === null) return;
         await api(`/admin/api/employees/${e.id}/pin`, { pin: pin.replace(/\s/g, "") });
         toast(`Το PIN για ${e.display_name} ορίστηκε`);
       }) }, "Ορισμός PIN"),
       el("button", { class: "link", onclick: act(async () => {
-        const name = prompt("Όνομα στο tablet (π.χ. με τόνους):", e.display_name);
+        const name = await askBox("Όνομα στο tablet (π.χ. με τόνους):", { input: true, value: e.display_name });
         if (name === null || !name.trim() || name.trim() === e.display_name) return;
         await api(`/admin/api/employees/${e.id}/name`, { display_name: name.trim() }); editorsFor = null; toast("Το όνομα άλλαξε");
       }) }, "Μετονομασία"),
@@ -1686,7 +1742,7 @@
         await api(`/admin/api/employees/${e.id}/active`, { active: !e.active });
       }) }, e.active ? "Απενεργοποίηση" : "Ενεργοποίηση"),
       el("button", { class: "link danger", onclick: act(async () => {
-        if (!confirm(`Οριστική διαγραφή του/της ${e.display_name};\n\nΓίνεται μόνο αν δεν υπάρχουν πραγματικές κινήσεις κάρτας (οι δοκιμαστικές διαγράφονται μαζί). Αλλιώς χρησιμοποίησε «Απενεργοποίηση».`)) return;
+        if (!await askBox(`Οριστική διαγραφή του/της ${e.display_name};\n\nΓίνεται μόνο αν δεν υπάρχουν πραγματικές κινήσεις κάρτας (οι δοκιμαστικές διαγράφονται μαζί). Αλλιώς χρησιμοποίησε «Απενεργοποίηση».`)) return;
         const r = await api(`/admin/api/employees/${e.id}/delete`, {}); editorsFor = null;
         toast(`Διαγράφηκε: ${e.display_name}${r.test_movements ? ` (και ${r.test_movements} δοκιμαστικές κινήσεις)` : ""}`);
       }) }, "Διαγραφή"),
@@ -1712,6 +1768,16 @@
     e.omissions_month >= 3 ? `Ξεχασμένα χτυπήματα μήνα: ${e.omissions_month} — πολλά: πάνω από 3 τον μήνα μπορεί να τραβήξουν έλεγχο` : null,
   ];
 
+  // «Σήμερα» and the reports count only the punches of the current mode: say so when the others are many
+  // («Δοκιμαστική» on a machine restored from a backup: the real punches are all there, but not counted)
+  function otherModeNote(d, which) {
+    const n = d.other_mode ? d.other_mode[which] : 0;
+    if (!n || d.mode === "production") return null;
+    return el("div", { class: "an-line warn" }, `«${MODE[d.mode] || d.mode}»: εδώ μετράνε μόνο τα δοκιμαστικά χτυπήματα. ` +
+      `${n} ${n === 1 ? "πραγματικό χτύπημα" : "πραγματικά χτυπήματα"}${which === "today" ? " σήμερα" : ""} (σε «Κανονική λειτουργία») ` +
+      "δεν φαίνονται εδώ ούτε στις αναφορές· φαίνονται μόλις η «Λειτουργία» γίνει ξανά κανονική ή «Περίοδος προσαρμογής».");
+  }
+
   // ---------- «Σήμερα»: who is in, who is expected, who is off ----------
   function renderToday(d) {
     const box = document.getElementById("todayBox");
@@ -1736,6 +1802,8 @@
     const deadline = t => !t || t.over || !t.ot_by ? "" : t.ot_passed ? `προθεσμία υπερωρίας πέρασε (${t.ot_by})` : `υπερωρία δηλώνεται έως ${t.ot_by}`;
     const kids = [];
     if (d.closed_today) kids.push(el("div", { class: "an-line muted" }, `Σήμερα: ${d.closed_today}`));
+    const note = otherModeNote(d, "today");
+    if (note) kids.push(note);
     if (open.length) kids.push(el("h3", {}, "Ξέχασαν αποχώρηση"), ...open.map(e => row(e,
       [`Χωρίς αποχώρηση: ${e.open_arrivals.map(o => `${dmy(o.movement_at)} ${o.movement_at.slice(11, 16)}`).join(", ")}`],
       e.open_arrivals.map(o => el("button", { class: "btn small-btn", onclick: () => showDepart(e, o) }, `Κλείσιμο ${o.movement_at.slice(8, 10)}/${o.movement_at.slice(5, 7)}…`)))));
@@ -1863,7 +1931,7 @@
           "aria-valuenow": String(done) }, fill)),
       el("ol", { class: "steps" }, ...items),
       el("button", { class: "link", onclick: act(async () => {
-        if (done < steps.length && !confirm("Απόκρυψη των «Πρώτων βημάτων»; Όσα δεν έγιναν δεν θα εμφανίζονται πια εδώ.")) return;
+        if (done < steps.length && !await askBox("Απόκρυψη των «Πρώτων βημάτων»; Όσα δεν έγιναν δεν θα εμφανίζονται πια εδώ.")) return;
         await api("/admin/api/first-steps", { hide: true });
       }) }, "Απόκρυψη"));
   }
@@ -1908,12 +1976,13 @@
     if (d.test_movements) tmKids.push(el("div", { class: "er-actions" },
       el("span", { class: "small" }, `${d.test_movements} δοκιμαστικές κινήσεις (dry run / δοκιμαστικό ΕΡΓΑΝΗ). `),
       el("button", { class: "link danger", onclick: act(async () => {
-        if (!confirm(`Διαγραφή ${d.test_movements} δοκιμαστικών κινήσεων;\n\nΟι πραγματικές κινήσεις (ΕΡΓΑΝΗ παραγωγής) δεν αγγίζονται ποτέ. Κάν' το πριν περάσεις σε παραγωγή, ώστε ωράρια, ειδοποιήσεις και αναφορά να ξεκινούν καθαρά.`)) return;
+        if (!await askBox(`Διαγραφή ${d.test_movements} δοκιμαστικών κινήσεων;\n\nΟι πραγματικές κινήσεις (ΕΡΓΑΝΗ παραγωγής) δεν αγγίζονται ποτέ. Κάν' το πριν περάσεις σε παραγωγή, ώστε ωράρια, ειδοποιήσεις και αναφορά να ξεκινούν καθαρά.`)) return;
         const r = await api("/admin/api/movements/purge-tests", {}); toast(`Διαγράφηκαν ${r.deleted} δοκιμαστικές κινήσεις`);
       }) }, "Διαγραφή δοκιμαστικών κινήσεων")));
     tm.replaceChildren(...tmKids);
 
     renderToday(d);
+    { const note = otherModeNote(d, "total"); document.getElementById("reportModeNote").replaceChildren(...(note ? [note] : [])); }
     renderFirstSteps(d);
 
     document.getElementById("devs").replaceChildren(
@@ -1922,11 +1991,11 @@
         el("td", {}, v.name), el("td", {}, fmtUtc(v.created_at)), el("td", {}, fmtUtc(v.last_seen)),
         el("td", {}, v.revoked ? "Ανακλήθηκε" : "Ενεργή"),
         el("td", {}, v.revoked ? null : el("button", { class: "link", onclick: act(async () => {
-          if (!confirm(`Ανάκληση της συσκευής «${v.name}»; Θα χρειαστεί νέα εγγραφή.`)) return;
+          if (!await askBox(`Ανάκληση της συσκευής «${v.name}»; Θα χρειαστεί νέα εγγραφή.`)) return;
           await api(`/admin/api/devices/${v.id}/revoke`, {}); toast("Η συσκευή ανακλήθηκε");
         }) }, "Ανάκληση"),
           el("button", { class: "link danger", onclick: act(async () => {
-            if (!confirm(v.revoked ? `Διαγραφή της «${v.name}» από τη λίστα;`
+            if (!await askBox(v.revoked ? `Διαγραφή της «${v.name}» από τη λίστα;`
                                    : `Διαγραφή της «${v.name}»; Ανακαλείται κιόλας — αν είναι ακόμα σε χρήση θα χρειαστεί νέα εγγραφή.`)) return;
             await api(`/admin/api/devices/${v.id}/delete`, {}); toast("Η συσκευή διαγράφηκε");
           }) }, "Διαγραφή")))));
@@ -1951,12 +2020,12 @@
           m.status === "uncertain" ? el("div", {},
             el("div", { class: "small warn-text" }, "Δεν ξέρουμε αν έφτασε στο ΕΡΓΑΝΗ. Έλεγξε τις κινήσεις κάρτας στο ΕΡΓΑΝΗ πριν διαλέξεις:"),
             el("button", { class: "link", onclick: act(async () => {
-              const protocol = prompt("Υπάρχει στο ΕΡΓΑΝΗ. Αριθμός πρωτοκόλλου (προαιρετικό):", "");
+              const protocol = await askBox("Υπάρχει στο ΕΡΓΑΝΗ. Αριθμός πρωτοκόλλου (προαιρετικό):", { input: true });
               if (protocol === null) return;
               await api(`/admin/api/movements/${m.id}/uncertain`, { sent: true, protocol: protocol.trim() }); toast("Σημειώθηκε ως υποβληθείσα");
             }) }, "Υπάρχει στο ΕΡΓΑΝΗ"),
             el("button", { class: "link danger", onclick: act(async () => {
-              if (!confirm("Η κίνηση ΔΕΝ υπάρχει στο ΕΡΓΑΝΗ; Θα σταλεί τώρα (ως εκπρόθεσμη αν πέρασε η ώρα).")) return;
+              if (!await askBox("Η κίνηση ΔΕΝ υπάρχει στο ΕΡΓΑΝΗ; Θα σταλεί τώρα (ως εκπρόθεσμη αν πέρασε η ώρα).")) return;
               await api(`/admin/api/movements/${m.id}/uncertain`, { sent: false }); toast("Στέλνεται ξανά");
             }) }, "Δεν υπάρχει — νέα αποστολή")) : null))));
     cardify(document.getElementById("devs")); cardify(document.getElementById("movs"));
@@ -2044,7 +2113,7 @@
   }
   document.getElementById("erganiCheck").addEventListener("click", erganiCheck);
   document.getElementById("alertsClear").addEventListener("click", act(async () => {
-    if (!confirm("Εκκαθάριση της λίστας ειδοποιήσεων;\n\nΟι ανοιχτές σημειώνονται «Εντάξει». Η μηνιαία αναφορά συνεχίζει να τις μετρά.")) return;
+    if (!await askBox("Εκκαθάριση της λίστας ειδοποιήσεων;\n\nΟι ανοιχτές σημειώνονται «Εντάξει». Η μηνιαία αναφορά συνεχίζει να τις μετρά.")) return;
     const r = await api("/admin/api/alerts/clear", {}); toast(`Καθαρίστηκαν ${r.cleared} ειδοποιήσεις`);
   }));
   document.getElementById("erganiRefresh").addEventListener("click", act(async () => {

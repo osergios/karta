@@ -90,6 +90,9 @@ def inspect(path: str | None = None) -> dict:
             "last_punch": last or any_last,
             "pin_key_ok": _pin_key_matches(c),
             "pin_key_restored": _adoptable(c),
+            # the Ergani password, if it was kept in the admin page (only then is it in the backup)
+            "ergani_password": c.execute("SELECT 1 FROM settings WHERE key='cfg.ERGANI_PASSWORD' AND value<>''")
+                                .fetchone() is not None,
             "size": os.path.getsize(path),
         }
     except sqlite3.DatabaseError as e:

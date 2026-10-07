@@ -783,6 +783,16 @@ def admin_config_save(body: ConfigIn, admin: str = Depends(security.require_admi
     return appconfig.view()
 
 
+@app.post("/admin/api/config/adopt-env")
+def admin_config_adopt_env(admin: str = Depends(security.require_admin)):
+    """«Να μπουν στα αντίγραφα»: the settings that exist only in .env are copied into the database."""
+    try:
+        names = appconfig.adopt_env(admin)
+    except appconfig.ConfigError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return {"saved": names, "config": appconfig.view()}
+
+
 @app.post("/admin/api/config/login-test")
 def admin_config_login_test(body: LoginTestIn, admin: str = Depends(security.require_admin)):
     """Tries to log in to Ergani (read-only: nothing is submitted) with what is typed, or with what is saved."""
@@ -808,7 +818,10 @@ def admin_mode(body: ModeIn, admin: str = Depends(security.require_admin)):
         until = _onboarding_date(body.onboarding_until, today)
     before = (db.setting("onboarding_until"), db.setting("onboarding_since"))
     if until:      # the period starts BEFORE the switch: not a single punch reaches Ergani in between
-        onboarding.set_period(onboarding.since() if onboarding.active(today) else today, until)
+        # moving the date of a running period keeps its start; a date left over in «Δοκιμαστική» (a restored
+        # database) is not a running period: it starts today
+        running = onboarding.active(today) and config.ERGANI_MODE == "production"
+        onboarding.set_period(onboarding.since() if running else today, until)
     try:
         appconfig.set_mode(body.mode, body.afm, admin)
     except appconfig.ConfigError as e:
@@ -881,6 +894,11 @@ def admin_overview(admin: str = Depends(security.require_admin)):
         "held": db.one("SELECT COUNT(*) n FROM movements WHERE status='pending' AND mode=?", (config.ERGANI_MODE,))["n"],
         "uncertain": db.one("SELECT COUNT(*) n FROM movements WHERE status='uncertain' AND mode=?",
                             (config.ERGANI_MODE,))["n"],
+        # punches of the other modes, which «Σήμερα» and the reports leave out (each mode is its own world): in
+        # «Δοκιμαστική» after a restore, the real ones are all there but not counted
+        "other_mode": {"today": db.one("SELECT COUNT(*) n FROM movements WHERE mode<>? AND movement_at>=?",
+                                       (config.ERGANI_MODE, now_local().date().isoformat()))["n"],
+                       "total": db.one("SELECT COUNT(*) n FROM movements WHERE mode<>?", (config.ERGANI_MODE,))["n"]},
         "stuck_other_mode": db.one("SELECT COUNT(*) n FROM movements WHERE status='pending' AND mode<>?",
                                    (config.ERGANI_MODE,))["n"],
         "branch": config.BRANCH_NUMBER,
@@ -1955,16 +1973,74 @@ class CloudIn(BaseModel):
     password: str | None = Field(default=None, max_length=200)   # the password of existing backups (restore)
 
 
-@app.post("/admin/api/cloud/connect")
-def admin_cloud_connect(body: CloudIn, admin: str = Depends(security.require_admin)):
-    try:
-        pw = cloud.connect(body.provider, token=body.token.strip(), account=body.account, key=body.key,
-                           bucket=body.bucket.strip(), password=(body.password or "").strip() or None)
-    except cloud.CloudError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+class CloudJob:
+    """One slow step with the cloud, run in the background: POST starts it (start), GET reports how it is going
+    (view): {state: running | done | fail | idle, seconds, result, error}. Asking again for the same thing while it
+    runs (a reloaded page) keeps waiting for it; something else is refused until it ends. idle = never started, or
+    Karta restarted meanwhile."""
+
+    def __init__(self, busy: str):
+        self.busy = busy
+        self.lock = threading.Lock()
+        self.st = {"state": "idle", "key": None, "error": "", "result": None, "started": None}
+
+    def start(self, key, fn) -> dict:
+        with self.lock:
+            if self.st["state"] == "running":
+                if self.st["key"] == key:
+                    return {"state": "running"}
+                raise HTTPException(status_code=409, detail=self.busy)
+            self.st.update(state="running", key=key, error="", result=None, started=time.monotonic())
+
+        def run():
+            try:
+                self.st.update(state="done", result=fn())
+            except (cloud.CloudError, restore.RestoreError) as e:
+                self.st.update(state="fail", error=str(e))
+            except Exception as e:
+                log.exception("cloud job failed")
+                self.st.update(state="fail", error=f"Απρόσμενο σφάλμα: {e}")
+        threading.Thread(target=run, daemon=True).start()
+        return {"state": "running"}
+
+    def view(self, once: bool = False) -> dict:
+        """once: the result is handed over a single time (the new encryption password), then forgotten."""
+        with self.lock:
+            st = {k: v for k, v in self.st.items() if k not in ("key", "started")}
+            st["seconds"] = int(time.monotonic() - self.st["started"]) if self.st["started"] else 0
+            if once and st["state"] in ("done", "fail"):
+                self.st.update(state="idle", key=None, error="", result=None, started=None)
+        return st
+
+
+def _connect(body: "CloudIn", admin: str) -> dict:
+    pw = cloud.connect(body.provider, token=body.token.strip(), account=body.account, key=body.key,
+                       bucket=body.bucket.strip(), password=(body.password or "").strip() or None)
     db.audit(admin, "cloud_connect", body.provider + (" (existing backups)" if pw is None else ""))
     st = cloud.status() or {}
-    return {"ok": True, "password": pw, "first_backup": st.get("state"), "error": st.get("error", ""), "empty": cloud.empty()}
+    return {"password": pw, "first_backup": st.get("state"), "error": st.get("error", ""), "empty": cloud.empty()}
+
+
+_connect_job = CloudJob("Μια σύνδεση με το cloud γίνεται ήδη· περιμένετε να τελειώσει.")
+_list_job = CloudJob("Η λίστα των αντιγράφων φορτώνει ήδη.")
+
+
+@app.post("/admin/api/cloud/connect")
+def admin_cloud_connect(body: CloudIn, admin: str = Depends(security.require_admin)):
+    """Connecting (a new repository, or the existing backups on a new machine) in the background: GET tells how it
+    went, and hands over the new encryption password once."""
+    if body.provider in ("drive", "dropbox"):              # a malformed access code is refused right away
+        try:
+            tok = json.loads(body.token.strip())
+            assert isinstance(tok, dict) and (tok.get("access_token") or tok.get("refresh_token"))
+        except (ValueError, AssertionError):
+            raise HTTPException(status_code=400, detail="Ο κωδικός πρόσβασης δεν μοιάζει σωστός: αντιγράψτε όλο το κείμενο από το { έως το }.")
+    return _connect_job.start(body.provider, lambda: _connect(body, admin))
+
+
+@app.get("/admin/api/cloud/connect")
+def admin_cloud_connect_state(admin: str = Depends(security.require_admin)):
+    return _connect_job.view(once=True)
 
 
 @app.post("/admin/api/cloud/password")
@@ -2001,12 +2077,15 @@ def admin_cloud_run(admin: str = Depends(security.require_admin)):
     return {"ok": True}
 
 
-@app.get("/admin/api/cloud/backups")
+@app.post("/admin/api/cloud/backups")
 def admin_cloud_backups(admin: str = Depends(security.require_admin)):
-    try:
-        return {"backups": cloud.list_backups()}
-    except cloud.CloudError as e:
-        raise HTTPException(status_code=502, detail=f"Το cloud δεν απάντησε: {e}")
+    """The list of backups in the cloud, in the background: GET returns it (result) when it is ready."""
+    return _list_job.start("list", cloud.list_backups)
+
+
+@app.get("/admin/api/cloud/backups")
+def admin_cloud_backups_state(admin: str = Depends(security.require_admin)):
+    return _list_job.view()
 
 
 MAX_RESTORE_BYTES = 500_000_000
@@ -2039,28 +2118,23 @@ class RestoreCloudIn(BaseModel):
     id: str = Field(max_length=64)
 
 
-# Step 1 (from the cloud) runs in the background: reaching Google Drive can take longer than a page request may last
-# (Cloudflare gives up after 100 seconds), so the page starts it and asks how it is going every few seconds.
-_cloud_fetch = {"state": "idle", "id": "", "error": "", "started": None, "info": None}
-_cloud_fetch_lock = threading.Lock()
-
-
-def _fetch_from_cloud(snapshot_id: str, admin: str) -> None:
+# Step 1 (from the cloud) runs in the background, like every slow step with the cloud (connecting, the list of backups):
+# reaching Google Drive can take longer than a page request may last (Cloudflare gives up after 100 seconds), so the
+# page starts it and asks how it is going every few seconds.
+def _fetch_from_cloud(snapshot_id: str, admin: str) -> dict:
     tmp = restore.staged_path() + ".part"
     try:
         key = cloud.download(snapshot_id, tmp)
         restore.stage_key(key)                              # before the check: it reports whether the key fits
         info = restore.stage_file(tmp)
         db.audit(admin, "restore_staged", f"cloud {snapshot_id}")
-        _cloud_fetch.update(state="done", info=info)
-    except (cloud.CloudError, restore.RestoreError) as e:
-        _cloud_fetch.update(state="fail", error=str(e))
-    except Exception as e:
-        log.exception("cloud restore download failed")
-        _cloud_fetch.update(state="fail", error=f"Απρόσμενο σφάλμα: {e}")
+        return info
     finally:
         if os.path.exists(tmp):
             os.remove(tmp)
+
+
+_fetch_job = CloudJob("Ένα άλλο αντίγραφο κατεβαίνει ήδη· περιμένετε να τελειώσει.")
 
 
 @app.post("/admin/api/restore/cloud")
@@ -2068,22 +2142,12 @@ def admin_restore_cloud(body: RestoreCloudIn, admin: str = Depends(security.requ
     """Step 1 (from the cloud): starts downloading the chosen copy; GET says when it is downloaded and checked."""
     if not cloud.SNAPSHOT_ID.match(body.id or ""):
         raise HTTPException(status_code=400, detail="Μη έγκυρο αντίγραφο.")
-    with _cloud_fetch_lock:
-        if _cloud_fetch["state"] == "running":
-            if _cloud_fetch["id"] == body.id:               # the page was reloaded meanwhile: keep waiting for it
-                return {"state": "running"}
-            raise HTTPException(status_code=409, detail="Ένα άλλο αντίγραφο κατεβαίνει ήδη· περιμένετε να τελειώσει.")
-        _cloud_fetch.update(state="running", id=body.id, error="", info=None, started=time.monotonic())
-    threading.Thread(target=_fetch_from_cloud, args=(body.id, admin), daemon=True).start()
-    return {"state": "running"}
+    return _fetch_job.start(body.id, lambda: _fetch_from_cloud(body.id, admin))
 
 
 @app.get("/admin/api/restore/cloud")
 def admin_restore_cloud_state(admin: str = Depends(security.require_admin)):
-    st = dict(_cloud_fetch)
-    started = st.pop("started")
-    st["seconds"] = int(time.monotonic() - started) if started else 0
-    return st
+    return _fetch_job.view()
 
 
 @app.get("/admin/api/restore/pending")
