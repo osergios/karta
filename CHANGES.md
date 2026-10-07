@@ -579,3 +579,7 @@
      `running` (with seconds) / `done` (with the check) / `fail`, and the page shows «Κατεβαίνει και ελέγχεται το
      αντίγραφο… 45″» until the check appears. Asking again for the same snapshot while it runs (a reloaded page)
      keeps waiting for it.
+115. **Cloud backups listed at the right time.** restic writes a snapshot's time as the machine's clock with its offset
+     (`2026-10-07T13:32:10…+03:00`, the container runs with `TZ=Europe/Athens`); «Από το cloud…» cut the offset off and
+     read it as UTC, so every backup was listed 3 hours late in summer (2 in winter). `cloud.snapshot_time` reads the
+     offset (or `Z`) and converts to Athens time.

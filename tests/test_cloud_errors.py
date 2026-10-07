@@ -1,4 +1,6 @@
 """What the admin reads when restic / rclone fail (samples of their real output)."""
+from datetime import datetime
+
 from app import cloud
 
 MISSING = """Fatal: unable to open config file: <config/> does not exist
@@ -45,3 +47,12 @@ def test_a_slow_cloud_is_explained():
            'Get "http://localhost/file-11248313741212961703": context deadline exceeded '
            '(Client.Timeout exceeded while awaiting headers)')
     assert cloud.explain(raw).startswith("Το cloud άργησε να απαντήσει")
+
+
+def test_snapshot_times_are_shown_in_athens_time():
+    """restic writes the machine's local time with its offset; it was read as UTC and shown 3 hours late."""
+    assert cloud.snapshot_time("2026-10-07T13:32:10.123456789+03:00") == datetime(2026, 10, 7, 13, 32, 10)
+    assert cloud.snapshot_time("2026-10-07T10:32:10.5Z") == datetime(2026, 10, 7, 13, 32, 10)     # summer: UTC+3
+    assert cloud.snapshot_time("2026-12-07T10:32:10Z") == datetime(2026, 12, 7, 12, 32, 10)       # winter: UTC+2
+    assert cloud.snapshot_time("2026-10-07T13:32:10+0300") == datetime(2026, 10, 7, 13, 32, 10)
+    assert cloud.snapshot_time("garbage") is None
