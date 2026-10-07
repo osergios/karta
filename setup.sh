@@ -99,6 +99,11 @@ keep() {  # keep DIR N: delete the oldest copies beyond N
   ls -1 "$1"/karta-*.db 2>/dev/null | sort -r | tail -n +"$(( $2 + 1 ))" | while read -r f; do rm -f -- "$f"; done
 }
 
+# a new installation (no employees yet, e.g. a new machine before the restore): nothing to keep, and an empty copy
+# must not become the newest one here or on the USB (nor replace karta.env, which has the old PIN_KEY)
+docker compose exec -T karta python -c "import sqlite3, sys; c = sqlite3.connect('/data/workcard.db'); sys.exit(0 if c.execute('SELECT 1 FROM employees LIMIT 1').fetchone() else 3)" >/dev/null 2>&1
+if [ $? -eq 3 ]; then echo "skipped: no employees yet (new installation)"; exit 0; fi
+
 local_state=fail; usb_state=-
 if docker compose exec -T karta python -c "import sqlite3; s=sqlite3.connect('/data/workcard.db'); d=sqlite3.connect('/data/backup.db'); s.backup(d); d.close()" \
    && docker compose cp karta:/data/backup.db "backups/daily/karta-$today.db" >/dev/null \
@@ -106,6 +111,9 @@ if docker compose exec -T karta python -c "import sqlite3; s=sqlite3.connect('/d
   cp -f "backups/daily/karta-$today.db" "backups/monthly/karta-$month.db"
   cp -f "backups/daily/karta-$today.db" "backups/yearly/karta-$year.db"
   cp -f .env backups/karta.env && chmod 600 backups/karta.env      # needed to restore (PIN_KEY, tunnel)
+  # the key in use may be one Karta took over from a cloud backup (data/pin-key): the copy must carry that one
+  k=$(docker compose exec -T karta sh -c 'cat /data/pin-key 2>/dev/null' | tr -d '\r\n')
+  if [ -n "$k" ]; then { grep -v '^PIN_KEY=' .env; echo "PIN_KEY=$k"; } > backups/karta.env; fi
   keep backups/daily 30
   keep backups/monthly 24
   local_state=ok
@@ -322,7 +330,7 @@ restore() {  # restore [file.db]: puts a backup back into Karta
   docker compose stop karta >/dev/null 2>&1 || true
   cp "$src" "$PWD/.restore.db" && chmod 644 "$PWD/.restore.db"      # readable by the container's user
   if docker compose run --rm --no-deps -T --entrypoint sh -v "$PWD/.restore.db:/restore.db:ro" karta \
-       -c 'cp /restore.db /data/workcard.db && rm -f /data/workcard.db-wal /data/workcard.db-shm'; then
+       -c 'cp /restore.db /data/workcard.db && rm -f /data/workcard.db-wal /data/workcard.db-shm /data/pin-key'; then
     rm -f "$PWD/.restore.db"
     docker compose up -d >/dev/null
     say "  ✓ Η επαναφορά έγινε. Ανοίξτε τη σελίδα διαχείρισης και ελέγξτε τα τελευταία χτυπήματα."

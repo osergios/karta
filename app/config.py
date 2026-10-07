@@ -114,6 +114,23 @@ DEVICE_COOKIE = "wc_device"
 DEVICE_COOKIE_MAX_AGE = 400 * 24 * 3600  # browsers cap cookies at 400 days
 MAX_SUBMIT_ATTEMPTS = 30
 
-# Optional: lets the admin view current PINs. 32-byte key, urlsafe base64, kept ONLY in .env
-# (keep a copy of it with your backups). Without it PINs are hash-only and cannot be shown.
+# Optional: lets the admin view current PINs. 32-byte key, urlsafe base64, in .env (and inside every cloud
+# snapshot, see restored_pin_key_path). Without it PINs are hash-only and cannot be shown.
 PIN_KEY = _get("PIN_KEY")
+
+
+def restored_pin_key_path() -> str:
+    """A backup restored from the cloud on a new machine brings the PIN_KEY its secrets were sealed with (restore.py).
+    It is kept here, next to the database (not inside it), and used instead of the one in .env."""
+    return os.path.join(os.path.dirname(os.path.abspath(DB_PATH)), "pin-key")
+
+
+def _restored_pin_key() -> str | None:
+    try:
+        with open(restored_pin_key_path(), encoding="utf-8") as f:
+            return f.read().strip() or None
+    except OSError:
+        return None
+
+
+PIN_KEY = _restored_pin_key() or PIN_KEY

@@ -90,8 +90,10 @@ you can only set a new one. If you lose the key:
 - the Ergani password and the ntfy token saved on the admin page can no longer be read;
   type them again in **«Ρυθμίσεις»**.
 
-Keep a copy of `.env` (or at least `PIN_KEY`) somewhere safe, e.g. in a password manager.
-See [Backups](Backups-EN).
+`PIN_KEY` travels encrypted inside every cloud backup, and a cloud restore on a new machine
+uses it automatically (it keeps it in `pin-key`, next to the database). Without cloud
+backups, keep a copy of `.env` (or at least `PIN_KEY`) somewhere safe. See
+[Backups](Backups-EN).
 
 ## Version
 

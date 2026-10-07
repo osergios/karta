@@ -40,6 +40,11 @@ database of about 6 MB → about 1 MB a day, 20–25 MB for the 30 daily snapsho
 1 MB for each monthly one: around 50 MB after two years, instead of half a GB with whole
 copies every night. A free Google Drive account (15 GB) is plenty.
 
+**Every night** the new snapshot goes up and the ones no longer kept leave the list; their
+space is freed **once a week**, because that means reading the whole folder (slow on Google
+Drive). What is deleted from Google Drive is gone for good, not moved to the trash. Next to
+the result you also see how long it took, e.g. «07/10 23:41 ✓ (1′20″)».
+
 In **«Ρυθμίσεις» → «Αντίγραφα ασφαλείας»**:
 
 1. In **«Πού»** (where) choose **Google Drive**, **Dropbox** or **Backblaze B2** (10 GB
@@ -135,27 +140,17 @@ In **«Ρυθμίσεις» → «Αντίγραφα ασφαλείας» → «
 First it shows **what the backup contains** (business, employees, punches, last punch), and
 nothing changes. With **«Επαναφορά τώρα»** (restore now) the current database is kept as
 `before-restore-….db` (next to the database) and the backup takes its place, without a
-restart. If the backup was made with a different `PIN_KEY`, the page tells you: then the
-Ergani password and the PINs aren't shown until you put the old `PIN_KEY` in `.env` (it's
-in the backups' `karta.env`) or enter them again.
+restart. If the backup was made on another machine (another `PIN_KEY`): a cloud backup
+(version 1.7.5 and later) carries its key along, and Karta uses it automatically. A file, or
+an older backup, doesn't: the page tells you, and the Ergani password and the PINs aren't
+shown until you put the old `PIN_KEY` in `.env` (it's in the backups' `karta.env`) or enter
+them again.
 
-### On a new machine, from the cloud
+### On a new machine (the old one is gone)
 
-The cloud snapshot holds **only the database**, not `karta.env` or `PIN_KEY`. If your
-Karta is on a VPS, or your only backup is in the cloud, keep a copy of `.env` (at least
-`PIN_KEY`) in a password manager. Without the old `PIN_KEY`, after the restore the Ergani
-password and the ntfy token must be typed again in «Ρυθμίσεις», and PINs and QR cards
-can't be shown until you issue new ones. PINs and QR cards still work on the shop screen.
-
-1. Install Karta with [Easy installation](Easy-Installation-EN) (`./setup.sh`: same
-   address and a Cloudflare API key, old or new; the assistant reuses the tunnel). If you
-   have the old `PIN_KEY`, put it in `.env` and restart (`cd ~/karta && docker compose up -d`)
-   before restoring.
-2. On the admin page: «Αντίγραφα ασφαλείας» → **«Έχω ήδη αντίγραφα στο cloud»** (I already
-   have backups in the cloud): same provider, a new access code (`rclone authorize`), and
-   the **encryption password** you wrote down → «Σύνδεση στα υπάρχοντα αντίγραφα» (connect
-   to the existing backups).
-3. «Επαναφορά» → «Από το cloud…» → the most recent one → «Επαναφορά τώρα».
+Step by step, for a VPS and for a local machine: **[Disaster recovery](Disaster-Recovery-EN)**.
+You need only the encryption password: the cloud snapshot holds the database and the key of
+its secrets (`PIN_KEY`), which Karta takes over by itself when restoring.
 
 ### From the terminal: `./setup.sh restore`
 

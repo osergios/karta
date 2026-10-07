@@ -843,7 +843,9 @@
   function showRestore(info) {
     const box = document.getElementById("restorePanel");
     box.hidden = false;
-    const warn = info.pin_key_ok === false
+    const warn = info.pin_key_ok === false && info.pin_key_restored
+      ? el("p", { class: "small" }, "Το αντίγραφο φτιάχτηκε σε άλλο μηχάνημα και έχει μαζί το κλειδί των κωδικών του (PIN_KEY): θα χρησιμοποιηθεί αυτόματα, ώστε ο κωδικός ΕΡΓΑΝΗ, τα PIN και οι κάρτες QR να λειτουργούν όπως πριν.")
+      : info.pin_key_ok === false
       ? el("p", { class: "warn-text" }, "Προσοχή: το αντίγραφο φτιάχτηκε με άλλο PIN_KEY. Μετά την επαναφορά ο κωδικός ΕΡΓΑΝΗ και τα PIN δεν θα εμφανίζονται: βάλτε στο .env το PIN_KEY της παλιάς εγκατάστασης (υπάρχει στο karta.env των αντιγράφων) ή ξαναγράψτε τον κωδικό ΕΡΓΑΝΗ και δώστε νέα PIN.")
       : null;
     box.replaceChildren(
@@ -894,7 +896,9 @@
       const r = await api("/admin/api/cloud/connect", { provider: provider.value, token: token.value.trim(), account: account.value.trim(),
         key: key.value.trim(), bucket: bucket.value.trim(), password: existing ? password.value : null });
       if (r.password) showCloudPassword(r.password);
-      if (r.first_backup !== "ok") toast(`Το cloud ρυθμίστηκε, αλλά το πρώτο αντίγραφο απέτυχε: ${r.error || "άγνωστο σφάλμα"}`, true);
+      if (r.empty) toast(existing ? "Συνδέθηκε με τα υπάρχοντα αντίγραφα· τώρα: «Επαναφορά» → «Από το cloud…»."
+                                  : "Το cloud ρυθμίστηκε· το πρώτο αντίγραφο ανεβαίνει μόλις προστεθούν εργαζόμενοι.");
+      else if (r.first_backup !== "ok") toast(`Το cloud ρυθμίστηκε, αλλά το πρώτο αντίγραφο απέτυχε: ${r.error || "άγνωστο σφάλμα"}`, true);
       else toast(existing ? "Συνδέθηκε με τα υπάρχοντα αντίγραφα· τώρα μπορείτε να κάνετε επαναφορά από το cloud."
                           : "Το cloud ρυθμίστηκε και το πρώτο αντίγραφο ανέβηκε ✓");
     });
@@ -947,7 +951,8 @@
       : C
         ? el("div", {},
             el("div", { class: `an-line ${C.state === "fail" || C.old ? "bad" : C.state === "ok" ? "" : "muted"}` },
-              `Cloud (${C.provider}, κρυπτογραφημένο): ` + (C.when ? `${dmyhm(C.when)} ${C.state === "ok" ? "✓" : "✗ απέτυχε"}` : "αναμονή για το πρώτο ανέβασμα…"),
+              `Cloud (${C.provider}, κρυπτογραφημένο): ` + (C.when ? `${dmyhm(C.when)} ${C.state === "ok" ? "✓" : "✗ απέτυχε"}` : "αναμονή για το πρώτο ανέβασμα…") +
+                (C.when && C.seconds != null ? ` (${C.seconds >= 60 ? `${Math.floor(C.seconds / 60)}′` : ""}${C.seconds % 60}″)` : ""),
               C.state === "fail" && C.error ? el("div", { class: "small" }, C.error) : null),
             el("div", { class: "backup-row" },
               el("button", { class: "btn ghost", type: "button", onclick: act(async () => {

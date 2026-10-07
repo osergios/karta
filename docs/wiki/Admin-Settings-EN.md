@@ -104,7 +104,7 @@ notifications. See [Alerts and reminders](Alerts-and-Reminders-EN#setting-up-ntf
 ## «Αντίγραφα ασφαλείας» (backups)
 
 - The result of the last nightly backup: on the machine and on USB (from `backup.sh`),
-  and in the cloud.
+  and in the cloud, with how long the upload took (e.g. «✓ (1′20″)»).
 - **Cloud:** connect to Google Drive, Dropbox or Backblaze B2 («Σύνδεση και πρώτο
   ανέβασμα», connect and first upload, with an encryption password shown once that **can't be recovered in any way**:
   write it down, type its last 4 characters back and press **«Τον σημείωσα»**, I've noted it),

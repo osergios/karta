@@ -23,6 +23,7 @@ pages quote every button or label exactly as it appears on screen, e.g. «Απο
 | Look up a setting in `.env` | [Configuration](Configuration-EN) |
 | Move from testing to real Ergani submissions | [Going live](Going-Live-EN) |
 | Keep punches safe for years (USB, cloud, restore) | [Backups and restore](Backups-EN) |
+| Set Karta up again if the machine is lost (VPS or local) | [Disaster recovery](Disaster-Recovery-EN) |
 | Set up the shop laptop or tablet | [Shop screen (kiosk)](Kiosk-EN) |
 | Give staff a QR card on their phone | [QR cards and the phone card](QR-Cards-EN) |
 

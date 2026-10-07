@@ -500,3 +500,29 @@
     take longer. Karta now runs restic with `-o rclone.timeout=5m`, explains such errors in Greek («Το cloud άργησε
     να απαντήσει…»), and after a failed upload tries again an hour later (and hourly until it works) instead of
     waiting until the last good one is 36 hours old.
+100. **A new machine never uploads its empty database over the real backups.** Connecting a new installation to the
+     existing cloud backups (to restore them) took a first snapshot right away, of the new, empty database: it became
+     the newest entry in «Επαναφορά» → «Από το cloud…», the one anyone would pick. Karta now takes no cloud snapshot
+     while the database has no employees (`cloud.empty()`), and the connect message then says what to do next. The
+     nightly `backup.sh` (written by `./setup.sh`) skips such a database too, so it can't become the newest copy on
+     the machine or the USB, nor replace `karta.env` (with the old `PIN_KEY`) there.
+101. **Disaster recovery, step by step.** New wiki page (GR/EN): the machine is gone (a deleted VPS, a broken PC or
+     Raspberry Pi), you have the encryption password; one path for both, with the VPS / local differences: what to
+     have, until Karta is back, new machine, setup assistant with the same answers, old `PIN_KEY`, connect to the
+     existing backups, check and restore, Ergani password and test, the shop screen, punches during the gap, and the
+     simpler USB path. Linked from Backups, the sidebar and Home.
+102. **A cloud restore brings the PIN_KEY back too.** The setup assistant writes `PIN_KEY` into `.env` and nobody
+     ever sees it, so after losing the machine nobody had it: the Ergani password and the ntfy token had to be typed
+     again, and PINs and QR cards couldn't be shown. Each cloud snapshot now also holds `pin-key` (encrypted with
+     everything else). «Επαναφορά» → «Από το cloud…» fetches it (`cloud.download_key`), the check says it will be used
+     (`pin_key_restored`), and after the swap Karta keeps it in `/data/pin-key` (mode 600, next to the database, not
+     inside it) and uses it instead of the `.env` one, also after a restart (`config.restored_pin_key_path`). Only when
+     the backup's key is the one that opens it; a file upload or an older snapshot works as before. `backup.sh` writes
+     that key into `karta.env`, and `./setup.sh restore` clears it (the `.env` gets the backup's own key there). The
+     disaster recovery guide needs only the encryption password now.
+103. **Quicker nightly cloud backups.** `restic forget --prune` lists every file of the repository, which takes minutes
+     on Google Drive; it ran every night. Now every night is backup + `forget` (the list of snapshots only), and the
+     prune runs when the last one is a week old (`cloud_last_prune`, `PRUNE_EVERY`). Same retention. rclone runs with
+     `RCLONE_DRIVE_USE_TRASH=false`, so what restic deletes on Google Drive is deleted, not moved to the trash (it
+     applies to existing connections too). Each result keeps how long it took (`seconds` in `cloud_status`), shown
+     as «07/10 23:41 ✓ (1′20″)» in «Αντίγραφα ασφαλείας».

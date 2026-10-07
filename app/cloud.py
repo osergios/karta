@@ -6,6 +6,9 @@ password shown to the admin once, compresses it, and stores only what changed si
 30 daily, 24 monthly and one yearly snapshot costs little more than a single copy. Each snapshot is still a complete
 database and restores on its own.
 
+Each snapshot also holds this installation's PIN_KEY (pin-key, encrypted with everything else), so a restore on a new
+machine opens the Ergani password and the PINs sealed with it (see restore.py).
+
 On this machine, next to the database: rclone.conf (access to the cloud), cloud-password and cloud.json (mode 600).
 A new connection is tried in a folder of its own (.cloud-new) and takes their place only once it works, so a failed
 reconnect never loses the working setup, nor the password of the backups already in the cloud.
@@ -28,8 +31,10 @@ log = logging.getLogger("workcard.cloud")
 PROVIDERS = {"drive": "Google Drive", "dropbox": "Dropbox", "b2": "Backblaze B2"}
 RUN_AT = (23, 40)                         # nightly snapshot, local time
 KEEP = ("--keep-daily", "30", "--keep-monthly", "24", "--keep-yearly", "1000")
+PRUNE_EVERY = timedelta(days=7)           # freeing the space of dropped snapshots lists the whole repository: weekly
 SNAPSHOT_ID = re.compile(r"^[0-9a-f]{8,64}$")
 FILE_IN_SNAPSHOT = "/karta.db"
+KEY_IN_SNAPSHOT = "/pin-key"
 RCLONE_START = "5m"                       # how long restic waits for rclone to answer (restic's default: 1m)
 STAGE = ".cloud-new"                      # a connection being tried (see _connect)
 NO_REPO = "Δεν βρέθηκαν αντίγραφα σε αυτόν τον φάκελο του cloud"
@@ -72,7 +77,8 @@ def _env(base: str | None = None) -> dict:
     cache = os.path.join(data_dir(), ".cache")          # the app user has no home folder in the image
     env = {**os.environ, "RCLONE_CONFIG": conf, "RCLONE_CACHE_DIR": os.path.join(cache, "rclone"),
            "XDG_CACHE_HOME": cache, "RESTIC_CACHE_DIR": os.path.join(cache, "restic"),
-           "RESTIC_PASSWORD_FILE": pw, "HOME": data_dir()}
+           "RESTIC_PASSWORD_FILE": pw, "HOME": data_dir(),
+           "RCLONE_DRIVE_USE_TRASH": "false"}     # Google Drive: what restic deletes is gone, not kept in the trash
     info = _info(base)
     if info:
         env["RESTIC_REPOSITORY"] = info["repo"]
@@ -249,23 +255,33 @@ def disconnect() -> None:
         c.execute("DELETE FROM settings WHERE key IN ('cloud_status', 'cloud_last_ok', 'cloud_last_try')")
 
 
-def _record(state: str, error: str = "") -> None:
+def _prune_due(now: datetime) -> bool:
+    try:
+        last = datetime.fromisoformat(db.setting("cloud_last_prune") or "").replace(tzinfo=timezone.utc)
+    except ValueError:
+        return True
+    return now - last >= PRUNE_EVERY
+
+
+def _record(state: str, error: str = "", seconds: float | None = None) -> None:
     with db.tx() as c:
         if state == "ok":
             db.put_setting(c, "cloud_last_ok", datetime.now(config.TZ).replace(tzinfo=None).isoformat(timespec="seconds"))
         db.put_setting(c, "cloud_status", json.dumps({
-            "at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S"), "state": state, "error": error[:300]}))
+            "at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S"), "state": state, "error": error[:300],
+            "seconds": None if seconds is None else round(seconds)}))
 
 
 def status() -> dict | None:
     """Provider and the last snapshot (with its local time), or None when the cloud is not set up."""
     if not connected():
         return None
-    out = {"provider": PROVIDERS.get((_info() or {}).get("provider", ""), "cloud"), "state": None, "when": None, "error": ""}
+    out = {"provider": PROVIDERS.get((_info() or {}).get("provider", ""), "cloud"), "state": None, "when": None, "error": "",
+           "seconds": None}
     try:
         s = json.loads(db.setting("cloud_status") or "null")
         if s:
-            out.update(state=s["state"], error=s.get("error", ""),
+            out.update(state=s["state"], error=s.get("error", ""), seconds=s.get("seconds"),
                        when=datetime.fromisoformat(s["at"]).replace(tzinfo=timezone.utc).astimezone(config.TZ).replace(tzinfo=None))
     except (ValueError, KeyError, TypeError):
         pass
@@ -282,6 +298,11 @@ def snapshot(path: str) -> None:
         dst.close()
 
 
+def empty() -> bool:
+    """A database with no employees at all: a new installation, nothing worth keeping yet."""
+    return db.one("SELECT 1 FROM employees LIMIT 1") is None
+
+
 def run_backup(now: datetime | None = None) -> None:
     """Tonight's snapshot (or one asked for in the admin page)."""
     if not _running.acquire(blocking=False):
@@ -293,22 +314,39 @@ def run_backup(now: datetime | None = None) -> None:
 
 
 def _backup() -> None:
-    """A snapshot, then the old ones are thinned out (30 daily, 24 monthly, yearly for good). The caller holds
-    _running."""
+    """A snapshot, then the old ones are thinned out (30 daily, 24 monthly, yearly for good). Every night only the
+    list of snapshots is thinned (forget: quick); the space they used is freed once a week (prune), which has to list
+    every file of the repository and is slow on Google Drive. The caller holds _running."""
+    if empty():
+        # A new installation (no employees yet), e.g. a new machine that has just connected to the existing backups
+        # to restore them: its empty database must never become the newest snapshot in the list.
+        log.info("Cloud backup skipped: the database has no employees yet")
+        return
     folder = os.path.join(data_dir(), "cloud-snapshot")
+    started = datetime.now(timezone.utc)
     try:
         os.makedirs(folder, exist_ok=True)
         snapshot(os.path.join(folder, "karta.db"))
+        files = ["karta.db"]
+        if config.PIN_KEY:                 # what the Ergani password and the PINs in it are sealed with
+            fd = os.open(os.path.join(folder, "pin-key"), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                f.write(config.PIN_KEY)
+            files.append("pin-key")
         try:    # a lock left by an interrupted run (power cut, restart): only stale ones, never a running backup
             _run("restic", "unlock", timeout=300)
         except CloudError:
             pass                                               # the backup below reports any real problem
-        _run("restic", "backup", "--quiet", "--host", "karta", "--tag", "karta", "karta.db", cwd=folder)
-        _run("restic", "forget", "--quiet", "--host", "karta", *KEEP, "--prune")
-        _record("ok")
+        _run("restic", "backup", "--quiet", "--host", "karta", "--tag", "karta", *files, cwd=folder)
+        prune = _prune_due(started)
+        _run("restic", "forget", "--quiet", "--host", "karta", *KEEP, *(["--prune"] if prune else []))
+        if prune:
+            with db.tx() as c:
+                db.put_setting(c, "cloud_last_prune", started.strftime("%Y-%m-%dT%H:%M:%S"))
+        _record("ok", seconds=(datetime.now(timezone.utc) - started).total_seconds())
         log.info("Cloud backup done")
     except Exception as e:
-        _record("fail", str(e))
+        _record("fail", str(e), seconds=(datetime.now(timezone.utc) - started).total_seconds())
         log.warning("Cloud backup failed: %s", e)
         raise
     finally:
@@ -327,6 +365,16 @@ def list_backups(base: str | None = None) -> list[dict]:
         out.append({"id": s.get("short_id") or s["id"][:8], "time": t.isoformat(timespec="minutes")})
     out.sort(key=lambda x: x["time"], reverse=True)
     return out
+
+
+def download_key(snapshot_id: str) -> str | None:
+    """The PIN_KEY kept in a snapshot, or None (a snapshot made before Karta 1.7.5 has none)."""
+    if not SNAPSHOT_ID.match(snapshot_id or ""):
+        return None
+    try:
+        return _run("restic", "dump", snapshot_id, KEY_IN_SNAPSHOT, timeout=300).strip() or None
+    except CloudError:
+        return None
 
 
 def download(snapshot_id: str, dest: str) -> None:
