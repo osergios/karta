@@ -38,6 +38,7 @@ KEY_IN_SNAPSHOT = "/pin-key"
 RCLONE_START = "5m"                       # how long restic waits for rclone to answer (restic's default: 1m)
 STAGE = ".cloud-new"                      # a connection being tried (see _connect)
 NO_REPO = "Δεν βρέθηκαν αντίγραφα σε αυτόν τον φάκελο του cloud"
+LOCKED = "Τα αντίγραφα είναι κλειδωμένα από προηγούμενη εργασία που διακόπηκε"
 WRONG_PASSWORD = "λάθος κωδικός κρυπτογράφησης"
 _running = threading.Lock()
 
@@ -105,8 +106,7 @@ def _run(tool: str, *args: str, timeout: int = 900, cwd: str | None = None, stdo
 # what restic / rclone say -> what the admin reads (the first match wins)
 _KNOWN = [
     (re.compile(r"Is there a repository|unable to open config file", re.I), NO_REPO),
-    (re.compile(r"repository is already locked", re.I),
-     "Τα αντίγραφα είναι κλειδωμένα από προηγούμενη εργασία που διακόπηκε"),
+    (re.compile(r"repository is already locked", re.I), LOCKED),
     (re.compile(r"wrong password", re.I), WRONG_PASSWORD),
     (re.compile(r"quota", re.I), "Ο χώρος στο cloud γέμισε"),               # also a 403: before the next line
     (re.compile(r"\b40[13]\b|invalid_grant|token expired|expired_access_token", re.I),
@@ -313,10 +313,23 @@ def run_backup(now: datetime | None = None) -> None:
         _running.release()
 
 
+def _restic_unlocked(*args: str, **kw) -> str:
+    """restic, and once more after removing stale locks if a run that was cut short (power cut, restart) left the
+    repository locked. `unlock` removes only stale locks, never the one of a backup that is running."""
+    try:
+        return _run("restic", *args, **kw)
+    except CloudError as e:
+        if str(e) != LOCKED:
+            raise
+    _run("restic", "unlock", timeout=300)
+    return _run("restic", *args, **kw)
+
+
 def _backup() -> None:
-    """A snapshot, then the old ones are thinned out (30 daily, 24 monthly, yearly for good). Every night only the
-    list of snapshots is thinned (forget: quick); the space they used is freed once a week (prune), which has to list
-    every file of the repository and is slow on Google Drive. The caller holds _running."""
+    """A snapshot. Every restic run starts rclone afresh, which on Google Drive takes long to log in and find its
+    folders (some 40 seconds), so a night is a single run: the backup. Once a week the old snapshots are thinned out
+    (30 daily, 24 monthly, yearly for good) and their space freed (forget --prune, which lists every file of the
+    repository: slow on Google Drive). The caller holds _running."""
     if empty():
         # A new installation (no employees yet), e.g. a new machine that has just connected to the existing backups
         # to restore them: its empty database must never become the newest snapshot in the list.
@@ -333,14 +346,9 @@ def _backup() -> None:
             with os.fdopen(fd, "w", encoding="utf-8") as f:
                 f.write(config.PIN_KEY)
             files.append("pin-key")
-        try:    # a lock left by an interrupted run (power cut, restart): only stale ones, never a running backup
-            _run("restic", "unlock", timeout=300)
-        except CloudError:
-            pass                                               # the backup below reports any real problem
-        _run("restic", "backup", "--quiet", "--host", "karta", "--tag", "karta", *files, cwd=folder)
-        prune = _prune_due(started)
-        _run("restic", "forget", "--quiet", "--host", "karta", *KEEP, *(["--prune"] if prune else []))
-        if prune:
+        _restic_unlocked("backup", "--quiet", "--host", "karta", "--tag", "karta", *files, cwd=folder)
+        if _prune_due(started):
+            _restic_unlocked("forget", "--quiet", "--host", "karta", *KEEP, "--prune")
             with db.tx() as c:
                 db.put_setting(c, "cloud_last_prune", started.strftime("%Y-%m-%dT%H:%M:%S"))
         _record("ok", seconds=(datetime.now(timezone.utc) - started).total_seconds())
@@ -367,21 +375,28 @@ def list_backups(base: str | None = None) -> list[dict]:
     return out
 
 
-def download_key(snapshot_id: str) -> str | None:
-    """The PIN_KEY kept in a snapshot, or None (a snapshot made before Karta 1.7.5 has none)."""
-    if not SNAPSHOT_ID.match(snapshot_id or ""):
-        return None
-    try:
-        return _run("restic", "dump", snapshot_id, KEY_IN_SNAPSHOT, timeout=300).strip() or None
-    except CloudError:
-        return None
-
-
-def download(snapshot_id: str, dest: str) -> None:
+def download(snapshot_id: str, dest: str) -> str | None:
+    """Writes the snapshot's database to dest and returns the PIN_KEY kept with it (None for a snapshot made before
+    Karta 1.7.5). One restic run for both: each run costs the time to reach the cloud again."""
     if not SNAPSHOT_ID.match(snapshot_id or ""):
         raise CloudError("Μη έγκυρο αντίγραφο.")
-    with open(dest, "wb") as f:
-        _run("restic", "dump", snapshot_id, FILE_IN_SNAPSHOT, stdout=f)
+    work = os.path.join(data_dir(), ".cloud-download")
+    shutil.rmtree(work, ignore_errors=True)
+    os.makedirs(work, mode=0o700)
+    try:
+        _run("restic", "restore", snapshot_id, "--target", work,
+             "--include", FILE_IN_SNAPSHOT, "--include", KEY_IN_SNAPSHOT)
+        got = os.path.join(work, FILE_IN_SNAPSHOT.lstrip("/"))
+        if not os.path.isfile(got):
+            raise CloudError("Το αντίγραφο δεν έχει βάση δεδομένων της Karta.")
+        os.replace(got, dest)
+        try:
+            with open(os.path.join(work, KEY_IN_SNAPSHOT.lstrip("/")), encoding="utf-8") as f:
+                return f.read().strip() or None
+        except OSError:
+            return None
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
 
 
 def due(now: datetime) -> bool:

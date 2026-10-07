@@ -4,6 +4,7 @@ import os
 import secrets
 import logging
 import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as FutureTimeout
 from contextlib import asynccontextmanager
@@ -2038,21 +2039,51 @@ class RestoreCloudIn(BaseModel):
     id: str = Field(max_length=64)
 
 
-@app.post("/admin/api/restore/cloud")
-def admin_restore_cloud(body: RestoreCloudIn, admin: str = Depends(security.require_admin)):
-    """Step 1 (from the cloud): downloads the chosen copy and checks it."""
+# Step 1 (from the cloud) runs in the background: reaching Google Drive can take longer than a page request may last
+# (Cloudflare gives up after 100 seconds), so the page starts it and asks how it is going every few seconds.
+_cloud_fetch = {"state": "idle", "id": "", "error": "", "started": None, "info": None}
+_cloud_fetch_lock = threading.Lock()
+
+
+def _fetch_from_cloud(snapshot_id: str, admin: str) -> None:
     tmp = restore.staged_path() + ".part"
     try:
-        cloud.download(body.id, tmp)
-        restore.stage_key(cloud.download_key(body.id))      # before the check: it reports whether the key fits
+        key = cloud.download(snapshot_id, tmp)
+        restore.stage_key(key)                              # before the check: it reports whether the key fits
         info = restore.stage_file(tmp)
+        db.audit(admin, "restore_staged", f"cloud {snapshot_id}")
+        _cloud_fetch.update(state="done", info=info)
     except (cloud.CloudError, restore.RestoreError) as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        _cloud_fetch.update(state="fail", error=str(e))
+    except Exception as e:
+        log.exception("cloud restore download failed")
+        _cloud_fetch.update(state="fail", error=f"Απρόσμενο σφάλμα: {e}")
     finally:
         if os.path.exists(tmp):
             os.remove(tmp)
-    db.audit(admin, "restore_staged", f"cloud {body.id}")
-    return info
+
+
+@app.post("/admin/api/restore/cloud")
+def admin_restore_cloud(body: RestoreCloudIn, admin: str = Depends(security.require_admin)):
+    """Step 1 (from the cloud): starts downloading the chosen copy; GET says when it is downloaded and checked."""
+    if not cloud.SNAPSHOT_ID.match(body.id or ""):
+        raise HTTPException(status_code=400, detail="Μη έγκυρο αντίγραφο.")
+    with _cloud_fetch_lock:
+        if _cloud_fetch["state"] == "running":
+            if _cloud_fetch["id"] == body.id:               # the page was reloaded meanwhile: keep waiting for it
+                return {"state": "running"}
+            raise HTTPException(status_code=409, detail="Ένα άλλο αντίγραφο κατεβαίνει ήδη· περιμένετε να τελειώσει.")
+        _cloud_fetch.update(state="running", id=body.id, error="", info=None, started=time.monotonic())
+    threading.Thread(target=_fetch_from_cloud, args=(body.id, admin), daemon=True).start()
+    return {"state": "running"}
+
+
+@app.get("/admin/api/restore/cloud")
+def admin_restore_cloud_state(admin: str = Depends(security.require_admin)):
+    st = dict(_cloud_fetch)
+    started = st.pop("started")
+    st["seconds"] = int(time.monotonic() - started) if started else 0
+    return st
 
 
 @app.get("/admin/api/restore/pending")

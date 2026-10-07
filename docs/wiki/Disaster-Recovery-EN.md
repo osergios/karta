@@ -72,7 +72,9 @@ already exist).
 ## Step 4: Restore
 
 1. On the same page: **«Επαναφορά» → «Από το cloud…»**.
-2. Pick the **most recent** backup and press **«Έλεγχος αντιγράφου»** (check backup).
+2. Pick the **most recent** backup and press **«Έλεγχος αντιγράφου»** (check backup). It is
+   downloaded and checked; on Google Drive this takes 1–2 minutes, and the page shows how long
+   it has been («Κατεβαίνει και ελέγχεται το αντίγραφο… 45″»).
 3. Check what it says: business name, number of employees and the **date of the last
    punch**. It should be the last day the old machine worked. It also says that the backup's
    own key (`PIN_KEY`) will be used automatically.

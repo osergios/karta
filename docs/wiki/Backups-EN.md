@@ -40,9 +40,10 @@ database of about 6 MB → about 1 MB a day, 20–25 MB for the 30 daily snapsho
 1 MB for each monthly one: around 50 MB after two years, instead of half a GB with whole
 copies every night. A free Google Drive account (15 GB) is plenty.
 
-**Every night** the new snapshot goes up and the ones no longer kept leave the list; their
-space is freed **once a week**, because that means reading the whole folder (slow on Google
-Drive). What is deleted from Google Drive is gone for good, not moved to the trash. Next to
+**Every night** only the new snapshot goes up: on Google Drive it takes about a minute,
+because reaching Drive takes its time each run, however small the database. The ones no
+longer kept are deleted and their space freed **once a week**, because that means reading the
+whole folder (slow on Google Drive; that night takes longer). What is deleted from Google Drive is gone for good, not moved to the trash. Next to
 the result you also see how long it took, e.g. «07/10 23:41 ✓ (1′20″)».
 
 In **«Ρυθμίσεις» → «Αντίγραφα ασφαλείας»**:
