@@ -140,3 +140,46 @@ def test_business_and_ergani_user_are_saved_together(client, admin, pin_key):
     assert config.ERGANI_PASSWORD == "secret-2"
     assert save(client, "company", **{**values, "ERGANI_PASSWORD": None}).status_code == 200   # password kept
     assert config.ERGANI_PASSWORD == "secret-2" and "company" not in client.get("/admin/api/config").json()
+
+
+def test_settings_only_in_env_go_into_the_backups(client, admin, pin_key, monkeypatch):
+    """Found on a recovery rehearsal: the Ergani password and the mode lived only in .env, so the backups (the
+    database) didn't have them. They are listed, «Αποθήκευση» keeps a password from .env in the database too, and
+    «Να μπουν στα αντίγραφα» copies all of them (secrets encrypted)."""
+    monkeypatch.setitem(config.ENV_VALUES, "ERGANI_USERNAME", "env-user")
+    monkeypatch.setitem(config.ENV_VALUES, "ERGANI_PASSWORD", "env-secret")
+    appconfig.load()
+    assert {"ERGANI_PASSWORD", "ERGANI_MODE", "EMPLOYER_AFM"} <= set(client.get("/admin/api/config").json()["env_only"])
+    # «Αποθήκευση» with the password field left empty: it is kept, and now in the database
+    r = save(client, "company", EMPLOYER_AFM="123456783", BRANCH_NUMBER="0", ERGANI_EMPLOYER_ID="",
+             TIME_DECLARATION="advance", ERGANI_USERNAME="env-user", ERGANI_PASSWORD=None, ERGANI_USER_TYPE="01")
+    assert r.status_code == 200, r.text
+    sealed = db.setting("cfg.ERGANI_PASSWORD")
+    assert sealed and "env-secret" not in sealed and config.ERGANI_PASSWORD == "env-secret"
+    # the rest, with one button
+    r = client.post("/admin/api/config/adopt-env")
+    assert r.status_code == 200 and "ERGANI_MODE" in r.json()["saved"], r.text
+    assert r.json()["config"]["env_only"] == [] and db.setting("cfg.ERGANI_MODE") == "dry_run"
+    assert config.ERGANI_MODE == "dry_run" and config.ERGANI_USERNAME == "env-user"     # same values
+
+
+def test_the_restore_check_says_when_the_ergani_password_is_missing(client, admin, pin_key):
+    r = client.post("/admin/api/restore/upload", content=client.get("/admin/api/backup.db").content)
+    assert r.status_code == 200 and r.json()["ergani_password"] is False, r.text
+    client.post("/admin/api/restore/discard")
+    save(client, "ergani", ERGANI_USERNAME="user1", ERGANI_PASSWORD="secret-pass", ERGANI_USER_TYPE="01")
+    r = client.post("/admin/api/restore/upload", content=client.get("/admin/api/backup.db").content)
+    assert r.json()["ergani_password"] is True
+    client.post("/admin/api/restore/discard")
+
+
+def test_a_restored_onboarding_date_does_not_count_in_dry_run(client, admin, pin_key, logins, clock):
+    """Found on a recovery rehearsal: the mode lived in .env (so the new machine stayed in «Δοκιμαστική») while the
+    period's date came back with the database. Starting the period must then switch the mode, from today."""
+    with db.tx() as c:
+        db.put_setting(c, "onboarding_since", "2026-09-01")
+        db.put_setting(c, "onboarding_until", "2026-12-01")
+    r = client.post("/admin/api/mode", json={"mode": "production", "afm": config.EMPLOYER_AFM, "onboarding_until": "2026-11-20"})
+    assert r.status_code == 200, r.text
+    assert config.ERGANI_MODE == "production"
+    assert (db.setting("onboarding_since"), db.setting("onboarding_until")) == ("2026-10-06", "2026-11-20")

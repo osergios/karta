@@ -20,17 +20,22 @@ def store(tmp_path):
     cloud._forget()
 
 
-def fetch_from_cloud(client, snapshot_id):
-    """«Έλεγχος αντιγράφου»: starts the download in the background, then asks until it is done (as the page does)."""
-    r = client.post("/admin/api/restore/cloud", json={"id": snapshot_id})
+def cloud_job(client, path, body):
+    """A slow step with the cloud: started in the background, then asked until it is over (as the page does)."""
+    r = client.post(path, json=body)
     assert r.status_code == 200 and r.json()["state"] == "running", r.text
     deadline = time.time() + 60
     while time.time() < deadline:
-        st = client.get("/admin/api/restore/cloud").json()
+        st = client.get(path).json()
         if st["state"] != "running":
             return st
         time.sleep(0.1)
-    raise AssertionError("the download did not finish")
+    raise AssertionError(f"{path} did not finish")
+
+
+def fetch_from_cloud(client, snapshot_id):
+    """«Έλεγχος αντιγράφου»: download and check in the background."""
+    return cloud_job(client, "/admin/api/restore/cloud", {"id": snapshot_id})
 
 
 def backup_bytes(client) -> bytes:
@@ -147,7 +152,7 @@ def test_cloud_backup_is_encrypted_deduplicated_and_can_be_restored(client, admi
     assert cloud.connect("local", local_path=str(store), password=password) is None
     add_employee(afm="900000002", display="Γιώργος")
     st = fetch_from_cloud(client, cloud.list_backups()[0]["id"])
-    assert st["state"] == "done" and st["info"]["employees"] == 1, st
+    assert st["state"] == "done" and st["result"]["employees"] == 1, st
     r = client.post("/admin/api/restore/apply", json={"confirm": True})
     assert db.one("SELECT COUNT(*) n FROM employees")["n"] == 1
     os.remove(os.path.join(os.path.dirname(config.DB_PATH), r.json()["kept"]))
@@ -176,11 +181,40 @@ def test_no_backup_while_connecting(store):
 
 
 def test_connect_reports_the_first_backup(client, admin, monkeypatch):
+    """Connecting runs in the background; the result (and the new encryption password) is handed over once."""
     monkeypatch.setattr(cloud, "connect", lambda *a, **k: "secret-password-1234")
     monkeypatch.setattr(cloud, "status", lambda: {"state": "fail", "error": "δεν απαντά το cloud"})
-    r = client.post("/admin/api/cloud/connect", json={"provider": "drive", "token": "{}"})
-    assert r.json() == {"ok": True, "password": "secret-password-1234", "first_backup": "fail",
-                        "error": "δεν απαντά το cloud", "empty": True}
+    st = cloud_job(client, "/admin/api/cloud/connect", {"provider": "drive", "token": '{"access_token": "x"}'})
+    assert st["state"] == "done" and st["result"] == {"password": "secret-password-1234", "first_backup": "fail",
+                                                      "error": "δεν απαντά το cloud", "empty": True}
+    assert client.get("/admin/api/cloud/connect").json()["state"] == "idle"        # the password: once only
+
+
+def test_slow_cloud_steps_wait_for_each_other(client, admin, monkeypatch):
+    """A reloaded page asking again for the same step keeps waiting for it; another one waits its turn; a failure
+    comes back as a message."""
+    import threading
+    go = threading.Event()
+
+    def slow_list():
+        go.wait(10)
+        return [{"id": "abcdef12", "time": "2026-10-07T13:32"}]
+    monkeypatch.setattr(cloud, "list_backups", slow_list)
+    assert client.post("/admin/api/cloud/backups", json={}).json()["state"] == "running"
+    assert client.post("/admin/api/cloud/backups", json={}).json()["state"] == "running"       # the same: waits
+    st = client.get("/admin/api/cloud/backups").json()
+    assert st["state"] == "running" and st["seconds"] >= 0
+    go.set()
+    deadline = time.time() + 10
+    while client.get("/admin/api/cloud/backups").json()["state"] == "running" and time.time() < deadline:
+        time.sleep(0.05)
+    assert client.get("/admin/api/cloud/backups").json()["result"][0]["id"] == "abcdef12"
+
+    def broken():
+        raise cloud.CloudError("Το cloud άργησε να απαντήσει")
+    monkeypatch.setattr(cloud, "list_backups", broken)
+    st = cloud_job(client, "/admin/api/cloud/backups", {})
+    assert st["state"] == "fail" and "άργησε" in st["error"]
 
 
 @needs_rclone
@@ -295,7 +329,7 @@ def test_a_new_machine_never_uploads_its_empty_database(client, admin, store):
     cloud.run_backup()                                                     # nor at night
     assert len(cloud.list_backups()) == 1
     st = fetch_from_cloud(client, cloud.list_backups()[0]["id"])
-    assert st["state"] == "done" and st["info"]["employees"] == 1, st  # the newest is the real one
+    assert st["state"] == "done" and st["result"]["employees"] == 1, st  # the newest is the real one
 
 
 @needs_rclone
@@ -324,7 +358,7 @@ def test_a_cloud_restore_on_a_new_machine_brings_its_pin_key(client, admin, stor
     try:
         st = fetch_from_cloud(client, snap)
         assert st["state"] == "done", st
-        assert st["info"]["pin_key_ok"] is False and st["info"]["pin_key_restored"] is True
+        assert st["result"]["pin_key_ok"] is False and st["result"]["pin_key_restored"] is True
         r = client.post("/admin/api/restore/apply", json={"confirm": True})
         assert r.status_code == 200, r.text
         assert config.PIN_KEY == old_key                                   # used from now on

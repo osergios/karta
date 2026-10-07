@@ -9,6 +9,13 @@
 Anything saved here applies immediately (no restart) and **overrides** `.env`. A value
 that comes from `.env` is marked «από το .env».
 
+Backups hold the **database**, not `.env`. If some settings exist only in `.env` (e.g. the
+Ergani password or the mode, on an installation set up without the assistant), the top of
+the section says **«Μόνο στο .env, όχι στα αντίγραφα: …»** (only in .env, not in the
+backups). Press **«Να μπουν στα αντίγραφα»** (put them in the backups): they are stored in
+the database with the same values (passwords encrypted), so a restore on a new machine brings
+everything back. «Αποθήκευση» does the same when the password field is left empty.
+
 - **«Λειτουργία» (mode):** **«Δοκιμαστική»** (test and training, nothing is sent),
   **«Περίοδος προσαρμογής»** (onboarding period, with the mandatory date: punches are
   recorded and sent from that day) or **«Κανονική λειτουργία»** (normal operation). From

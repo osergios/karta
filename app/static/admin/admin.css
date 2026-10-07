@@ -457,3 +457,10 @@ button:disabled { cursor: default; }
 .mode-buttons { display: flex; flex-direction: column; gap: .4rem; align-items: stretch; }
 .cfg-advanced { margin-top: 1.4rem; padding-top: .8rem; border-top: 1px solid var(--line); }
 .cfg-sub { font-size: .95rem; margin: 1.1rem 0 .2rem; }
+
+/* questions inside the page (askBox), instead of the browser's confirm() / prompt() */
+dialog.ask { max-width: min(32rem, calc(100vw - 2rem)); width: 100%; padding: 1.3rem 1.4rem 1.1rem; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink); box-shadow: 0 12px 40px rgba(0, 0, 0, .25); }
+dialog.ask::backdrop { background: rgba(0, 0, 0, .45); }
+.ask-text { margin: 0 0 1rem; white-space: pre-line; line-height: 1.5; }
+dialog.ask input { width: 100%; box-sizing: border-box; font: inherit; padding: .55rem .7rem; margin: 0 0 1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); }
+.ask-actions { display: flex; justify-content: flex-end; gap: .6rem; flex-wrap: wrap; }

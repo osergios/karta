@@ -64,7 +64,8 @@ Open the admin page (`https://…/admin`) → **«Ρυθμίσεις» → «Α�
 2. A new access code, as the page says (for Google Drive: `rclone authorize "drive"`),
    **with the same Google account**. Paste it.
 3. Open **«Έχω ήδη αντίγραφα στο cloud»**, type the **encryption password** and press
-   **«Σύνδεση στα υπάρχοντα αντίγραφα»**.
+   **«Σύνδεση στα υπάρχοντα αντίγραφα»**. The page shows how long it has been; on Google
+   Drive it takes 1–2 minutes (and so does the list of backups in the next step).
 
 Don't press «Σύνδεση και πρώτο ανέβασμα»: that's for new backups (and it will tell you some
 already exist).
@@ -87,10 +88,12 @@ shop screens.
 ## Step 5: Check
 
 - **«Ρυθμίσεις» → «Επιχείρηση και σύνδεση με το ΕΡΓΑΝΗ» → «Δοκιμή σύνδεσης».**
-  If the backup is from a version before 1.7.5 (without the key), type the Ergani
+  If the backup is from a version before 1.7.5 (without the key), or the backup check said
+  it has no Ergani password (it was only in the old machine's `.env`), type the Ergani
   web-services user's password again and press «Αποθήκευση»; the same for the ntfy token,
   if you had one.
-- **«Λειτουργία»** (mode): the same as before.
+- **«Λειτουργία»** (mode): the same as before. If not (it was only in the old machine's
+  `.env`), choose it again.
 - **«Αντίγραφα ασφαλείας»:** press **«Ανέβασμα τώρα»**, for a first backup from the new machine.
 - On the machine: `cd ~/karta && ./setup.sh check`.
 
