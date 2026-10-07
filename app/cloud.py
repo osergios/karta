@@ -361,14 +361,28 @@ def _backup() -> None:
         shutil.rmtree(folder, ignore_errors=True)
 
 
+_TIME = re.compile(r"^(\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d)(?:\.\d+)?(Z|[+-]\d\d:?\d\d)?$")
+
+
+def snapshot_time(raw: str) -> datetime | None:
+    """restic's time of a snapshot -> local (Athens) time, naive. restic writes the clock of the machine that took it
+    with its offset ("2026-10-07T13:32:10.123456789+03:00" with TZ=Europe/Athens, "…Z" in UTC)."""
+    m = _TIME.match((raw or "").strip())
+    if not m:
+        return None
+    off = m.group(2) or "Z"
+    off = "+00:00" if off == "Z" else (off if ":" in off else f"{off[:3]}:{off[3:]}")
+    t = datetime.fromisoformat(m.group(1) + off)
+    return t.astimezone(config.TZ).replace(tzinfo=None)
+
+
 def list_backups(base: str | None = None) -> list[dict]:
     """The snapshots in the cloud, newest first: [{id, time (local, ISO), kind}]."""
     raw = _run("restic", "snapshots", "--json", "--host", "karta", timeout=300, base=base)
     out = []
     for s in json.loads(raw or "[]") or []:
-        try:
-            t = datetime.fromisoformat(s["time"][:19]).replace(tzinfo=timezone.utc).astimezone(config.TZ).replace(tzinfo=None)
-        except (KeyError, ValueError):
+        t = snapshot_time(s.get("time", ""))
+        if t is None:
             continue
         out.append({"id": s.get("short_id") or s["id"][:8], "time": t.isoformat(timespec="minutes")})
     out.sort(key=lambda x: x["time"], reverse=True)
