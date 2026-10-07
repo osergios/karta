@@ -87,6 +87,11 @@ steps 2–3 with a new access code. Karta keeps the **same encryption password**
 with the same backups; you don't need to type it. If the new connection fails, the previous
 setup stays as it was (Karta tries the new one separately and keeps it only if it works).
 
+**«Το cloud άργησε να απαντήσει»** (the cloud was slow to answer): Google Drive (or the
+machine's connection) didn't answer in time. It's usually temporary: Karta tries again by
+itself an hour later, and every hour until it works; you can also press «Ανέβασμα τώρα».
+Backups already uploaded aren't affected. If it happens often, try Backblaze B2.
+
 ### To a USB stick: `./setup.sh usb`
 
 For a Raspberry Pi or PC in the shop or at home. Connecting a USB stick needs administrator
