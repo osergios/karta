@@ -274,3 +274,56 @@ def test_a_new_machine_never_uploads_its_empty_database(client, admin, store):
     assert len(cloud.list_backups()) == 1
     r = client.post("/admin/api/restore/cloud", json={"id": cloud.list_backups()[0]["id"]})
     assert r.status_code == 200 and r.json()["employees"] == 1, r.text  # the newest is the real one
+
+
+@needs_rclone
+def test_a_cloud_restore_on_a_new_machine_brings_its_pin_key(client, admin, store, monkeypatch):
+    """The old machine's PIN_KEY travels inside the encrypted snapshot; the new machine (another key in its .env)
+    takes it over on restore, so the Ergani password and the PINs open as before, with nothing to type."""
+    old_key = base64.urlsafe_b64encode(os.urandom(32)).decode()
+    new_key = base64.urlsafe_b64encode(os.urandom(32)).decode()
+    monkeypatch.setattr(config, "PIN_KEY", old_key)
+    add_employee()
+    with db.tx() as c:
+        db.put_setting(c, "cfg.ERGANI_PASSWORD", security.seal_pin("ergani-secret", b"karta-cfg-ERGANI_PASSWORD"))
+    password = cloud.connect("local", local_path=str(store))
+    snap = cloud.list_backups()[0]["id"]
+    assert cloud.download_key(snap) == old_key
+
+    # the old machine is gone; a new one, with its own key and an empty database
+    cloud._forget()
+    with db.tx() as c:
+        for t in ("employees", "settings"):
+            c.execute(f"DELETE FROM {t}")
+    monkeypatch.setattr(config, "PIN_KEY", new_key)
+    assert cloud.connect("local", local_path=str(store), password=password) is None
+    key_file = config.restored_pin_key_path()
+    try:
+        r = client.post("/admin/api/restore/cloud", json={"id": snap})
+        assert r.status_code == 200, r.text
+        assert r.json()["pin_key_ok"] is False and r.json()["pin_key_restored"] is True
+        r = client.post("/admin/api/restore/apply", json={"confirm": True})
+        assert r.status_code == 200, r.text
+        assert config.PIN_KEY == old_key                                   # used from now on
+        with open(key_file, encoding="utf-8") as f:
+            assert f.read() == old_key                                     # and after a restart
+        assert oct(os.stat(key_file).st_mode & 0o777) == "0o600"
+        sealed = db.setting("cfg.ERGANI_PASSWORD")
+        assert security.open_pin(sealed, b"karta-cfg-ERGANI_PASSWORD") == "ergani-secret"
+        assert config.VALUES.get("ERGANI_PASSWORD") == "ergani-secret"         # loaded, nothing to type again
+        assert not os.path.exists(restore.staged_key_path())
+        os.remove(os.path.join(os.path.dirname(config.DB_PATH), r.json()["kept"]))
+    finally:
+        if os.path.exists(key_file):
+            os.remove(key_file)
+
+
+def test_a_backup_without_a_key_restores_as_before(client, admin):
+    """A file upload (or a snapshot made before 1.7.5) brings no key: nothing is taken over."""
+    restore.stage_key(None)
+    assert not os.path.exists(restore.staged_key_path())
+    r = client.post("/admin/api/restore/upload", content=backup_bytes(client))
+    assert r.status_code == 200, r.text
+    assert r.json()["pin_key_restored"] is False
+    client.post("/admin/api/restore/discard")
+    assert not os.path.exists(config.restored_pin_key_path())

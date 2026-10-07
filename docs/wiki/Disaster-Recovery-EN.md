@@ -9,6 +9,10 @@ they differ, it says so.
 
 Time: about an hour.
 
+The **encryption password** is all you need: the cloud backup holds the database **and** the
+key that locks the Ergani password, the PINs and the QR cards inside it (`PIN_KEY`). Karta
+takes it over by itself when restoring.
+
 ## What you need
 
 | What | Why |
@@ -16,7 +20,6 @@ Time: about an hour.
 | **The encryption password** of the backups | The one you wrote on paper or in a password manager. Without it the cloud backups can't be opened. |
 | **The cloud account** | The same Google Drive, Dropbox or Backblaze B2 account the backups went to. Don't touch the folder there (`data`, `index`, `keys`, `locks`, `snapshots`, `config`). |
 | **The Cloudflare account** | Your domain is there. |
-| If you have it: **the `.env`**, or just its `PIN_KEY` | Without it you type the Ergani password again ([step 6](#step-6-check)). |
 | **A new machine** | A VPS, or a PC / Raspberry Pi with Ubuntu, as in [Easy installation](Easy-Installation-EN#step-2-prepare-the-machine). |
 
 > **A local machine with a USB backup that survived?** See [With USB](#with-usb-local-machine-only):
@@ -53,21 +56,7 @@ with the same answers as the first time:
 **Don't set anything up on the admin page** («Πρώτα βήματα», employees, Ergani): it all comes
 from the backup.
 
-## Step 3: The old `PIN_KEY` (if you have it)
-
-Otherwise, go on to step 4.
-
-```bash
-cd ~/karta && nano .env
-```
-
-Replace the `PIN_KEY=…` line with the old one, save (Ctrl+O, Enter, Ctrl+X) and:
-
-```bash
-docker compose up -d
-```
-
-## Step 4: Connect the cloud to the existing backups
+## Step 3: Connect the cloud to the existing backups
 
 Open the admin page (`https://…/admin`) → **«Ρυθμίσεις» → «Αντίγραφα ασφαλείας»**:
 
@@ -80,28 +69,30 @@ Open the admin page (`https://…/admin`) → **«Ρυθμίσεις» → «Α�
 Don't press «Σύνδεση και πρώτο ανέβασμα»: that's for new backups (and it will tell you some
 already exist).
 
-## Step 5: Restore
+## Step 4: Restore
 
 1. On the same page: **«Επαναφορά» → «Από το cloud…»**.
 2. Pick the **most recent** backup and press **«Έλεγχος αντιγράφου»** (check backup).
 3. Check what it says: business name, number of employees and the **date of the last
-   punch**. It should be the last day the old machine worked.
+   punch**. It should be the last day the old machine worked. It also says that the backup's
+   own key (`PIN_KEY`) will be used automatically.
 4. **«Επαναφορά τώρα»** (restore now).
 
 Within seconds Karta has everything it had: employees (PINs and QR cards work as before),
 schedules, leave, punches, settings, the mode (e.g. «Κανονική λειτουργία») and the registered
 shop screens.
 
-## Step 6: Check
+## Step 5: Check
 
 - **«Ρυθμίσεις» → «Επιχείρηση και σύνδεση με το ΕΡΓΑΝΗ» → «Δοκιμή σύνδεσης».**
-  Without the old `PIN_KEY` (step 3): type the Ergani web-services user's password again and
-  press «Αποθήκευση». The same for the ntfy token, if you had one.
+  If the backup is from a version before 1.7.5 (without the key), type the Ergani
+  web-services user's password again and press «Αποθήκευση»; the same for the ntfy token,
+  if you had one.
 - **«Λειτουργία»** (mode): the same as before.
 - **«Αντίγραφα ασφαλείας»:** press **«Ανέβασμα τώρα»**, for a first backup from the new machine.
 - On the machine: `cd ~/karta && ./setup.sh check`.
 
-## Step 7: The shop screen
+## Step 6: The shop screen
 
 - **VPS** (the shop device survived): open Karta's address as always. It works as before,
   because its registration is in the backup.
@@ -110,7 +101,7 @@ shop screens.
   κωδικού εγγραφής» and `/enroll` on the device ([Shop screen](Kiosk-EN#registering-the-device)).
   You can delete the old one from the list.
 
-## Step 8: Punches during the gap
+## Step 7: Punches during the gap
 
 Whatever happened after the last backup (the cloud copy goes up every night at 23:40) until
 Karta came back isn't in Karta:
@@ -136,18 +127,13 @@ nightly backup **and** the `.env` (with the `PIN_KEY`).
 
    Choose **"2) από USB"** (from USB) and the most recent backup. When asked about the
    backup's `PIN_KEY`, answer **"y"**.
-3. Continue with [steps 6–8](#step-6-check).
-4. Reconnect the cloud as in [step 4](#step-4-connect-the-cloud-to-the-existing-backups)
+3. Continue with [steps 5–7](#step-5-check).
+4. Reconnect the cloud as in [step 3](#step-3-connect-the-cloud-to-the-existing-backups)
    (with «Έχω ήδη αντίγραφα στο cloud» and the encryption password), so the backups carry on
    in the same folder.
 
 ## Be ready, starting now
 
-- Keep the **encryption password** («Εμφάνιση κωδικού κρυπτογράφησης» shows it again) and the
-  **whole `.env`** in a password manager:
-
-  ```bash
-  cat ~/karta/.env
-  ```
-
-- Print this page and keep it with them.
+- Keep the **encryption password** on paper or in a password manager («Εμφάνιση κωδικού
+  κρυπτογράφησης» shows it again). It's the only thing you need.
+- Print this page and keep it with it.

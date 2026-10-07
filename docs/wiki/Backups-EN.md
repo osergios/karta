@@ -135,15 +135,17 @@ In **«Ρυθμίσεις» → «Αντίγραφα ασφαλείας» → «
 First it shows **what the backup contains** (business, employees, punches, last punch), and
 nothing changes. With **«Επαναφορά τώρα»** (restore now) the current database is kept as
 `before-restore-….db` (next to the database) and the backup takes its place, without a
-restart. If the backup was made with a different `PIN_KEY`, the page tells you: then the
-Ergani password and the PINs aren't shown until you put the old `PIN_KEY` in `.env` (it's
-in the backups' `karta.env`) or enter them again.
+restart. If the backup was made on another machine (another `PIN_KEY`): a cloud backup
+(version 1.7.5 and later) carries its key along, and Karta uses it automatically. A file, or
+an older backup, doesn't: the page tells you, and the Ergani password and the PINs aren't
+shown until you put the old `PIN_KEY` in `.env` (it's in the backups' `karta.env`) or enter
+them again.
 
 ### On a new machine (the old one is gone)
 
 Step by step, for a VPS and for a local machine: **[Disaster recovery](Disaster-Recovery-EN)**.
-You need the encryption password and, if you have it, the `.env` (or just its `PIN_KEY`):
-the cloud snapshot holds **only the database**.
+You need only the encryption password: the cloud snapshot holds the database and the key of
+its secrets (`PIN_KEY`), which Karta takes over by itself when restoring.
 
 ### From the terminal: `./setup.sh restore`
 

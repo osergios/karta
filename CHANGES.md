@@ -511,3 +511,12 @@
      have, until Karta is back, new machine, setup assistant with the same answers, old `PIN_KEY`, connect to the
      existing backups, check and restore, Ergani password and test, the shop screen, punches during the gap, and the
      simpler USB path. Linked from Backups, the sidebar and Home.
+102. **A cloud restore brings the PIN_KEY back too.** The setup assistant writes `PIN_KEY` into `.env` and nobody
+     ever sees it, so after losing the machine nobody had it: the Ergani password and the ntfy token had to be typed
+     again, and PINs and QR cards couldn't be shown. Each cloud snapshot now also holds `pin-key` (encrypted with
+     everything else). «Επαναφορά» → «Από το cloud…» fetches it (`cloud.download_key`), the check says it will be used
+     (`pin_key_restored`), and after the swap Karta keeps it in `/data/pin-key` (mode 600, next to the database, not
+     inside it) and uses it instead of the `.env` one, also after a restart (`config.restored_pin_key_path`). Only when
+     the backup's key is the one that opens it; a file upload or an older snapshot works as before. `backup.sh` writes
+     that key into `karta.env`, and `./setup.sh restore` clears it (the `.env` gets the backup's own key there). The
+     disaster recovery guide needs only the encryption password now.

@@ -2022,6 +2022,7 @@ async def admin_restore_upload(request: Request, admin: str = Depends(security.r
                 if size > MAX_RESTORE_BYTES:
                     raise HTTPException(status_code=413, detail="Το αρχείο είναι πολύ μεγάλο για αντίγραφο της Karta.")
                 f.write(chunk)
+        restore.stage_key(None)                           # a file brings no key of its own
         info = restore.stage_file(tmp)
     except restore.RestoreError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -2042,6 +2043,7 @@ def admin_restore_cloud(body: RestoreCloudIn, admin: str = Depends(security.requ
     tmp = restore.staged_path() + ".part"
     try:
         cloud.download(body.id, tmp)
+        restore.stage_key(cloud.download_key(body.id))      # before the check: it reports whether the key fits
         info = restore.stage_file(tmp)
     except (cloud.CloudError, restore.RestoreError) as e:
         raise HTTPException(status_code=400, detail=str(e))

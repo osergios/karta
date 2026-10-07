@@ -28,13 +28,14 @@ def verify_pin(pin_hash: str, pin: str) -> bool:
 PIN_LENGTH = 6
 
 
-def _pin_cipher():
+def _pin_cipher(pin_key: str | None = None):
     from . import config
-    if not config.PIN_KEY:
+    pin_key = pin_key or config.PIN_KEY
+    if not pin_key:
         return None
     import base64
     from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-    key = base64.urlsafe_b64decode(config.PIN_KEY + "=" * (-len(config.PIN_KEY) % 4))
+    key = base64.urlsafe_b64decode(pin_key + "=" * (-len(pin_key) % 4))
     if len(key) != 32:
         raise RuntimeError("PIN_KEY must be 32 bytes (urlsafe base64)")
     return AESGCM(key)
@@ -50,8 +51,12 @@ def seal_pin(pin: str, aad: bytes = b"workcard-pin") -> str | None:
     return base64.urlsafe_b64encode(nonce + aead.encrypt(nonce, pin.encode(), aad)).decode()
 
 
-def open_pin(token: str | None, aad: bytes = b"workcard-pin") -> str | None:
-    aead = _pin_cipher()
+def open_pin(token: str | None, aad: bytes = b"workcard-pin", pin_key: str | None = None) -> str | None:
+    """pin_key: another key than this installation's (checking a backup's key before restoring it)."""
+    try:
+        aead = _pin_cipher(pin_key)
+    except (ValueError, RuntimeError):
+        return None
     if aead is None or not token:
         return None
     import base64

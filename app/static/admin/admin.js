@@ -843,7 +843,9 @@
   function showRestore(info) {
     const box = document.getElementById("restorePanel");
     box.hidden = false;
-    const warn = info.pin_key_ok === false
+    const warn = info.pin_key_ok === false && info.pin_key_restored
+      ? el("p", { class: "small" }, "Το αντίγραφο φτιάχτηκε σε άλλο μηχάνημα και έχει μαζί το κλειδί των κωδικών του (PIN_KEY): θα χρησιμοποιηθεί αυτόματα, ώστε ο κωδικός ΕΡΓΑΝΗ, τα PIN και οι κάρτες QR να λειτουργούν όπως πριν.")
+      : info.pin_key_ok === false
       ? el("p", { class: "warn-text" }, "Προσοχή: το αντίγραφο φτιάχτηκε με άλλο PIN_KEY. Μετά την επαναφορά ο κωδικός ΕΡΓΑΝΗ και τα PIN δεν θα εμφανίζονται: βάλτε στο .env το PIN_KEY της παλιάς εγκατάστασης (υπάρχει στο karta.env των αντιγράφων) ή ξαναγράψτε τον κωδικό ΕΡΓΑΝΗ και δώστε νέα PIN.")
       : null;
     box.replaceChildren(

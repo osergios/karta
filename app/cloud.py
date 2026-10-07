@@ -6,6 +6,9 @@ password shown to the admin once, compresses it, and stores only what changed si
 30 daily, 24 monthly and one yearly snapshot costs little more than a single copy. Each snapshot is still a complete
 database and restores on its own.
 
+Each snapshot also holds this installation's PIN_KEY (pin-key, encrypted with everything else), so a restore on a new
+machine opens the Ergani password and the PINs sealed with it (see restore.py).
+
 On this machine, next to the database: rclone.conf (access to the cloud), cloud-password and cloud.json (mode 600).
 A new connection is tried in a folder of its own (.cloud-new) and takes their place only once it works, so a failed
 reconnect never loses the working setup, nor the password of the backups already in the cloud.
@@ -30,6 +33,7 @@ RUN_AT = (23, 40)                         # nightly snapshot, local time
 KEEP = ("--keep-daily", "30", "--keep-monthly", "24", "--keep-yearly", "1000")
 SNAPSHOT_ID = re.compile(r"^[0-9a-f]{8,64}$")
 FILE_IN_SNAPSHOT = "/karta.db"
+KEY_IN_SNAPSHOT = "/pin-key"
 RCLONE_START = "5m"                       # how long restic waits for rclone to answer (restic's default: 1m)
 STAGE = ".cloud-new"                      # a connection being tried (see _connect)
 NO_REPO = "Δεν βρέθηκαν αντίγραφα σε αυτόν τον φάκελο του cloud"
@@ -309,11 +313,17 @@ def _backup() -> None:
     try:
         os.makedirs(folder, exist_ok=True)
         snapshot(os.path.join(folder, "karta.db"))
+        files = ["karta.db"]
+        if config.PIN_KEY:                 # what the Ergani password and the PINs in it are sealed with
+            fd = os.open(os.path.join(folder, "pin-key"), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                f.write(config.PIN_KEY)
+            files.append("pin-key")
         try:    # a lock left by an interrupted run (power cut, restart): only stale ones, never a running backup
             _run("restic", "unlock", timeout=300)
         except CloudError:
             pass                                               # the backup below reports any real problem
-        _run("restic", "backup", "--quiet", "--host", "karta", "--tag", "karta", "karta.db", cwd=folder)
+        _run("restic", "backup", "--quiet", "--host", "karta", "--tag", "karta", *files, cwd=folder)
         _run("restic", "forget", "--quiet", "--host", "karta", *KEEP, "--prune")
         _record("ok")
         log.info("Cloud backup done")
@@ -337,6 +347,16 @@ def list_backups(base: str | None = None) -> list[dict]:
         out.append({"id": s.get("short_id") or s["id"][:8], "time": t.isoformat(timespec="minutes")})
     out.sort(key=lambda x: x["time"], reverse=True)
     return out
+
+
+def download_key(snapshot_id: str) -> str | None:
+    """The PIN_KEY kept in a snapshot, or None (a snapshot made before Karta 1.7.5 has none)."""
+    if not SNAPSHOT_ID.match(snapshot_id or ""):
+        return None
+    try:
+        return _run("restic", "dump", snapshot_id, KEY_IN_SNAPSHOT, timeout=300).strip() or None
+    except CloudError:
+        return None
 
 
 def download(snapshot_id: str, dest: str) -> None:
