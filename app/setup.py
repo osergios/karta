@@ -247,13 +247,16 @@ class Cloudflare:
         return app
 
 
-def tunnel_for(cf: Cloudflare, account: str, host: str) -> tuple[str, dict]:
-    """The tunnel for this address. «karta» serves one address: a reinstall of the same one (a new machine after a
-    disaster) takes it over. Another installation in the same Cloudflare account (a test machine, a second shop) gets
-    a tunnel of its own, «karta-<address>»: taking «karta» would replace the first one's address and take it offline."""
+def tunnel_for(cf: Cloudflare, account: str, host: str, rec: dict | None) -> tuple[str, dict]:
+    """The tunnel for this address. «karta» is taken over only when it already serves this address (a new machine
+    after a disaster): its route, or the address's DNS record, points to it. Any other installation in the same
+    Cloudflare account (a test machine, a second shop) gets a tunnel of its own, «karta-<address>»: taking «karta»
+    would replace the first installation's address and take it offline."""
     first = cf.find_tunnel(account, "karta")
-    if first is None or host in cf.tunnel_hosts(account, first["id"]) or not cf.tunnel_hosts(account, first["id"]):
-        return "karta", first or cf.tunnel(account, "karta")
+    if first is None:
+        return "karta", cf.tunnel(account, "karta")
+    if (rec or {}).get("content") == f"{first['id']}.cfargotunnel.com" or host in cf.tunnel_hosts(account, first["id"]):
+        return "karta", first
     name = f"karta-{host}"
     return name, cf.tunnel(account, name)
 
@@ -270,10 +273,10 @@ def cloudflare_auto(token: str, host: str, emails: list[str], session=None, conf
         raise CloudflareError("δεν έχει ενεργοποιηθεί το Zero Trust. Ανοίξτε μία φορά dash.cloudflare.com → Zero Trust, "
                               "διαλέξτε team name και το Free πλάνο, και ξανατρέξτε τον οδηγό.")
     ok(f"Zero Trust: {team}")
-    name, tun = tunnel_for(cf, account, host)
+    rec = cf.dns_record(zone["id"], host)
+    name, tun = tunnel_for(cf, account, host, rec)
     cf.route(account, tun["id"], host)
     ok(f"tunnel «{name}» → {host}")
-    rec = cf.dns_record(zone["id"], host)
     target = f"{tun['id']}.cfargotunnel.com"
     if rec and rec.get("content") != target:
         if confirm and not confirm(f"Υπάρχει ήδη εγγραφή DNS για το {host} ({rec.get('type')} {rec.get('content')}). Να αντικατασταθεί;"):

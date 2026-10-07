@@ -183,6 +183,18 @@ def test_a_second_installation_gets_its_own_tunnel():
     assert len(cf.tunnels) == 2
 
 
+def test_a_tunnel_made_by_hand_is_never_taken_over():
+    """«karta» made outside the assistant (its routes not in the Cloudflare configuration): a new address gets its
+    own tunnel; the same address (its DNS record points to «karta») takes it over."""
+    cf = FakeCloudflare()
+    cf.tunnels.append({"id": "T1", "name": "karta"})                       # no remote configuration
+    wizard.cloudflare_auto("token", "karta.test-shop.eu.org", ["me@example.gr"], session=cf)
+    assert [t["name"] for t in cf.tunnels] == ["karta", "karta-karta.test-shop.eu.org"] and "T1" not in cf.configs
+    cf.dns = {"id": "D9", "type": "CNAME", "content": "T1.cfargotunnel.com"}
+    wizard.cloudflare_auto("token", HOST, ["me@example.gr"], session=cf)
+    assert len(cf.tunnels) == 2 and cf.configs["T1"]["config"]["ingress"][0]["hostname"] == HOST
+
+
 def test_cloudflare_auto_uses_reusable_policies_when_needed():
     cf = FakeCloudflare(app_policies_fail=True)
     wizard.cloudflare_auto("token", HOST, ["me@example.gr"], session=cf)
