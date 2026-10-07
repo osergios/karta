@@ -80,7 +80,7 @@ use the «Κλείσιμο DD/MM…» button on the [Today](Admin-Today-EN) tab.
 
 ### Someone forgot a whole shift
 
-«Ενέργειες ▾» → «Ξεχασμένη βάρδια…». It's recorded in Karta only, for the report and pay.
+«Σήμερα» → the person's «Ενέργειες ▾» → «Ξεχασμένη βάρδια…». It's recorded in Karta only, for the report and pay.
 
 ### We declare overtime retrospectively. What changes?
 

@@ -17,7 +17,6 @@
 
 **Σελίδα διαχείρισης**
 - [Σήμερα](Admin-Today)
-- [Προσωπικό](Admin-Staff)
 - [Ωράρια & αργίες](Admin-Schedules-and-Holidays)
 - [Αναφορές](Admin-Reports)
 - [Ρυθμίσεις](Admin-Settings)
@@ -44,7 +43,6 @@
 [Shop screen](Kiosk-EN) ·
 [QR cards](QR-Cards-EN) ·
 [Today](Admin-Today-EN) ·
-[Staff](Admin-Staff-EN) ·
 [Schedules](Admin-Schedules-and-Holidays-EN) ·
 [Reports](Admin-Reports-EN) ·
 [Settings](Admin-Settings-EN) ·

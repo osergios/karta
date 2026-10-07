@@ -115,6 +115,7 @@ def employee_state(employee_id: int) -> dict:
         "inside": inside,
         "next_action": "DEPARTURE" if inside else "ARRIVAL",
         "last_movement_at": last["movement_at"] if last else None,
+        "last_type": last["type"] if last else None,
         "last_status": last["status"] if last else None,     # 'onboarding' = recorded in karta only (admin «Αποχώρηση…»)
         "open_previous_day": open_previous,
         # not punched in for the part of today's schedule that is ending / has ended: the kiosk asks first,

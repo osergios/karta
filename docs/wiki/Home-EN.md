@@ -31,8 +31,7 @@ pages quote every button or label exactly as it appears on screen, e.g. «Απο
 
 | Tab | What it's for |
 |---|---|
-| «Σήμερα» | [Today](Admin-Today-EN): who's in, who's coming, forgotten punch-outs, alerts |
-| «Προσωπικό» | [Staff](Admin-Staff-EN): employee cards and the «Ενέργειες ▾» menu (leave, overtime, PIN, QR…) |
+| «Σήμερα» | [Today](Admin-Today-EN): every employee (who's in, who's coming, who's off) with the «Ενέργειες ▾» menu (leave, overtime, PIN, QR…), forgotten punch-outs, alerts |
 | «Ωράρια & αργίες» | [Schedules and holidays](Admin-Schedules-and-Holidays-EN) |
 | «Αναφορές» | [Reports](Admin-Reports-EN): monthly and yearly Excel files for the accountant |
 | «Ρυθμίσεις» | [Settings](Admin-Settings-EN): business and Ergani connection (mode, ΑΦΜ, Ergani user), Ergani check, limits and alerts, phone notifications, backups, version and update, business details, devices, movements |

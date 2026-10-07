@@ -105,7 +105,7 @@ class Sched(NamedTuple):
 
     def label(self) -> str:
         return " + ".join(f"{a:%H:%M}–{b:%H:%M}" for a, b in self.segments) + (
-            f" /{'+' if self.break_out else ''}{self.break_min}′" if self.break_min else "")
+            f" · διάλ. {self.break_min}′{' εκτός ωραρίου' if self.break_out else ''}" if self.break_min else "")
 
 
 def day_change(employee_id: int, day: date):

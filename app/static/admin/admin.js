@@ -338,7 +338,7 @@
     const today = todayAthens();
     const day = el("input", { type: "date", value: today, min: today, "aria-label": "Ημέρα" });
     const kind = el("select", { "aria-label": "Είδος" }, ...Object.entries(CHANGE_KINDS).map(([k, v]) => el("option", { value: k }, v)));
-    const text = el("input", { type: "text", maxlength: "60", placeholder: "π.χ. 10:00-17:30/+30", "aria-label": "Ωράριο ημέρας" });
+    const week = DAYS.map((_, i) => ((d.schedules || {})[String(e.id)] || {})[String(i)] || "");
     const note = el("input", { type: "text", maxlength: "120", placeholder: "Σημείωση (προαιρετικά), π.χ. νυφικό", "aria-label": "Σημείωση" });
     const info = el("div", {});
     const regularOf = iso => {
@@ -346,16 +346,22 @@
       return ((d.schedules || {})[String(e.id)] || {})[String(wd)] || "";
     };
     const hh = x => `${String(Math.floor(x / 60)).padStart(2, "0")}:${String(x % 60).padStart(2, "0")}`;
+    // the day's break: the one of that weekday, else the one of the week; on parts longer than 4 hours, as in «Ωράρια»
+    const breakFor = iso => { const r = parseSpan(regularOf(iso)); return r && !r.error && r.b ? { b: r.b, out: r.bo } : weekBreak(week); };
+    const hours = weekRows([""], { off: "χωρίς ώρες", who: e.display_name, labels: [""], names: ["ημέρα"], onChange: () => refresh() });
+    const hoursBox = el("div", {}, el("div", { class: "small" }, "Ώρες της ημέρας"), hours.node);
+    const textOf = () => { const v = hours.bodies()[0], sp = parseSpan(v), wb = breakFor(day.value);
+      return sp && !sp.error && wb && longest(sp) > 240 ? `${v}/${wb.out ? "+" : ""}${wb.b}` : v; };
     const refresh = () => {
-      text.disabled = kind.value === "off";
+      hoursBox.hidden = kind.value === "off";
       const reg = parseSpan(regularOf(day.value));
-      const kids = [el("div", { class: "small" }, `Κανονικό ωράριο αυτής της ημέρας: ${reg && !reg.error ? regularOf(day.value) : "ρεπό"}`)];
-      const sp = kind.value === "off" ? null : parseSpan(text.value);
+      const kids = [el("div", { class: "small" }, `Κανονικό ωράριο αυτής της ημέρας: ${reg && !reg.error ? reg.body.replace(/-/g, "–").replace(/\+/g, " + ") + (reg.b ? ` · διάλ. ${reg.b}′${reg.bo ? " εκτός ωραρίου" : ""}` : "") : "ρεπό"}`)];
+      const sp = kind.value === "off" ? null : parseSpan(textOf());
       if (kind.value !== "off") {
-        if (!sp || sp.error) kids.push(el("div", { class: "an-line bad" }, "Γράψε το ωράριο της ημέρας όπως θα είναι δηλωμένο στο ΕΡΓΑΝΗ, π.χ. 10:00-17:30/+30."));
+        if (!sp || sp.error) kids.push(el("div", { class: "an-line bad" }, "Γράψε τις ώρες της ημέρας όπως θα είναι δηλωμένες στο ΕΡΓΑΝΗ (αρχή και λήξη, «+ σπαστό» για δεύτερο κομμάτι)."));
         else {
           const leave = sp.e + (sp.bo ? sp.b : 0);
-          kids.push(el("div", { class: "an-line" }, `Πληρωμένες ώρες ${H(netMin(sp))} · αποχώρηση ${sp.bo ? `από ${hh(sp.e)} έως ${hh(leave)}` : `στις ${hh(sp.e)}`}` +
+          kids.push(el("div", { class: "an-line" }, `Πληρωμένες ώρες ${H(netMin(sp))}${sp.b ? ` · διάλειμμα ${sp.b}′${sp.bo ? " εκτός ωραρίου" : ""}` : ""} · αποχώρηση ${sp.bo ? `από ${hh(sp.e)} έως ${hh(leave)}` : `στις ${hh(sp.e)}`}` +
             (reg && !reg.error ? ` · ${netMin(sp) - netMin(reg) >= 0 ? "+" : "−"}${H(Math.abs(netMin(sp) - netMin(reg)))} σε σχέση με το κανονικό` : "")));
         }
       }
@@ -369,8 +375,8 @@
       }
       info.replaceChildren(...kids);
     };
-    const prefill = () => { text.value = kind.value === "off" ? "" : regularOf(day.value); refresh(); };
-    day.addEventListener("change", prefill); kind.addEventListener("change", prefill); text.addEventListener("input", refresh);
+    const prefill = () => hours.set([kind.value === "off" ? "" : regularOf(day.value)]);
+    day.addEventListener("change", prefill); kind.addEventListener("change", prefill);
     prefill();
     const close = () => hide(box);
     const list = (e.day_changes || []).map(c => el("div", { class: "leave-row" },
@@ -384,15 +390,15 @@
       el("p", { class: "small" }, "Για μία ημέρα: υπερωρία, άλλο ωράριο, ή ρεπό (και για εργασία σε αργία ή όταν το κατάστημα είναι κλειστό). ΠΡΩΤΑ τη δηλώνεις στο ΕΡΓΑΝΗ, ΜΕΤΑ την περνάς εδώ: οι υπενθυμίσεις, οι ειδοποιήσεις και η αναφορά ακολουθούν το νέο ωράριο, και η αναφορά δείχνει τις δηλωμένες επιπλέον ώρες χωριστά. Εδώ δεν στέλνεται τίποτα στο ΕΡΓΑΝΗ."),
       ...(list.length ? [el("div", { class: "small" }, "Επόμενες αλλαγές:"), ...list] : []),
       el("div", { class: "leave-form" }, el("label", {}, "Ημέρα ", day), el("label", {}, "Είδος ", kind),
-        el("label", {}, "Ωράριο ημέρας ", text), note),
+        note), hoursBox,
       info,
       el("div", { class: "qr-actions" },
         el("button", { class: "btn", onclick: act(async () => {
-          if (kind.value !== "off") { const sp = parseSpan(text.value); if (!sp || sp.error) { toast("Γράψε σωστά το ωράριο της ημέρας", true); return; } }
+          if (kind.value !== "off") { const sp = parseSpan(textOf()); if (!sp || sp.error) { toast("Γράψε σωστά τις ώρες της ημέρας", true); return; } }
           const t = e.today;
           if (day.value === today && t && t.ot_passed && kind.value !== "off" &&
               !confirm(`Η προθεσμία ήταν ${t.ot_by}.\n\nΠέρασέ την ΜΟΝΟ αν η αλλαγή δηλώθηκε στο ΕΡΓΑΝΗ πριν τις ${t.ot_by}. Αλλιώς ${e.display_name} πρέπει να φύγει έως ${t.end}.\n\nΣυνέχεια;`)) return;
-          const r = await api(`/admin/api/employees/${e.id}/day-change`, { day: day.value, kind: kind.value, text: text.value.trim(), note: note.value.trim() });
+          const r = await api(`/admin/api/employees/${e.id}/day-change`, { day: day.value, kind: kind.value, text: kind.value === "off" ? "" : textOf(), note: note.value.trim() });
           close(); toast(`${e.display_name} ${dmy(day.value)}: ${kind.value === "off" ? "ρεπό" : r.text}` + (r.late_after ? ` — καταχωρήθηκε μετά την προθεσμία ${r.late_after}` : ""), !!r.late_after);
         }) }, "Καταχώρηση"),
         el("button", { class: "link", onclick: close }, "Κλείσιμο"))));
@@ -1188,7 +1194,7 @@
   }
 
   // Returns {days:[{i, cls, text}], lines:[{cls, text}]} for one weekly schedule.
-  function analyse(values, L, F) {
+  function analyse(values, L, F, flex) {
     const spans = values.map(parseSpan);
     const work = spans.map((sp, i) => ({ sp, i })).filter(x => x.sp && !x.sp.error);
     const sixDay = work.length >= 6;
@@ -1198,7 +1204,7 @@
     let total = 0, gross = 0, weekOT = 0;
     spans.forEach((sp, i) => {
       if (!sp) return;
-      if (sp.error) { days.push({ i, cls: "bad", text: `${DAYS[i]}: δεν καταλαβαίνω «${values[i]}». Γράψε 10:00-18:00, 10:00-18:30/30 ή σπαστό 10:00-14:00+17:00-21:00.` }); return; }
+      if (sp.error) { days.push({ i, cls: "bad", text: `${DAYS[i]}: οι ώρες δεν είναι σωστές — κάθε κομμάτι θέλει αρχή και λήξη (π.χ. 10:00 έως 18:00), το επόμενο κομμάτι μετά το προηγούμενο.` }); return; }
       const n = netMin(sp), g = sp.g; total += n; gross += g;
       const parts = [], notes = [];
       let cls = "ok";
@@ -1210,23 +1216,22 @@
         const ot = Math.max(0, n - legalDay);
         if (ot > 0) { parts.push(`${H(ot)} υπερωρία (${RETRO ? "απολογιστική δήλωση στο ΕΡΓΑΝΗ" : "δήλωση στο ΕΡΓΑΝΗ πριν ξεκινήσει"}, +40%)`); cls = "bad"; weekOT += ot; }
       }
-      if (sp.b && F && F.break_within === false && !sp.bo) { notes.push(`στο ΕΡΓΑΝΗ το διάλειμμα είναι ΕΚΤΟΣ ωραρίου: γράψε /+${sp.b} (όχι /${sp.b})`); cls = "bad"; }
-      else if (sp.bo && F && F.break_within === true) { notes.push(`στο ΕΡΓΑΝΗ το διάλειμμα είναι ΕΝΤΟΣ ωραρίου: γράψε /${sp.b} (όχι /+${sp.b})`); cls = "bad"; }
-      if (g > 240 && sp.b < 15 && F && F.break_within === true && F.break_minutes >= 15) notes.push(`διάλειμμα ${F.break_minutes}′ εντός ωραρίου κατά το ΕΡΓΑΝΗ — μετρά ως εργασία`);
-      else if (g > 240 && sp.b < 15) { notes.push("χρειάζεται διάλειμμα 15–30′: γράψε π.χ. /30 στο τέλος"); cls = "bad"; }
-      else if (sp.b > 30) { notes.push("διάλειμμα πάνω από 30′: αυτό είναι διακεκομμένο ωράριο, όχι απλό διάλειμμα"); if (cls === "ok") cls = "warn"; }
+      // a break is due after 4 hours of work in a row: on a split shift, only if one part is longer than that
+      const run = Math.max(...sp.segs.map(([a, z]) => z - a));
+      if (run > 240 && sp.b < 15) { notes.push("πάνω από 4 ώρες συνεχόμενα χωρίς διάλειμμα (χρειάζεται τουλάχιστον 15′)"); cls = "bad"; }
+      else if (sp.b > 30) { notes.push("διάλειμμα πάνω από 30′: για μεγαλύτερο κενό, σπαστό ωράριο"); if (cls === "ok") cls = "warn"; }
       if (sp.segs.length > 1) {
         const gaps = sp.segs.slice(1).map((x, k) => x[0] - sp.segs[k][1]);
-        notes.push(`σπαστό ωράριο, κενό ${gaps.map(H).join(" και ")}`);
+        notes.push(`σπαστό ωράριο, κενό ${gaps.map(H).join(" και ")} (4 χτυπήματα)`);
       }
-      else if (sp.b && sp.bo) { const lb = sp.e + sp.b; notes.push(`διάλειμμα ${sp.b}′ εκτός ωραρίου: αποχώρηση από ${String(Math.floor(sp.e / 60)).padStart(2, "0")}:${String(sp.e % 60).padStart(2, "0")} έως ${String(Math.floor(lb / 60)).padStart(2, "0")}:${String(lb % 60).padStart(2, "0")}`); }
-      else if (sp.b) notes.push(`διάλειμμα ${sp.b}′ όποτε βολεύει (εντός ωραρίου)`);
+      if (sp.b && sp.bo) notes.push(`διάλειμμα ${sp.b}′ εκτός ωραρίου: αποχώρηση έως ${hm(sp.e + sp.b)}`);
+      else if (sp.b) notes.push(`διάλειμμα ${sp.b}′ όποτε βολεύει (μέσα στις ώρες)`);
       const j = (i + 1) % 7, nx = spans[j];
       if (nx && !nx.error) {
         const rest = (24 * 60 - sp.e) + nx.s;
         if (rest < L.min_rest_hours * 60) { notes.push(`μόνο ${H(rest)} ανάπαυση μέχρι ${DAY_FULL[j]} (ελάχιστο ${L.min_rest_hours}ω)`); cls = "bad"; }
       }
-      days.push({ i, cls, text: `${DAYS[i]}: ${parts.join(" · ")}${notes.length ? " — " + notes.join("; ") : ""}` });
+      days.push({ i, cls, net: n, text: `${DAYS[i]}: ${parts.join(" · ")}${notes.length ? " — " + notes.join("; ") : ""}` });
     });
     if (!work.length) return { days, lines: [{ cls: "muted", text: "Χωρίς ωράριο: κάθε προσέλευση θα θεωρείται αδήλωτη εργασία." }] };
     const wk = `${H(total)} καθαρά σε ${work.length} ${work.length === 1 ? "ημέρα" : "ημέρες"}`;
@@ -1245,6 +1250,14 @@
           ? { cls: "ok", text: `Ταιριάζει με τις ${F.weekly_hours} ώρες/εβδομάδα που είναι δηλωμένες στο ΕΡΓΑΝΗ${how} ✓` }
           : { cls: "warn", text: `Στο ΕΡΓΑΝΗ είναι δηλωμένες ${F.weekly_hours} ώρες/εβδομάδα, εδώ ${H(cmp)}${how} (${diff > 0 ? "+" : "−"}${H(Math.abs(diff) * 60)}). Πρέπει να ταιριάζουν.` });
       }
+      // the break and the flexible arrival must be the ones declared in Ergani
+      const wb = work.find(x => x.sp.b), b = wb ? wb.sp.b : 0, bo = wb ? wb.sp.bo : false;
+      const needs = work.some(x => Math.max(...x.sp.segs.map(([a, z]) => z - a)) > 240);
+      const kind = out => out === true ? " εκτός ωραρίου" : out === false ? " μέσα στις ώρες" : "";
+      if (F.break_minutes != null && needs && (b !== F.break_minutes || (b && F.break_within != null && bo === F.break_within)))
+        lines.push({ cls: "bad", text: `Στο ΕΡΓΑΝΗ: διάλειμμα ${F.break_minutes}′${kind(F.break_within == null ? null : !F.break_within)}· εδώ ${b ? `${b}′${kind(bo)}` : "χωρίς διάλειμμα"}. Πρέπει να ταιριάζουν — «Χρήση στοιχείων ΕΡΓΑΝΗ».` });
+      if (F.flex != null && flex != null && flex !== F.flex)
+        lines.push({ cls: "warn", text: `Στο ΕΡΓΑΝΗ: ευέλικτη προσέλευση ${F.flex ? `${F.flex}′` : "όχι"}· εδώ ${flex ? `${flex}′` : "όχι"}.` });
       if (F.week_days && F.week_days !== work.length)
         lines.push({ cls: "warn", text: `Στο ΕΡΓΑΝΗ είναι ${F.week_days}ήμερη απασχόληση, εδώ ${work.length} ημέρες.` });
       if (F.full_time === false)
@@ -1265,13 +1278,6 @@
                                   : "Κάθε φορά πρέπει να δηλώνεται στο ΕΡΓΑΝΗ πριν γίνει.") });
     }
     return { days, lines };
-  }
-
-  function renderAnalysis(box, values, L, F) {
-    const { days, lines } = analyse(values, L, F);
-    box.replaceChildren(
-      ...lines.map(l => el("div", { class: "an-line " + l.cls }, l.text)),
-      ...(days.length ? [el("ul", { class: "an-days" }, ...days.map(x => el("li", { class: x.cls }, x.text)))] : []));
   }
 
   function salonInsight(box, values, L) {
@@ -1319,128 +1325,274 @@
     ].filter(Boolean).join(" · ") || "—";
   }
 
+  // ---------- a week of hours as rows: start–end per part, «+ σπαστό» for a second part, empty = day off ----------
+  const hm = x => `${String(Math.floor(x / 60)).padStart(2, "0")}:${String(x % 60).padStart(2, "0")}`;
+  // what people type for a time: "9" "930" "09.30" "17:00" -> "HH:MM"; anything else -> null
+  function normTime(v) {
+    const t = String(v || "").trim().replace(/[.,;]/g, ":");
+    const m = /^(\d{1,2})(?::(\d{2}))?$/.exec(t) || /^(\d{1,2})(\d{2})$/.exec(t);
+    if (!m || +m[1] > 23 || +(m[2] || 0) > 59) return null;
+    return hm(+m[1] * 60 + +(m[2] || 0));
+  }
+  const longest = sp => Math.max(...sp.segs.map(([a, z]) => z - a));
+  function weekRows(initial, { off, who, onChange, labels = DAYS, names = DAY_FULL }) {
+    const state = initial.map(t => { const sp = parseSpan(t); return sp && !sp.error ? sp.segs.map(([a, z]) => [hm(a), hm(z)]) : []; });
+    const rows = labels.map(() => el("div", { class: "wk-row" }));
+    const notes = labels.map(() => el("span", { class: "wk-note" }));
+    const body = i => state[i].map(([a, z]) => `${normTime(a) || "?"}-${normTime(z) || "?"}`).join("+");
+    // the nearest earlier day with hours: «+ ώρες» starts from it (Τρίτη like Δευτέρα)
+    const n = labels.length;
+    const before = i => { for (let k = 1; k < n; k++) { const s = state[(i - k + n) % n]; if (s.length) return s; } return null; };
+    function draw(i, focus) {
+      const segs = state[i];
+      const parts = segs.map((seg, k) => {
+        const part = segs.length > 1 ? ` (${k + 1}ο κομμάτι)` : "";
+        const time = (j, what) => {
+          const x = el("input", { class: "tm", value: seg[j], placeholder: "--:--", inputmode: "decimal", maxlength: "5", autocomplete: "off",
+                                  "aria-label": `${who} ${names[i]} ${what}${part}` });
+          x.addEventListener("input", () => { seg[j] = x.value; onChange(); });
+          x.addEventListener("blur", () => { const n = normTime(x.value); if (n && n !== x.value) { x.value = n; seg[j] = n; onChange(); } });
+          return x;
+        };
+        return el("span", { class: "wk-seg" }, time(0, "από"), el("span", { class: "wk-dash" }, "–"), time(1, "έως"),
+          el("button", { type: "button", class: "wk-x", title: segs.length > 1 ? "Αφαίρεση κομματιού" : `Χωρίς ώρες (${off})`,
+                         "aria-label": `${names[i]}: ${segs.length > 1 ? `αφαίρεση ${k + 1}ου κομματιού` : off}`,
+                         onclick: () => { segs.splice(k, 1); draw(i); onChange(); } }, "✕"));
+      });
+      const kids = segs.length ? [...parts, segs.length < 3 ? el("button", { type: "button", class: "wk-add", title: "Σπαστό ωράριο: ένα ακόμα κομμάτι την ίδια ημέρα (4 χτυπήματα)",
+          onclick: () => { segs.push(["", ""]); draw(i, "last"); onChange(); } }, "+ σπαστό") : null]
+        : [el("span", { class: "wk-off" }, off), el("button", { type: "button", class: "wk-add",
+            onclick: () => { const b = before(i); segs.push(...(b ? b.map(s => [...s]) : [["", ""]])); draw(i, "first"); onChange(); } }, "+ ώρες")];
+      rows[i].replaceChildren(labels[i] ? el("span", { class: "wk-day" }, labels[i]) : "", el("span", { class: "wk-segs" }, ...kids), notes[i]);
+      rows[i].classList.toggle("off", !segs.length);
+      if (focus) { const ins = rows[i].querySelectorAll("input.tm"); const x = focus === "last" ? ins[ins.length - 2] : ins[0]; if (x) x.focus(); }
+    }
+    labels.forEach((_, i) => draw(i));
+    return {
+      node: el("div", { class: "wk" }, ...rows),
+      bodies: () => labels.map((_, i) => body(i)),
+      set(values) { values.forEach((t, i) => { const sp = parseSpan(t); state[i] = sp && !sp.error ? sp.segs.map(([a, z]) => [hm(a), hm(z)]) : []; draw(i); }); onChange(); },
+      mark(i, cls, text) { rows[i].classList.remove("ok", "warn", "bad"); if (cls) rows[i].classList.add(cls); notes[i].textContent = text || ""; },
+    };
+  }
+  const BREAKS = [0, 15, 20, 30, 45, 60], FLEXES = [0, 15, 30, 45, 60, 90, 120];
+  const options = (list, cur, label) => [...new Set([...list, cur])].sort((a, b) => a - b)
+    .map(v => { const o = el("option", { value: String(v) }, label(v)); o.selected = v === cur; return o; });
+  function setSelect(sel, v, label) { if (![...sel.options].some(o => +o.value === v)) sel.replaceChildren(...options([...sel.options].map(o => +o.value), v, label)); sel.value = String(v); }
+  const breakLabel = v => v ? `${v}′` : "Χωρίς", flexLabel = v => v ? `έως ${v}′ αργότερα` : "Όχι";
+  // the break of a week: the one most days have ("+30" = εκτός ωραρίου)
+  function weekBreak(values) {
+    const n = {};
+    values.map(parseSpan).forEach(sp => { if (sp && !sp.error && sp.b) { const k = `${sp.bo ? "+" : ""}${sp.b}`; n[k] = (n[k] || 0) + 1; } });
+    const top = Object.keys(n).sort((a, b) => n[b] - n[a])[0];
+    return top ? { b: +top.replace("+", ""), out: top.startsWith("+") } : null;
+  }
+
+  // «Δευ–Παρ 09:00–17:00, Σαβ 10:00–14:00»: a week in one line, for the folded cards
+  function weekText(values) {
+    const key = values.map(v => { const sp = parseSpan(v); return sp && !sp.error ? sp.body.replace(/-/g, "–").replace(/\+/g, " + ") : sp ? "?" : ""; });
+    const out = [];
+    for (let i = 0; i < 7;) {
+      let j = i; while (j + 1 < 7 && key[j + 1] === key[i]) j++;
+      if (key[i]) out.push(`${DAYS[i]}${j > i ? (j > i + 1 ? "–" : ", ") + DAYS[j] : ""} ${key[i]}`);
+      i = j + 1;
+    }
+    return out.join(" · ") || "χωρίς ωράριο";
+  }
+  const schedOpen = new Set();          // cards left open, kept when the list is drawn again (after «Αποθήκευση»)
+  const schedFilter = { q: "", issues: false };
+
   function renderEditors(d) {
     // rendered once / when the staff list changes, so the 30s refresh never wipes what you are typing
     const refreshers = [];
     const L = () => currentLimits(d.settings);
-    // break stepper: rewrites the "/NN" part of a day field in 15′ steps
-    const BREAK_STEP = 15, BREAK_MAX = 120;
-    function setBreak(inp, minutes) {
-      const sp = parseSpan(inp.value);
-      if (!sp || sp.error) return false;
-      minutes = Math.max(0, Math.min(minutes, BREAK_MAX, sp.g - BREAK_STEP));
-      inp.value = minutes ? `${sp.body}/${sp.bo ? "+" : ""}${minutes}` : sp.body;
-      inp.dispatchEvent(new Event("input"));
-      return true;
+    // a folded card: one line (name, the week, ✓ / ⚠) until opened; the editor is built on the first opening
+    function foldCard(id, cls, head, build) {
+      const sumWeek = el("span", { class: "sum-week" }), badge = el("span", { class: "sum-badge" });
+      const det = el("details", { class: "sched-card " + cls }, el("summary", {}, el("span", { class: "sum-name" }, ...head), sumWeek, badge));
+      let built = false;
+      const open = () => { if (!built) { built = true; det.append(...build()); } };
+      det.addEventListener("toggle", () => { if (det.open) { open(); schedOpen.add(id); } else schedOpen.delete(id); });
+      if (schedOpen.has(id)) { det.open = true; open(); }
+      return { det, isBuilt: () => built, summary(text, cls_, issues) {
+        sumWeek.textContent = text; det.dataset.state = cls_;
+        badge.className = "sum-badge " + cls_; badge.textContent = cls_ === "ok" ? "✓" : `⚠ ${issues}`;
+        badge.title = cls_ === "ok" ? "Χωρίς παρατηρήσεις" : `${issues} ${issues === 1 ? "παρατήρηση" : "παρατηρήσεις"}`;
+      } };
     }
-    const breakOf = inp => { const sp = parseSpan(inp.value); return sp && !sp.error ? sp.b : null; };
-    function breakStepper(inp) {
-      const minus = el("button", { type: "button", "aria-label": "λιγότερο διάλειμμα" }, "−");
-      const plus = el("button", { type: "button", "aria-label": "περισσότερο διάλειμμα" }, "+");
-      const label = el("span", {});
-      const sync = () => {
-        const b = breakOf(inp);
-        minus.disabled = b === null || b === 0; plus.disabled = b === null || b >= BREAK_MAX;
-        label.textContent = b === null ? "—" : b ? `διάλ. ${b}′` : "χωρίς διάλ.";
-      };
-      minus.addEventListener("click", () => { const b = breakOf(inp); if (b !== null) setBreak(inp, b - BREAK_STEP); });
-      plus.addEventListener("click", () => { const b = breakOf(inp); if (b !== null) setBreak(inp, b + BREAK_STEP); });
-      inp.addEventListener("input", sync); sync();
-      return el("div", { class: "brk" }, minus, label, plus);
-    }
-    // split shifts don't fit in the field: show the parts underneath
-    function segCaption(inp) {
-      const cap = el("div", { class: "seg-cap" });
-      const sync = () => {
-        const sp = parseSpan(inp.value);
-        const split = sp && !sp.error && sp.segs.length > 1;
-        cap.textContent = split ? sp.body.split("+").map(x => x.replace("-", "–")).join("\n") : "";
-        cap.hidden = !split; inp.title = inp.value;
-        inp.closest(".day")?.classList.toggle("split", !!split);
-      };
-      inp.addEventListener("input", sync); setTimeout(sync);
-      return cap;
-    }
-    const dayFields = (inputs, withBreaks) => el("div", { class: "sched-days" },
-      ...inputs.map((inp, i) => el("div", { class: "day" }, el("span", {}, DAYS[i]), inp, segCaption(inp), withBreaks ? breakStepper(inp) : null)));
-    const card = (cls, title, actions, inputs, box, withBreaks) => el("div", { class: "sched-card " + cls },
-      el("div", { class: "sched-head" }, title, el("span", { class: "sched-actions" }, ...actions)),
-      dayFields(inputs, withBreaks), box);
-    // What Ergani says for one employee, with the actions it allows.
-    function erganiBox(F, inputs, refresh) {
-      const kids = [el("strong", {}, "ΕΡΓΑΝΗ: "), erganiFacts(F), ` (ενημ. ${fmt(F.fetched_at)})`];
-      const actions = [];
-      const withBreak = (v) => {
-        const sp = parseSpan(v);
-        return sp && !sp.error && F.break_within === false && F.break_minutes && sp.g > 240 ? `${v}/+${F.break_minutes}` : v;
-      };
-      if (F.proposal) {
-        actions.push(el("button", { class: "link", type: "button", onclick: () => {
-          inputs.forEach((inp, i) => { inp.value = F.proposal[String(i)] ? withBreak(F.proposal[String(i)]) : ""; inp.dispatchEvent(new Event("input")); });
-          refresh(); toast("Συμπληρώθηκαν οι ώρες από το ΕΡΓΑΝΗ — έλεγξέ τες και πάτα Αποθήκευση");
-        } }, "Συμπλήρωση ωρών από ΕΡΓΑΝΗ"));
-      } else if (F.digital) {
-        kids.push(el("div", { class: "sub" }, "Οι ώρες ανά ημέρα είναι στο ψηφιακό ωράριο του ΕΡΓΑΝΗ και δεν επιστρέφονται σε αυτή την ανάγνωση — συμπλήρωσέ τες ίδιες με τη δήλωση."));
-      } else if (F.schedule_text) {
-        kids.push(el("div", { class: "sub" }, `Ωράριο ΕΡΓΑΝΗ (δεν διαβάστηκε αυτόματα): ${F.schedule_text}`));
-      }
-      if (!F.proposal && F.break_within === false && F.break_minutes) {
-        actions.push(el("button", { class: "link", type: "button", onclick: () => {
-          let n = 0; inputs.forEach(inp => { const sp = parseSpan(inp.value);
-            if (sp && !sp.error && sp.g > 240) { inp.value = `${sp.body}/+${F.break_minutes}`; inp.dispatchEvent(new Event("input")); n++; } });
-          toast(n ? `Διάλειμμα ${F.break_minutes}′ σε ${n} ημέρες — πάτα Αποθήκευση` : "Συμπλήρωσε πρώτα τις ώρες");
-        } }, `Διάλειμμα ${F.break_minutes}′ εκτός ωραρίου (από ΕΡΓΑΝΗ)`));
-      }
-      if (actions.length) kids.push(el("div", { class: "er-card-actions" }, ...actions));
-      return el("div", { class: "er-ref" }, ...kids);
-    }
+    const verdict = ({ days, lines }) => {
+      const bad = [...days, ...lines].filter(x => x.cls === "bad" || x.cls === "warn");
+      return [bad.some(x => x.cls === "bad") ? "bad" : bad.length ? "warn" : "ok", bad.length];
+    };
+    const weekly = values => H(values.map(parseSpan).reduce((a, sp) => a + (sp && !sp.error ? netMin(sp) : 0), 0));
+    const firstBad = values => values.map(parseSpan).findIndex(sp => sp && sp.error);
 
-
-    const salonInputs = DAYS.map((_, i) => el("input", { value: (d.salon_hours || {})[String(i)] || "", placeholder: "κλειστά", "aria-label": `Κατάστημα ${DAYS[i]}` }));
-    const salonBox = el("div", { class: "analysis" });
-    const salonRefresh = () => salonInsight(salonBox, salonInputs.map(x => x.value), L());
-    salonInputs.forEach(x => x.addEventListener("input", salonRefresh)); refreshers.push(salonRefresh);
-    const salonSave = el("button", { class: "link", onclick: act(async () => {
-      const days = {}; salonInputs.forEach((x, i) => { days[String(i)] = x.value.trim(); });
-      await api("/admin/api/salon-hours", { days }); toast("Το ωράριο καταστήματος αποθηκεύτηκε");
-    }) }, "Αποθήκευση");
-
-    const cards = [card("salon", el("strong", {}, "Ωράριο καταστήματος"), [salonSave], salonInputs, salonBox)];
-    d.employees.filter(e => e.active).forEach(e => {
-      const cur = d.schedules[String(e.id)] || {};
-      const inputs = DAYS.map((_, i) => el("input", { value: cur[String(i)] || "", placeholder: "ρεπό", "data-day": String(i), "aria-label": `${e.display_name} ${DAYS[i]}` }));
+    // ---- the shop hours
+    const salonVals = DAYS.map((_, i) => (d.salon_hours || {})[String(i)] || "");
+    let salon = null;
+    const salonValues = () => salon ? salon.bodies() : salonVals;
+    const salonCard = foldCard("salon", "salon", [el("strong", {}, "Ωράριο καταστήματος")], () => {
       const box = el("div", { class: "analysis" });
-      const ei = (d.ergani_info || {})[String(e.id)];
-      const refresh = () => renderAnalysis(box, inputs.map(x => x.value), L(), ei);
-      inputs.forEach(x => x.addEventListener("input", refresh)); refreshers.push(refresh);
+      salon = weekRows(salonVals, { off: "κλειστά", who: "Κατάστημα", onChange: () => salonRefresh() });
       const save = el("button", { class: "link", onclick: act(async () => {
-        const days = {}; inputs.forEach(inp => { days[inp.dataset.day] = inp.value.trim(); });
-        const vf = document.getElementById("schedFrom").value || todayAthens();
-        const when = vf === todayAthens() ? "από σήμερα" : `από ${dmy(vf)}/${vf.slice(0, 4)}`;
-        if (!confirm(`Αποθήκευση ωραρίου για ${e.display_name} — ισχύει ${when};\n\nΟι ημέρες πριν μετρούν με το ωράριο που ίσχυε τότε.`)) return;
-        await api(`/admin/api/schedules/${e.id}`, { days, valid_from: vf }); editorsFor = null; toast(`Το ωράριο για ${e.display_name} αποθηκεύτηκε (ισχύει ${when})`);
+        const values = salon.bodies(), bad = firstBad(values);
+        if (bad >= 0) { toast(`${DAY_FULL[bad]}: οι ώρες δεν είναι σωστές`, true); return; }
+        const days = {}; values.forEach((v, i) => { days[String(i)] = v; });
+        await api("/admin/api/salon-hours", { days }); toast("Το ωράριο καταστήματος αποθηκεύτηκε");
       }) }, "Αποθήκευση");
-      const copy = el("button", { class: "link", onclick: () => {
-        salonInputs.forEach((s0, i) => { const v = s0.value.trim(), sp = parseSpan(v); inputs[i].value = v && sp && !sp.error && sp.g > 240 ? `${v}/30` : v; });
-        refresh(); toast("Αντιγράφηκε το ωράριο καταστήματος — προσάρμοσέ το και πάτα Αποθήκευση");
-      } }, "Από κατάστημα");
-      const all30 = el("button", { class: "link", onclick: () => {
-        let n = 0;
-        inputs.forEach(inp => { const sp = parseSpan(inp.value); if (sp && !sp.error && sp.g > 240 && setBreak(inp, 30)) n++; });
-        toast(n ? `Διάλειμμα 30′ σε ${n} ${n === 1 ? "ημέρα" : "ημέρες"} — πάτα Αποθήκευση` : "Καμία ημέρα πάνω από 4 ώρες");
-      } }, "Διάλειμμα 30′ παντού");
-      const ref = ei ? erganiBox(ei, inputs, refresh) : null;
+      salon.box = box; setTimeout(salonRefresh);
+      return [el("div", { class: "sched-head" }, el("span", {}), el("span", { class: "sched-actions" }, save)), salon.node, box];
+    });
+    function salonRefresh() {
+      const values = salonValues();
+      const open_ = values.filter(v => v).length;
+      salonCard.summary(`${weekText(values)}${open_ ? ` · ${H(values.map(parseSpan).reduce((a, sp) => a + (sp && !sp.error ? sp.g : 0), 0))}/εβδ.` : ""}`,
+                        firstBad(values) >= 0 ? "bad" : "ok", 1);
+      if (!salon) return;
+      values.forEach((v, i) => { const sp = parseSpan(v); salon.mark(i, sp && sp.error ? "bad" : "", sp && !sp.error ? H(sp.g) : sp ? "λάθος ώρες" : ""); });
+      salonInsight(salon.box, values, L());
+    }
+    refreshers.push(salonRefresh);
+    if (!salonVals.some(Boolean)) { salonCard.det.open = true; }
+
+    // ---- one card per employee
+    const staff = d.employees.filter(e => e.active);
+    const live = {};        // id -> the hours and break on screen, for «Αντιγραφή από…» (only cards opened so far)
+    const sourceOf = id => {
+      if (live[id]) return live[id]();
+      const values = DAYS.map((_, i) => ((d.schedules[String(id)] || {})[String(i)] || ""));
+      return { bodies: values.map(v => { const sp = parseSpan(v); return sp && !sp.error ? sp.body : ""; }), ...(weekBreak(values) || { b: 0, out: false }) };
+    };
+    const cards = staff.map(e => {
+      const cur = d.schedules[String(e.id)] || {};
+      const saved = DAYS.map((_, i) => cur[String(i)] || "");
+      const ei = (d.ergani_info || {})[String(e.id)];
+      const flex0 = e.flex_arrival || 0;
       const meta = (d.schedule_meta || {})[String(e.id)];
       const vtxt = !meta ? "" : meta.latest_from > todayAthens()
         ? ` · νέο ωράριο από ${dmy(meta.latest_from)} (μέχρι τότε ισχύει το προηγούμενο)`
         : meta.latest_from > "2000-01-01" ? ` · ισχύει από ${dmy(meta.latest_from)}/${meta.latest_from.slice(0, 4)}` : "";
-      const c0 = card("", el("span", {}, el("strong", {}, e.display_name), vtxt ? el("span", { class: "small" }, vtxt) : null),
-                      [all30, copy, save], inputs, box, true);
-      if (ref) c0.insertBefore(ref, c0.children[1]);
-      cards.push(c0);
+      const summarise = (values, flex) => {
+        const wb = weekBreak(values);
+        fc.summary(`${weekText(values)}${wb ? ` · διάλ. ${wb.b}′${wb.out ? " εκτός" : ""}` : ""}${flex ? ` · ευέλ. ${flex}′` : ""} · ${weekly(values)}/εβδ.`,
+                   ...verdict(analyse(values, L(), ei, flex)));
+      };
+      let refresh = () => summarise(saved, flex0);
+      const fc = foldCard(e.id, "", [el("strong", {}, e.display_name), vtxt ? el("span", { class: "small" }, vtxt) : null], () => {
+        const wb = weekBreak(saved) || { b: 0, out: !!ei && ei.break_within === false };
+        const box = el("div", { class: "analysis" }), hint = el("div", { class: "wk-hint" });
+        const rows = weekRows(saved, { off: "ρεπό", who: e.display_name, onChange: () => refresh() });
+        const brkSel = el("select", { "aria-label": `Διάλειμμα ${e.display_name}` }, ...options(BREAKS, wb.b, breakLabel));
+        const inR = el("input", { type: "radio", name: `brk${e.id}`, value: "in" }), outR = el("input", { type: "radio", name: `brk${e.id}`, value: "out" });
+        inR.checked = !wb.out; outR.checked = wb.out;
+        const flexSel = el("select", { "aria-label": `Ευέλικτη προσέλευση ${e.display_name}` }, ...options(FLEXES, flex0, flexLabel));
+        [brkSel, inR, outR, flexSel].forEach(x => x.addEventListener("change", () => refresh()));
+        const brk = () => +brkSel.value, out = () => outR.checked, flex = () => +flexSel.value;
+        // the break goes on every day with more than 4 hours in a row (a split shift with short parts needs none)
+        const full = () => rows.bodies().map(v => { const sp = parseSpan(v); return sp && !sp.error && brk() && longest(sp) > 240 ? `${v}/${out() ? "+" : ""}${brk()}` : v; });
+        live[e.id] = () => ({ bodies: rows.bodies(), b: brk(), out: out() });
+
+        refresh = () => {
+          const values = full();
+          const res = analyse(values, L(), ei, flex()), { days, lines } = res;
+          summarise(values, flex());
+          DAYS.forEach((_, i) => { const x = days.find(y => y.i === i); rows.mark(i, x && x.cls !== "ok" ? x.cls : "", x ? (x.net != null ? H(x.net) : "λάθος ώρες") : ""); });
+          box.replaceChildren(...lines.map(l => el("div", { class: "an-line " + l.cls }, l.text)),
+            ...(days.some(x => x.cls !== "ok") ? [el("ul", { class: "an-days" }, ...days.filter(x => x.cls !== "ok").map(x => el("li", { class: x.cls }, x.text)))] : []));
+          inR.disabled = outR.disabled = !brk();
+          const first = values.map(parseSpan).find(sp => sp && !sp.error && sp.b);
+          const b = brk();
+          hint.replaceChildren(...[
+            el("div", {}, !b ? "Χωρίς διάλειμμα. Ημέρες με πάνω από 4 ώρες συνεχόμενης εργασίας χρειάζονται τουλάχιστον 15′."
+              : out() ? `Διάλειμμα ${b}′ εκτός ωραρίου, χωρίς χτύπημα κάρτας: η αποχώρηση γίνεται έως ${b}′ μετά τη λήξη${first ? ` (π.χ. λήξη ${hm(first.e)} → αποχώρηση έως ${hm(first.e + b)})` : ""}.`
+              : `Διάλειμμα ${b}′ μέσα στις ώρες, όποτε βολεύει, χωρίς χτύπημα κάρτας.`),
+            b ? el("div", {}, "Μπαίνει σε κάθε ημέρα με πάνω από 4 ώρες συνεχόμενης εργασίας (στο σπαστό, μόνο αν ένα κομμάτι ξεπερνά τις 4 ώρες).") : null,
+            el("div", {}, "Διάλειμμα που φεύγει από το κατάστημα και χτυπά κάρτα; Γράψτε την ημέρα ως σπαστό ωράριο («+ σπαστό»)."),
+            flex() ? el("div", {}, `Ευέλικτη προσέλευση: μπορεί να έρθει έως ${flex()}′ μετά την έναρξη χωρίς να είναι καθυστέρηση· η αποχώρηση μετακινείται το ίδιο. Μόνο με γραπτή συμφωνία δηλωμένη στο ΕΡΓΑΝΗ. Ισχύει αμέσως με την αποθήκευση.`) : null].filter(Boolean));
+        };
+
+        const save = el("button", { class: "link", onclick: act(async () => {
+          const values = full(), bad = firstBad(values);
+          if (bad >= 0) { toast(`${e.display_name}, ${DAY_FULL[bad]}: οι ώρες δεν είναι σωστές`, true); return; }
+          const same = values.every((v, i) => { const a = parseSpan(v), z = parseSpan(saved[i]); return (!a && !z) || (a && z && !z.error && v === z.body + (z.b ? `/${z.bo ? "+" : ""}${z.b}` : "")); });
+          if (same && flex() === flex0) { toast("Καμία αλλαγή"); return; }
+          if (!same) {
+            const vf = document.getElementById("schedFrom").value || todayAthens();
+            const when = vf === todayAthens() ? "από σήμερα" : `από ${dmy(vf)}/${vf.slice(0, 4)}`;
+            if (!confirm(`Αποθήκευση ωραρίου για ${e.display_name} — ισχύει ${when};\n\nΟι ημέρες πριν μετρούν με το ωράριο που ίσχυε τότε.`)) return;
+            const days = {}; values.forEach((v, i) => { days[String(i)] = v; });
+            await api(`/admin/api/schedules/${e.id}`, { days, valid_from: vf });
+          }
+          if (flex() !== flex0) await api(`/admin/api/employees/${e.id}/flex`, { minutes: flex() });
+          editorsFor = null; toast(`Το ωράριο για ${e.display_name} αποθηκεύτηκε`);
+        }) }, "Αποθήκευση");
+        // «Αντιγραφή από…»: the hours (and the break) of the shop or of a colleague; the flexible arrival stays (it is personal)
+        const copy = el("select", { class: "copy-from", "aria-label": `Αντιγραφή ωραρίου για ${e.display_name}` },
+          el("option", { value: "" }, "Αντιγραφή από…"), el("option", { value: "salon" }, "Ωράριο καταστήματος"),
+          ...staff.filter(o => o.id !== e.id).map(o => el("option", { value: String(o.id) }, o.display_name)));
+        copy.addEventListener("change", () => {
+          const v = copy.value; copy.value = "";
+          if (!v) return;
+          if (v === "salon") { rows.set(salonValues()); toast("Αντιγράφηκε το ωράριο καταστήματος — προσάρμοσέ το και πάτα Αποθήκευση"); return; }
+          const o = staff.find(x => String(x.id) === v), src = sourceOf(o.id);
+          setSelect(brkSel, src.b, breakLabel); inR.checked = !src.out; outR.checked = src.out;
+          rows.set(src.bodies);
+          toast(`Αντιγράφηκαν οι ώρες και το διάλειμμα από ${o.display_name} — πάτα Αποθήκευση`);
+        });
+
+        let ref = null;
+        if (ei) {
+          const kids = [el("strong", {}, "ΕΡΓΑΝΗ: "), erganiFacts(ei), ` (ενημ. ${fmt(ei.fetched_at)})`];
+          if (!ei.proposal && ei.digital) kids.push(el("div", { class: "sub" }, "Οι ώρες ανά ημέρα είναι στο ψηφιακό ωράριο του ΕΡΓΑΝΗ και δεν επιστρέφονται σε αυτή την ανάγνωση — συμπλήρωσέ τες ίδιες με τη δήλωση."));
+          else if (!ei.proposal && ei.schedule_text) kids.push(el("div", { class: "sub" }, `Ωράριο ΕΡΓΑΝΗ (δεν διαβάστηκε αυτόματα): ${ei.schedule_text}`));
+          if (ei.proposal || ei.break_minutes != null || ei.flex != null) kids.push(el("div", { class: "er-card-actions" }, el("button", { class: "link", type: "button", onclick: () => {
+            const got = [];
+            if (ei.break_minutes != null) {
+              setSelect(brkSel, ei.break_minutes, breakLabel);
+              if (ei.break_within != null) { inR.checked = ei.break_within; outR.checked = !ei.break_within; }
+              got.push("διάλειμμα");
+            }
+            if (ei.flex != null) { setSelect(flexSel, ei.flex, flexLabel); got.push("ευέλικτη προσέλευση"); }
+            if (ei.proposal) { rows.set(DAYS.map((_, i) => ei.proposal[String(i)] || "")); got.unshift("ώρες"); }
+            refresh(); toast(`Από το ΕΡΓΑΝΗ: ${got.join(", ")} — έλεγξέ τα και πάτα Αποθήκευση`);
+          } }, "Χρήση στοιχείων ΕΡΓΑΝΗ")));
+          ref = el("div", { class: "er-ref" }, ...kids);
+        }
+        const opts = el("div", { class: "wk-opts" },
+          el("label", {}, "Διάλειμμα ", brkSel),
+          el("span", { class: "wk-radios" }, el("label", {}, inR, " μέσα στις ώρες"), el("label", {}, outR, " εκτός ωραρίου (μετά τη λήξη)")),
+          el("label", {}, "Ευέλικτη προσέλευση ", flexSel));
+        setTimeout(() => refresh());
+        return [el("div", { class: "sched-head" }, copy, el("span", { class: "sched-actions" }, save)), ref, opts, hint, rows.node, box].filter(Boolean);
+      });
+      fc.det.dataset.name = `${e.display_name} ${e.last_name} ${e.first_name}`.toLocaleLowerCase("el");
+      refreshers.push(() => refresh());
+      return fc.det;
     });
-    if (!d.employees.some(e => e.active)) cards.push(el("p", { class: "small" }, "Κάνε πρώτα εισαγωγή εργαζομένων από το ΕΡΓΑΝΗ."));
-    document.getElementById("scheds").replaceChildren(...cards);
+
+    // ---- many people: search, and «only those that need attention»
+    const list = el("div", { class: "sched-list" }, salonCard.det, ...cards);
+    const search = el("input", { type: "search", placeholder: "Αναζήτηση εργαζόμενου", "aria-label": "Αναζήτηση εργαζόμενου", value: schedFilter.q });
+    const issuesOnly = el("input", { type: "checkbox" }); issuesOnly.checked = schedFilter.issues;
+    const count = el("span", { class: "small" });
+    const fold = el("button", { type: "button", class: "link", onclick: () => list.querySelectorAll("details.sched-card[open]").forEach(x => { x.open = false; }) }, "Κλείσιμο όλων");
+    const filter = () => {
+      schedFilter.q = search.value.trim().toLocaleLowerCase("el"); schedFilter.issues = issuesOnly.checked;
+      const plain = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "");
+      let shown = 0;
+      cards.forEach(c => {
+        const hit = (!schedFilter.q || plain(c.dataset.name).includes(plain(schedFilter.q))) && (!schedFilter.issues || c.dataset.state !== "ok");
+        c.hidden = !hit; if (hit) shown++;
+      });
+      const need = cards.filter(c => c.dataset.state !== "ok").length;
+      count.textContent = `${shown} από ${cards.length}` + (need ? ` · ${need} θέλουν προσοχή` : "");
+    };
+    search.addEventListener("input", filter); issuesOnly.addEventListener("change", filter);
+    refreshers.push(filter);
+    const tools = el("div", { class: "sched-tools" }, search, el("label", {}, issuesOnly, " Μόνο όσοι θέλουν προσοχή"), count, fold);
+    tools.hidden = staff.length < 2;
+    document.getElementById("scheds").replaceChildren(tools, list,
+      ...(staff.length ? [] : [el("p", { class: "small" }, "Κάνε πρώτα εισαγωγή εργαζομένων από το ΕΡΓΑΝΗ.")]));
 
     // limits, each with a live explanation of what the value means
     const form = document.getElementById("limits");
@@ -1455,7 +1607,7 @@
   }
 
 
-  // ---------- employees: one card each, actions in one menu (a sheet on the phone) ----------
+  // ---------- employees: actions in one menu (a sheet on the phone) ----------
   function actionsMenu(items) {
     const list = items.filter(Boolean);
     while (list.length && list[0].tagName === "HR") list.shift();          // no divider at the top (inactive: no first group)
@@ -1489,17 +1641,7 @@
         await api(`/admin/api/employees/${e.id}/quiet`, { on: !e.quiet_today });
         toast(e.quiet_today ? `${e.display_name}: οι υπενθυμίσεις προσέλευσης ξαναμπήκαν` : `${e.display_name}: χωρίς υπενθύμιση προσέλευσης σήμερα`);
       }) }, e.quiet_today ? "Άρση σίγασης προσέλευσης" : "Θα αργήσει σήμερα (σίγαση)") : null,
-      e.active ? el("button", { class: "link", onclick: act(async () => {
-        const v = prompt(`Ευέλικτη προσέλευση για ${e.display_name}, σε λεπτά (0 = καμία, έως 120).\n\n` +
-          "Βάλε ό,τι γράφει το ΕΡΓΑΝΗ στην καρτέλα του εργαζομένου («Ψηφιακή Οργάνωση Χρόνου Εργασίας» → «Ευέλικτη Προσέλευση»). " +
-          "Η προσέλευση μέσα σε αυτά τα λεπτά μετά την έναρξη δεν είναι καθυστέρηση και η λήξη μετακινείται ανάλογα. Πριν την έναρξη δεν επιτρέπεται ποτέ.",
-          String(e.flex_arrival || 0));
-        if (v === null) return;
-        const n = Number(v.trim());
-        if (!Number.isInteger(n) || n < 0 || n > 120) { toast("Γράψε λεπτά από 0 έως 120", true); return; }
-        await api(`/admin/api/employees/${e.id}/flex`, { minutes: n });
-        toast(n ? `${e.display_name}: ευέλικτη προσέλευση ${n}′` : `${e.display_name}: χωρίς ευέλικτη προσέλευση`);
-      }) }, "Ευέλικτη προσέλευση…") : null,
+
       e.active ? el("button", { class: "link", onclick: act(async () => {
         if (e.qr && e.qr_viewable) return showQrCard(await api(`/admin/api/employees/${e.id}/qr`), e);
         if (e.qr && !confirm(`Η κάρτα QR του/της ${e.display_name} δεν μπορεί να ξαναεμφανιστεί. Έκδοση νέας; Η παλιά θα σταματήσει να ισχύει.`)) return;
@@ -1538,40 +1680,22 @@
   // flexible arrival today: the window while waiting, how far the day moved once they came in
   const flexNote = (t, inside) => !t || !t.flex ? "" : t.moved > 0 ? ` · ευέλικτη +${t.moved}′ (κανονικά έως ${t.declared_end})`
     : inside ? "" : ` · ευέλικτη προσέλευση έως ${t.arrive_by}`;
-  function empFacts(e) {
+  // what «Σήμερα» shows under a person besides today's hours: who they are officially, and what is coming up
+  function personFacts(e) {
+    const later = (e.day_changes || []).filter(c => c.day > todayAthens());
+    const at = e.last_movement_at;
     return [
-      e.active && e.off_today ? el("div", { class: "small" }, `Σήμερα: ${e.off_today}`) : null,
-      e.active && e.today ? el("div", { class: "small" }, `Σήμερα: ${e.today.label}` + (e.today.change === "overtime" ? " (δηλωμένη υπερωρία)" : e.today.change ? " (αλλαγή ημέρας)" : "") +
-        flexNote(e.today, e.inside) + ` · φεύγει έως ${e.today.end}` + (e.today.over || !e.today.ot_by ? "" : e.today.ot_passed ? " · προθεσμία υπερωρίας πέρασε" : ` · υπερωρία δηλώνεται έως ${e.today.ot_by}`)) : null,
-      (e.leaves || []).length ? el("div", { class: "small" }, e.leaves.map(l => `${l.label || "Άδεια"}: ${dmy(l.start_date)}–${dmy(l.end_date)}`).join(" · ")) : null,
-      (e.day_changes || []).filter(c => c.day > todayAthens()).length ? el("div", { class: "small" },
-        "Αλλαγές: " + e.day_changes.filter(c => c.day > todayAthens()).map(c => `${dmy(c.day)} ${c.text || "ρεπό"}`).join(", ")) : null,
-      e.locked ? el("div", { class: "warn-text" }, "Κλειδωμένο PIN") : null,
-      (e.open_arrivals || []).length ? el("div", { class: "warn-text" },
-        `Χωρίς αποχώρηση: ${e.open_arrivals.map(o => `${dmy(o.movement_at)} ${o.movement_at.slice(11, 16)}`).join(", ")}`) : null,
-      e.early_allowed_today ? el("div", { class: "small" }, "Επιτρέπεται νωρίτερη προσέλευση σήμερα") : null,
-      e.active && e.quiet_today && !e.inside ? el("div", { class: "small" }, "Θα αργήσει: χωρίς υπενθύμιση προσέλευσης σήμερα") : null,
-      e.active && e.flex_arrival ? el("div", { class: "small muted" }, `Ευέλικτη προσέλευση ${e.flex_arrival}′`) : null,
-      e.omissions_month ? el("div", { class: e.omissions_month >= 3 ? "warn-text" : "small" },
-        `Ξεχασμένα χτυπήματα μήνα: ${e.omissions_month}` + (e.omissions_month >= 3 ? " — πολλά: πάνω από 3 τον μήνα μπορεί να τραβήξουν έλεγχο" : "")) : null,
+      at ? `Τελευταίο χτύπημα: ${e.last_type === "ARRIVAL" ? "προσέλευση" : "αποχώρηση"} ${at.slice(0, 10) === todayAthens() ? "σήμερα" : `${dmy(at)}/${at.slice(0, 4)}`} ${at.slice(11, 19)}` : "Δεν έχει χτυπήσει ακόμα κάρτα",
+      `${e.last_name} ${e.first_name} · ΑΦΜ ${e.afm}`,
+      (e.leaves || []).length ? e.leaves.map(l => `${l.label || "Άδεια"}: ${dmy(l.start_date)}–${dmy(l.end_date)}`).join(" · ") : null,
+      later.length ? "Αλλαγές: " + later.map(c => `${dmy(c.day)} ${c.text || "ρεπό"}`).join(", ") : null,
+      e.early_allowed_today ? "Επιτρέπεται νωρίτερη προσέλευση σήμερα" : null,
     ];
   }
-  const stateOf = e => !e.active ? ["off", "Ανενεργός"] : e.inside ? ["in", "Σε βάρδια"] : e.on_leave ? ["leave", "Σε άδεια"]
-    : e.off_today ? ["leave", "Κλειστά"] : ["out", "Εκτός"];
-  function renderPeople(d) {
-    const box = document.getElementById("emps");
-    if (editing(box)) return;      // don't redraw under an open menu
-    box.replaceChildren(...(d.employees.length ? d.employees.map(e => {
-      const [cls, txt] = stateOf(e);
-      return el("div", { class: `emp-card ${e.active ? "" : "inactive"}` },
-        el("div", { class: "emp-head" }, el("strong", {}, e.display_name), el("span", { class: `pill ${cls}` }, txt)),
-        el("div", { class: "small muted" }, `${e.last_name} ${e.first_name} · ΑΦΜ ${e.afm}`),
-        ...empFacts(e),
-        el("div", { class: "emp-actions" },
-          e.inside ? el("button", { class: "btn small-btn", onclick: () => showDepart(e) }, "Αποχώρηση…") : null,
-          actionsMenu(empActions(e, d))));
-    }) : [el("p", { class: "small" }, "Δεν υπάρχουν εργαζόμενοι ακόμα. «Ρυθμίσεις» → ΕΡΓΑΝΗ → «Έλεγχος ΕΡΓΑΝΗ» για εισαγωγή.")]));
-  }
+  const personWarnings = e => [
+    e.locked ? "Κλειδωμένο PIN (5 λάθος PIN· ξεκλειδώνει σε 5′ ή με «Νέο PIN»)" : null,
+    e.omissions_month >= 3 ? `Ξεχασμένα χτυπήματα μήνα: ${e.omissions_month} — πολλά: πάνω από 3 τον μήνα μπορεί να τραβήξουν έλεγχο` : null,
+  ];
 
   // ---------- «Σήμερα»: who is in, who is expected, who is off ----------
   function renderToday(d) {
@@ -1584,9 +1708,16 @@
     const done = act_.filter(e => !e.inside && e.today && e.today.over && !e.today.left);
     const off = act_.filter(e => !e.inside && !e.today);
     const open = act_.filter(e => (e.open_arrivals || []).some(o => o.movement_at.slice(0, 10) < todayAthens()));
-    const row = (e, lines, buttons) => el("div", { class: "today-row" },
-      el("div", { class: "tr-main" }, el("strong", {}, e.display_name), ...lines.filter(Boolean).map(t => el("div", { class: "small" }, t))),
+    const row = (e, lines, buttons = []) => el("div", { class: "today-row" + (e.active ? "" : " inactive") },
+      el("div", { class: "tr-main" }, el("strong", {}, e.display_name),
+        ...lines.filter(Boolean).map(t => el("div", { class: "small" }, t)),
+        ...personWarnings(e).filter(Boolean).map(t => el("div", { class: "warn-text" }, t)),
+        ...personFacts(e).filter(Boolean).map(t => el("div", { class: "small muted" }, t))),
       el("div", { class: "tr-actions" }, ...buttons.filter(Boolean), actionsMenu(empActions(e, d))));
+    if (!d.employees.length) {
+      box.replaceChildren(el("p", { class: "small" }, "Δεν υπάρχουν εργαζόμενοι ακόμα: «Ρυθμίσεις» → «ΕΡΓΑΝΗ» → «Έλεγχος ΕΡΓΑΝΗ» για εισαγωγή."));
+      return;
+    }
     const deadline = t => !t || t.over || !t.ot_by ? "" : t.ot_passed ? `προθεσμία υπερωρίας πέρασε (${t.ot_by})` : `υπερωρία δηλώνεται έως ${t.ot_by}`;
     const kids = [];
     if (d.closed_today) kids.push(el("div", { class: "an-line muted" }, `Σήμερα: ${d.closed_today}`));
@@ -1602,8 +1733,17 @@
     if (left.length) kids.push(el("h3", {}, `Έφυγαν νωρίτερα (${left.length})`), ...left.map(e => row(e, [leftLine(e.today)],
       [e.today.left.reason ? null : el("button", { class: "btn small-btn", onclick: () => showEarlyLeave(e) }, "Λόγος…")])));
     if (expected.length) kids.push(el("h3", {}, `Έρχονται σήμερα (${expected.length})`), ...expected.map(e => row(e, [e.today.label + flexNote(e.today) + (e.quiet_today ? " · θα αργήσει (σίγαση)" : ""), deadline(e.today)], [])));
-    if (done.length) kids.push(el("h3", {}, "Τελείωσαν"), el("p", { class: "small muted" }, done.map(e => `${e.display_name} (${e.today.label})`).join(" · ")));
-    if (off.length) kids.push(el("h3", {}, "Εκτός σήμερα"), el("p", { class: "small muted" }, off.map(e => `${e.display_name}${e.off_today ? ` — ${e.off_today}` : e.on_leave ? " — άδεια" : " — ρεπό"}`).join(" · ")));
+    if (done.length) kids.push(el("h3", {}, `Τελείωσαν (${done.length})`), ...done.map(e => row(e, [e.today.label])));
+    if (off.length) kids.push(el("h3", {}, `Εκτός σήμερα (${off.length})`),
+      ...off.map(e => row(e, [e.off_today || (e.on_leave ? "άδεια" : "ρεπό")])));
+    const inactive = d.employees.filter(e => !e.active);
+    if (inactive.length) {
+      const wasOpen = box.querySelector("details.inactive-list")?.open;
+      const det = el("details", { class: "inactive-list" }, el("summary", {}, `Ανενεργοί (${inactive.length})`),
+        ...inactive.map(e => row(e, ["δεν εμφανίζεται στην οθόνη του καταστήματος"])));
+      det.open = !!wasOpen;
+      kids.push(det);
+    }
     box.replaceChildren(...kids);
   }
 
@@ -1641,9 +1781,9 @@
   });
 
   // ---------- tabs (top on the PC, bottom bar on the phone) ----------
-  const TABS = ["today", "people", "sched", "reports", "settings"];
+  const TABS = ["today", "sched", "reports", "settings"];
   function showTab(name, push = true) {
-    if (!TABS.includes(name)) name = "today";
+    if (!TABS.includes(name)) name = "today";        // also the old «Προσωπικό» (#people), now part of «Σήμερα»
     document.querySelectorAll(".tab").forEach(t => { t.hidden = t.dataset.tab !== name; });
     document.querySelectorAll("#tabs button").forEach(b => b.setAttribute("aria-current", b.dataset.tab === name ? "page" : "false"));
     try { localStorage.setItem("karta-admin-tab", name); } catch { /* ignore */ }
@@ -1758,7 +1898,6 @@
       }) }, "Διαγραφή δοκιμαστικών κινήσεων")));
     tm.replaceChildren(...tmKids);
 
-    renderPeople(d);
     renderToday(d);
     renderFirstSteps(d);
 

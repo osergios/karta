@@ -108,9 +108,9 @@ Karta came back isn't in Karta:
 
 - **Ergani has it all:** what Karta sent that day and what staff punched with the Ergani app.
   The legal record is complete.
-- **For Karta's reports to be right,** add those shifts with «Προσωπικό» → «Ενέργειες ▾» →
-  **«Ξεχασμένη βάρδια…»** (forgotten shift). They go into Karta only and are never sent to
-  Ergani again.
+- **For Karta's reports to be right,** add those shifts with «Σήμερα» → the person's
+  «Ενέργειες ▾» → **«Ξεχασμένη βάρδια…»** (forgotten shift). They go into Karta only and
+  are never sent to Ergani again.
 
 ## With USB (local machine only)
 
