@@ -8,6 +8,7 @@ complete .env). Normally started through setup.sh, inside the Karta image, as th
 """
 import base64
 import getpass
+import json
 import os
 import re
 import shutil
@@ -247,21 +248,38 @@ class Cloudflare:
         return app
 
 
-def tunnel_for(cf: Cloudflare, account: str, host: str, rec: dict | None) -> tuple[str, dict]:
-    """The tunnel for this address. «karta» is taken over only when it already serves this address (a new machine
-    after a disaster): its route, or the address's DNS record, points to it. Any other installation in the same
-    Cloudflare account (a test machine, a second shop) gets a tunnel of its own, «karta-<address>»: taking «karta»
-    would replace the first installation's address and take it offline."""
+def tunnel_id_of(token: str) -> str | None:
+    """The tunnel a TUNNEL_TOKEN belongs to (base64 JSON {"a": account, "t": tunnel, "s": secret})."""
+    try:
+        return json.loads(base64.b64decode(token + "=" * (-len(token) % 4)))["t"]
+    except (ValueError, KeyError, TypeError):
+        return None
+
+
+def tunnel_for(cf: Cloudflare, account: str, host: str, rec: dict | None, mine: str | None = None) -> tuple[str, dict]:
+    """The tunnel for this address. «karta» is used again only when it serves this address and nothing else, and:
+    - it is this machine's own (its TUNNEL_TOKEN is in .env: the assistant run again), or
+    - no machine is connected to it (a new machine after a disaster), and its route or the address's DNS record
+      points to it.
+    Otherwise the installation gets a tunnel of its own, «karta-<address>». Joining a tunnel another machine is
+    connected to would split the visits between the two machines at random, and changing its route would take the
+    other installation's address offline."""
     first = cf.find_tunnel(account, "karta")
     if first is None:
         return "karta", cf.tunnel(account, "karta")
-    if (rec or {}).get("content") == f"{first['id']}.cfargotunnel.com" or host in cf.tunnel_hosts(account, first["id"]):
+    hosts = cf.tunnel_hosts(account, first["id"])
+    alone = not [h for h in hosts if h != host]
+    busy = first.get("status") in ("healthy", "degraded") or bool(first.get("connections"))
+    points = host in hosts or (rec or {}).get("content") == f"{first['id']}.cfargotunnel.com"
+    if alone and (first["id"] == mine or (not busy and points)):
         return "karta", first
+    if busy and first["id"] != mine:
+        ok("το tunnel «karta» το χρησιμοποιεί άλλο μηχάνημα: αυτή η εγκατάσταση παίρνει δικό της")
     name = f"karta-{host}"
     return name, cf.tunnel(account, name)
 
 
-def cloudflare_auto(token: str, host: str, emails: list[str], session=None, confirm=None) -> dict:
+def cloudflare_auto(token: str, host: str, emails: list[str], session=None, confirm=None, mine: str | None = None) -> dict:
     """Creates (or reuses) everything Karta needs in Cloudflare. Returns the .env values.
     confirm(question) -> bool is asked before replacing an existing DNS record."""
     cf = Cloudflare(token, session)
@@ -274,7 +292,7 @@ def cloudflare_auto(token: str, host: str, emails: list[str], session=None, conf
                               "διαλέξτε team name και το Free πλάνο, και ξανατρέξτε τον οδηγό.")
     ok(f"Zero Trust: {team}")
     rec = cf.dns_record(zone["id"], host)
-    name, tun = tunnel_for(cf, account, host, rec)
+    name, tun = tunnel_for(cf, account, host, rec, mine)
     cf.route(account, tun["id"], host)
     ok(f"tunnel «{name}» → {host}")
     target = f"{tun['id']}.cfargotunnel.com"
@@ -389,7 +407,8 @@ def setup(path: str = ".env") -> int:
         while True:
             token = ask_secret("Κλειδί API του Cloudflare (δεν αποθηκεύεται)")
             try:
-                env.update(cloudflare_auto(token, host, emails_list, confirm=yes))
+                env.update(cloudflare_auto(token, host, emails_list, confirm=yes,
+                                           mine=tunnel_id_of(env.get("TUNNEL_TOKEN", ""))))
                 break
             except CloudflareError as e:
                 bad(str(e))

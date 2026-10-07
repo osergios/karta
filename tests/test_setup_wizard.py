@@ -195,6 +195,30 @@ def test_a_tunnel_made_by_hand_is_never_taken_over():
     assert len(cf.tunnels) == 2 and cf.configs["T1"]["config"]["ingress"][0]["hostname"] == HOST
 
 
+def test_a_tunnel_another_machine_is_connected_to_is_never_joined():
+    """The case met for real: the production machine is connected to «karta» (its routes not in the Cloudflare
+    configuration), and the test machine's address already points to «karta» from an older setup. The test
+    machine must get its own tunnel: joining «karta» would split production's visits between the two machines."""
+    import base64
+    import json
+    cf = FakeCloudflare()
+    cf.tunnels.append({"id": "T1", "name": "karta", "status": "healthy", "connections": [{"id": "c1"}]})
+    cf.dns = {"id": "D9", "type": "CNAME", "content": "T1.cfargotunnel.com"}
+    wizard.cloudflare_auto("token", "karta.test-shop.eu.org", ["me@example.gr"], session=cf, confirm=lambda q: True)
+    assert [t["name"] for t in cf.tunnels] == ["karta", "karta-karta.test-shop.eu.org"] and "T1" not in cf.configs
+    assert cf.dns["content"] == "T2.cfargotunnel.com"
+    # the production machine running the assistant again: its own tunnel (its token in .env), kept
+    mine = base64.b64encode(json.dumps({"a": "A1", "t": "T1", "s": "x"}).encode()).decode().rstrip("=")
+    assert wizard.tunnel_id_of(mine) == "T1" and wizard.tunnel_id_of("garbage") is None
+    cf.dns = {"id": "D1", "type": "CNAME", "content": "T1.cfargotunnel.com"}
+    wizard.cloudflare_auto("token", HOST, ["me@example.gr"], session=cf, mine=wizard.tunnel_id_of(mine))
+    assert len(cf.tunnels) == 2 and cf.configs["T1"]["config"]["ingress"][0]["hostname"] == HOST
+    # …but never with another address on it: the old test setup's .env still has the token of «karta»
+    wizard.cloudflare_auto("token", "karta.test-shop.eu.org", ["me@example.gr"], session=cf, confirm=lambda q: True,
+                           mine="T1")
+    assert cf.configs["T1"]["config"]["ingress"][0]["hostname"] == HOST
+
+
 def test_cloudflare_auto_uses_reusable_policies_when_needed():
     cf = FakeCloudflare(app_policies_fail=True)
     wizard.cloudflare_auto("token", HOST, ["me@example.gr"], session=cf)
@@ -288,7 +312,7 @@ def test_setup_asks_only_the_address_and_cloudflare(tmp_path, monkeypatch):
     replies = iter(["ναι", "karta.example.gr", "Me@Example.com", "", "ν"])     # "": the machine is at the shop/home
     monkeypatch.setattr("builtins.input", lambda prompt="": next(replies))
     monkeypatch.setattr(wizard, "ask_secret", lambda q, keep="": "cf-token")
-    monkeypatch.setattr(wizard, "cloudflare_auto", lambda token, host, emails, confirm=None: {
+    monkeypatch.setattr(wizard, "cloudflare_auto", lambda token, host, emails, confirm=None, mine=None: {
         "CF_ACCESS_TEAM_DOMAIN": "shop.cloudflareaccess.com", "CF_ACCESS_AUD": "a" * 64, "TUNNEL_TOKEN": "tun"})
     assert wizard.setup(str(path)) == 0
     env = wizard.read_env(str(path))
