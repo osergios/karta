@@ -327,3 +327,32 @@ def test_a_backup_without_a_key_restores_as_before(client, admin):
     assert r.json()["pin_key_restored"] is False
     client.post("/admin/api/restore/discard")
     assert not os.path.exists(config.restored_pin_key_path())
+
+
+def test_old_snapshots_are_pruned_weekly_and_the_time_is_shown(client, admin, employee, monkeypatch):
+    """Every night: backup + forget (quick). The space is freed (prune: lists the whole repository, slow on Google
+    Drive) once a week. Each result keeps how long it took."""
+    calls = []
+
+    def fake_run(tool, *args, **kw):
+        calls.append(args)
+        return ""
+    monkeypatch.setattr(cloud, "_run", fake_run)
+    monkeypatch.setattr(cloud, "connected", lambda: True)
+    prunes = lambda: [a for a in calls if a[0] == "forget" and "--prune" in a]      # noqa: E731
+    cloud.run_backup()
+    assert len(prunes()) == 1                                        # never pruned: now
+    assert [a for a in calls if a[0] == "forget"]
+    cloud.run_backup()
+    assert len(prunes()) == 1                                        # the next night: forget only
+    with db.tx() as c:
+        db.put_setting(c, "cloud_last_prune", "2026-01-01T00:00:00")
+    cloud.run_backup()
+    assert len(prunes()) == 2                                        # a week (or more) later: prune
+    st = cloud.status()
+    assert st["state"] == "ok" and isinstance(st["seconds"], int) and st["seconds"] >= 0
+    assert client.get("/admin/api/overview").json()["backup"]["cloud"]["seconds"] == st["seconds"]
+
+
+def test_google_drive_deletes_without_the_trash():
+    assert cloud._env()["RCLONE_DRIVE_USE_TRASH"] == "false"

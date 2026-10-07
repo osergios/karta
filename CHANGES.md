@@ -520,3 +520,9 @@
      the backup's key is the one that opens it; a file upload or an older snapshot works as before. `backup.sh` writes
      that key into `karta.env`, and `./setup.sh restore` clears it (the `.env` gets the backup's own key there). The
      disaster recovery guide needs only the encryption password now.
+103. **Quicker nightly cloud backups.** `restic forget --prune` lists every file of the repository, which takes minutes
+     on Google Drive; it ran every night. Now every night is backup + `forget` (the list of snapshots only), and the
+     prune runs when the last one is a week old (`cloud_last_prune`, `PRUNE_EVERY`). Same retention. rclone runs with
+     `RCLONE_DRIVE_USE_TRASH=false`, so what restic deletes on Google Drive is deleted, not moved to the trash (it
+     applies to existing connections too). Each result keeps how long it took (`seconds` in `cloud_status`), shown
+     as «07/10 23:41 ✓ (1′20″)» in «Αντίγραφα ασφαλείας».

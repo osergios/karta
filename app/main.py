@@ -710,7 +710,7 @@ def backup_info() -> dict:
                                         "usb": b.get("usb"), "old": old(b["when"])},
         "cloud": None if c is None else {"provider": c["provider"], "state": c["state"], "error": c["error"],
                                          "when": c["when"].isoformat(timespec="minutes") if c["when"] else None,
-                                         "old": old(c["when"])},
+                                         "old": old(c["when"]), "seconds": c.get("seconds")},
         "cloud_available": cloud.available(),
         "restore_pending": os.path.exists(restore.staged_path()),
     }

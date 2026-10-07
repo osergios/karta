@@ -951,7 +951,8 @@
       : C
         ? el("div", {},
             el("div", { class: `an-line ${C.state === "fail" || C.old ? "bad" : C.state === "ok" ? "" : "muted"}` },
-              `Cloud (${C.provider}, κρυπτογραφημένο): ` + (C.when ? `${dmyhm(C.when)} ${C.state === "ok" ? "✓" : "✗ απέτυχε"}` : "αναμονή για το πρώτο ανέβασμα…"),
+              `Cloud (${C.provider}, κρυπτογραφημένο): ` + (C.when ? `${dmyhm(C.when)} ${C.state === "ok" ? "✓" : "✗ απέτυχε"}` : "αναμονή για το πρώτο ανέβασμα…") +
+                (C.when && C.seconds != null ? ` (${C.seconds >= 60 ? `${Math.floor(C.seconds / 60)}′` : ""}${C.seconds % 60}″)` : ""),
               C.state === "fail" && C.error ? el("div", { class: "small" }, C.error) : null),
             el("div", { class: "backup-row" },
               el("button", { class: "btn ghost", type: "button", onclick: act(async () => {
