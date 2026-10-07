@@ -187,11 +187,18 @@ class Cloudflare:
             return None
         return (org or {}).get("auth_domain") or None
 
-    def tunnel(self, account: str, name: str) -> dict:
+    def find_tunnel(self, account: str, name: str) -> dict | None:
         found = self.call("GET", f"/accounts/{account}/cfd_tunnel", params={"name": name, "is_deleted": "false"}) or []
-        if found:
-            return found[0]
-        return self.call("POST", f"/accounts/{account}/cfd_tunnel", json={"name": name, "config_src": "cloudflare"})
+        return found[0] if found else None
+
+    def tunnel(self, account: str, name: str) -> dict:
+        return self.find_tunnel(account, name) or self.call(
+            "POST", f"/accounts/{account}/cfd_tunnel", json={"name": name, "config_src": "cloudflare"})
+
+    def tunnel_hosts(self, account: str, tunnel_id: str) -> list[str]:
+        """The addresses a tunnel serves now."""
+        cfg = self.call("GET", f"/accounts/{account}/cfd_tunnel/{tunnel_id}/configurations") or {}
+        return [r["hostname"] for r in ((cfg.get("config") or {}).get("ingress") or []) if r.get("hostname")]
 
     def tunnel_token(self, account: str, tunnel_id: str) -> str:
         return self.call("GET", f"/accounts/{account}/cfd_tunnel/{tunnel_id}/token")
@@ -240,6 +247,17 @@ class Cloudflare:
         return app
 
 
+def tunnel_for(cf: Cloudflare, account: str, host: str) -> tuple[str, dict]:
+    """The tunnel for this address. «karta» serves one address: a reinstall of the same one (a new machine after a
+    disaster) takes it over. Another installation in the same Cloudflare account (a test machine, a second shop) gets
+    a tunnel of its own, «karta-<address>»: taking «karta» would replace the first one's address and take it offline."""
+    first = cf.find_tunnel(account, "karta")
+    if first is None or host in cf.tunnel_hosts(account, first["id"]) or not cf.tunnel_hosts(account, first["id"]):
+        return "karta", first or cf.tunnel(account, "karta")
+    name = f"karta-{host}"
+    return name, cf.tunnel(account, name)
+
+
 def cloudflare_auto(token: str, host: str, emails: list[str], session=None, confirm=None) -> dict:
     """Creates (or reuses) everything Karta needs in Cloudflare. Returns the .env values.
     confirm(question) -> bool is asked before replacing an existing DNS record."""
@@ -252,9 +270,9 @@ def cloudflare_auto(token: str, host: str, emails: list[str], session=None, conf
         raise CloudflareError("δεν έχει ενεργοποιηθεί το Zero Trust. Ανοίξτε μία φορά dash.cloudflare.com → Zero Trust, "
                               "διαλέξτε team name και το Free πλάνο, και ξανατρέξτε τον οδηγό.")
     ok(f"Zero Trust: {team}")
-    tun = cf.tunnel(account, "karta")
+    name, tun = tunnel_for(cf, account, host)
     cf.route(account, tun["id"], host)
-    ok(f"tunnel «karta» → {host}")
+    ok(f"tunnel «{name}» → {host}")
     rec = cf.dns_record(zone["id"], host)
     target = f"{tun['id']}.cfargotunnel.com"
     if rec and rec.get("content") != target:
