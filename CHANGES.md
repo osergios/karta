@@ -583,3 +583,15 @@
      (`2026-10-07T13:32:10…+03:00`, the container runs with `TZ=Europe/Athens`); «Από το cloud…» cut the offset off and
      read it as UTC, so every backup was listed 3 hours late in summer (2 in winter). `cloud.snapshot_time` reads the
      offset (or `Z`) and converts to Athens time.
+
+# A second installation never takes over the first one's tunnel (v1.8.3)
+
+116. **Setup assistant: one tunnel per installation.** `cloudflare_auto` always used the tunnel named «karta» in the
+     Cloudflare account and set its route to the new address. A second installation in the same account (a test
+     machine, a second shop, on another domain) joined the first one's tunnel: Cloudflare then split the visits of both
+     addresses between the two machines at random (a punch at the shop could land on the test machine), and the new
+     route could take the first address offline. Now «karta» is used again only when it serves this address and
+     nothing else, and either it is this machine's own (the tunnel of the `TUNNEL_TOKEN` in `.env`: the assistant run
+     again) or no machine is connected to it and its route or the address's DNS record points to it (a new machine after
+     a disaster, as the recovery guide says). Otherwise the installation gets a tunnel of its own, «karta-<address>»
+     (`tunnel_for`, `tunnel_id_of`).

@@ -102,7 +102,7 @@ class FakeCloudflare:
     def __init__(self, team="shop.cloudflareaccess.com", dns=None, app_policies_fail=False):
         self.headers, self.calls = {}, []
         self.team, self.dns, self.app_policies_fail = team, dns, app_policies_fail
-        self.tunnels, self.apps = [], []
+        self.tunnels, self.apps, self.configs = [], [], {}
 
     def request(self, method, url, timeout=None, params=None, json=None):
         path = url.replace(wizard.CF_API, "")
@@ -110,17 +110,21 @@ class FakeCloudflare:
         r = lambda result: _Resp(200, {"success": True, "result": result})
         err = lambda msg: _Resp(400, {"success": False, "errors": [{"code": 1, "message": msg}]})
         if path == "/zones":
-            return r([{"id": "Z1", "name": "example.gr", "account": {"id": "A1"}}] if params["name"] == "example.gr" else [])
+            return r([{"id": "Z1", "name": params["name"], "account": {"id": "A1"}}]
+                     if params["name"] in ("example.gr", "test-shop.eu.org") else [])
         if path == "/accounts/A1/access/organizations":
             return r({"auth_domain": self.team}) if self.team else err("not set up")
         if path == "/accounts/A1/cfd_tunnel" and method == "GET":
-            return r(self.tunnels)
+            return r([t for t in self.tunnels if t["name"] == params["name"]])
         if path == "/accounts/A1/cfd_tunnel" and method == "POST":
-            self.tunnels.append({"id": "T1", "name": json["name"]})
+            self.tunnels.append({"id": f"T{len(self.tunnels) + 1}", "name": json["name"]})
             return r(self.tunnels[-1])
-        if path == "/accounts/A1/cfd_tunnel/T1/configurations":
-            return r({})
-        if path == "/accounts/A1/cfd_tunnel/T1/token":
+        if path.startswith("/accounts/A1/cfd_tunnel/") and path.endswith("/configurations"):
+            tid = path.split("/")[4]
+            if method == "PUT":
+                self.configs[tid] = json
+            return r(self.configs.get(tid, {}))
+        if path.startswith("/accounts/A1/cfd_tunnel/") and path.endswith("/token"):
             return r("TUNNEL-TOKEN")
         if path == "/zones/Z1/dns_records" and method == "GET":
             return r([self.dns] if self.dns else [])
@@ -161,6 +165,58 @@ def test_cloudflare_auto_is_safe_to_run_again():
     wizard.cloudflare_auto("token", HOST, ["me@example.gr"], session=cf)
     wizard.cloudflare_auto("token", HOST, ["me@example.gr"], session=cf)
     assert len(cf.tunnels) == 1 and len(cf.apps) == 1
+
+
+def test_a_second_installation_gets_its_own_tunnel():
+    """A test machine (or a second shop) on another address in the same Cloudflare account: it must never take
+    over the tunnel «karta» of the one in production — that would replace its address and take it offline."""
+    cf = FakeCloudflare()
+    first = wizard.cloudflare_auto("token", HOST, ["me@example.gr"], session=cf)
+    cf.dns = None
+    wizard.cloudflare_auto("token", "karta.test-shop.eu.org", ["me@example.gr"], session=cf)
+    assert [t["name"] for t in cf.tunnels] == ["karta", "karta-karta.test-shop.eu.org"]
+    assert cf.configs["T1"]["config"]["ingress"][0]["hostname"] == HOST                     # untouched
+    assert cf.configs["T2"]["config"]["ingress"][0]["hostname"] == "karta.test-shop.eu.org"
+    assert cf.dns["content"] == "T2.cfargotunnel.com"
+    # a new machine for the first address (after a disaster) takes «karta» over, as before
+    assert wizard.cloudflare_auto("token", HOST, ["me@example.gr"], session=cf) == first
+    assert len(cf.tunnels) == 2
+
+
+def test_a_tunnel_made_by_hand_is_never_taken_over():
+    """«karta» made outside the assistant (its routes not in the Cloudflare configuration): a new address gets its
+    own tunnel; the same address (its DNS record points to «karta») takes it over."""
+    cf = FakeCloudflare()
+    cf.tunnels.append({"id": "T1", "name": "karta"})                       # no remote configuration
+    wizard.cloudflare_auto("token", "karta.test-shop.eu.org", ["me@example.gr"], session=cf)
+    assert [t["name"] for t in cf.tunnels] == ["karta", "karta-karta.test-shop.eu.org"] and "T1" not in cf.configs
+    cf.dns = {"id": "D9", "type": "CNAME", "content": "T1.cfargotunnel.com"}
+    wizard.cloudflare_auto("token", HOST, ["me@example.gr"], session=cf)
+    assert len(cf.tunnels) == 2 and cf.configs["T1"]["config"]["ingress"][0]["hostname"] == HOST
+
+
+def test_a_tunnel_another_machine_is_connected_to_is_never_joined():
+    """The case met for real: the production machine is connected to «karta» (its routes not in the Cloudflare
+    configuration), and the test machine's address already points to «karta» from an older setup. The test
+    machine must get its own tunnel: joining «karta» would split production's visits between the two machines."""
+    import base64
+    import json
+    cf = FakeCloudflare()
+    cf.tunnels.append({"id": "T1", "name": "karta", "status": "healthy", "connections": [{"id": "c1"}]})
+    cf.dns = {"id": "D9", "type": "CNAME", "content": "T1.cfargotunnel.com"}
+    wizard.cloudflare_auto("token", "karta.test-shop.eu.org", ["me@example.gr"], session=cf, confirm=lambda q: True)
+    assert [t["name"] for t in cf.tunnels] == ["karta", "karta-karta.test-shop.eu.org"] and "T1" not in cf.configs
+    assert cf.dns["content"] == "T2.cfargotunnel.com"
+    # the production machine running the assistant again: its own tunnel (its token in .env), kept
+    mine = base64.b64encode(json.dumps({"a": "A1", "t": "T1", "s": "x"}).encode()).decode().rstrip("=")
+    assert wizard.tunnel_id_of(mine) == "T1" and wizard.tunnel_id_of("garbage") is None
+    cf.dns = {"id": "D1", "type": "CNAME", "content": "T1.cfargotunnel.com"}
+    wizard.cloudflare_auto("token", HOST, ["me@example.gr"], session=cf, mine=wizard.tunnel_id_of(mine))
+    assert len(cf.tunnels) == 2 and cf.configs["T1"]["config"]["ingress"][0]["hostname"] == HOST
+    # …but never with another address on it: the old test setup's .env still has the token of «karta»
+    wizard.cloudflare_auto("token", "karta.test-shop.eu.org", ["me@example.gr"], session=cf, confirm=lambda q: True,
+                           mine="T1")
+    assert cf.configs["T1"]["config"]["ingress"][0]["hostname"] == HOST
 
 
 def test_cloudflare_auto_uses_reusable_policies_when_needed():
@@ -256,7 +312,7 @@ def test_setup_asks_only_the_address_and_cloudflare(tmp_path, monkeypatch):
     replies = iter(["ναι", "karta.example.gr", "Me@Example.com", "", "ν"])     # "": the machine is at the shop/home
     monkeypatch.setattr("builtins.input", lambda prompt="": next(replies))
     monkeypatch.setattr(wizard, "ask_secret", lambda q, keep="": "cf-token")
-    monkeypatch.setattr(wizard, "cloudflare_auto", lambda token, host, emails, confirm=None: {
+    monkeypatch.setattr(wizard, "cloudflare_auto", lambda token, host, emails, confirm=None, mine=None: {
         "CF_ACCESS_TEAM_DOMAIN": "shop.cloudflareaccess.com", "CF_ACCESS_AUD": "a" * 64, "TUNNEL_TOKEN": "tun"})
     assert wizard.setup(str(path)) == 0
     env = wizard.read_env(str(path))
