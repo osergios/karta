@@ -13,7 +13,7 @@ EXPIRED = """rclone: 2026/10/05 23:40:05 ERROR : : couldn't list files: couldn't
 Fatal: unable to open repository at rclone:karta-store:Karta-backups: error talking HTTP to rclone: exit status 1"""
 FORBIDDEN = "Fatal: unable to save snapshot: googleapi: Error 403: The user's Drive storage quota has been exceeded., storageQuotaExceeded"
 OTHER = """Fatal: unable to save snapshot: rclone: response status 500
-  context deadline exceeded
+  unexpected EOF
 connection reset by peer"""
 
 
@@ -28,8 +28,8 @@ def test_known_errors_become_clear_greek_messages():
 
 
 def test_anything_else_keeps_its_last_lines():
-    assert cloud.explain(OTHER) == ("Fatal: unable to save snapshot: rclone: response status 500 · context deadline "
-                                    "exceeded · connection reset by peer")
+    assert cloud.explain(OTHER) == ("Fatal: unable to save snapshot: rclone: response status 500 · unexpected EOF · "
+                                    "connection reset by peer")
     assert len(cloud.explain("x" * 1000)) == 300
     assert cloud.explain("", "rclone", 3) == "rclone: κωδικός 3"
     assert cloud.explain("lock was created by PID 4031") .startswith("lock")     # a number is not an HTTP status
@@ -38,3 +38,10 @@ def test_anything_else_keeps_its_last_lines():
 def test_a_new_repository_over_old_backups_is_still_recognised():
     assert "already exists" in cloud.explain("Fatal: create repository at rclone:karta-store:Karta-backups failed: "
                                              "config file already exists")
+
+
+def test_a_slow_cloud_is_explained():
+    raw = ('Fatal: unable to open repository at rclone:karta-store:Karta-backups: error talking HTTP to rclone: '
+           'Get "http://localhost/file-11248313741212961703": context deadline exceeded '
+           '(Client.Timeout exceeded while awaiting headers)')
+    assert cloud.explain(raw).startswith("Το cloud άργησε να απαντήσει")

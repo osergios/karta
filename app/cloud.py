@@ -30,6 +30,7 @@ RUN_AT = (23, 40)                         # nightly snapshot, local time
 KEEP = ("--keep-daily", "30", "--keep-monthly", "24", "--keep-yearly", "1000")
 SNAPSHOT_ID = re.compile(r"^[0-9a-f]{8,64}$")
 FILE_IN_SNAPSHOT = "/karta.db"
+RCLONE_START = "5m"                       # how long restic waits for rclone to answer (restic's default: 1m)
 STAGE = ".cloud-new"                      # a connection being tried (see _connect)
 NO_REPO = "Δεν βρέθηκαν αντίγραφα σε αυτόν τον φάκελο του cloud"
 WRONG_PASSWORD = "λάθος κωδικός κρυπτογράφησης"
@@ -82,6 +83,8 @@ def _run(tool: str, *args: str, timeout: int = 900, cwd: str | None = None, stdo
     if not available():
         raise CloudError("Το rclone / restic δεν υπάρχει σε αυτή την εγκατάσταση (χρειάζεται νεότερο image της Karta).")
     try:
+        if tool == "restic":    # rclone may need more than restic's 1 minute to reach Google Drive (token, folder lookup)
+            args = ("-o", f"rclone.timeout={RCLONE_START}", *args)
         r = subprocess.run([tool, *args], stdout=stdout if stdout is not None else subprocess.PIPE,
                            stderr=subprocess.PIPE, text=stdout is None, timeout=timeout, env=_env(base), cwd=cwd)
     except subprocess.TimeoutExpired:
@@ -102,6 +105,8 @@ _KNOWN = [
     (re.compile(r"quota", re.I), "Ο χώρος στο cloud γέμισε"),               # also a 403: before the next line
     (re.compile(r"\b40[13]\b|invalid_grant|token expired|expired_access_token", re.I),
      "Η πρόσβαση στο cloud έληξε — συνδέστε ξανά"),
+    (re.compile(r"context deadline exceeded|Client\.Timeout|timeout awaiting|i/o timeout|TLS handshake timeout", re.I),
+     "Το cloud άργησε να απαντήσει (συνήθως προσωρινό)· η Karta θα ξαναδοκιμάσει σε μία ώρα"),
 ]
 
 
@@ -333,7 +338,8 @@ def download(snapshot_id: str, dest: str) -> None:
 
 def due(now: datetime) -> bool:
     """Tonight's snapshot is due after 23:40 once a day; any time when the last good one is over 36 hours old
-    (the machine was off at night). After an attempt, wait an hour before the next."""
+    (the machine was off at night), or the last attempt failed (a slow cloud is usually fine an hour later).
+    After an attempt, wait an hour before the next."""
     if not connected():
         return False
     last_try = db.setting("cloud_last_try")
@@ -344,6 +350,11 @@ def due(now: datetime) -> bool:
     tonight = now.replace(hour=RUN_AT[0], minute=RUN_AT[1], second=0, microsecond=0)
     if now >= tonight and (last_ok is None or last_ok < tonight):
         return True
+    try:
+        if json.loads(db.setting("cloud_status") or "null")["state"] == "fail":
+            return True
+    except (ValueError, KeyError, TypeError):
+        pass
     return last_ok is None or now - last_ok >= timedelta(hours=36)
 
 

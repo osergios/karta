@@ -495,3 +495,8 @@
     answer fail, and the disabled button gave no sign. The check now ignores case, spaces and Greek look-alikes
     (it only proves the password was looked at); the button is always pressable and explains a mismatch; the field
     has autocapitalize/autocorrect off; and the panel says the password itself is Latin characters, case-sensitive.
+99. **A slow Google Drive no longer fails the nightly backup.** restic gives rclone 1 minute to start answering
+    (`Get "http://localhost/file-…": context deadline exceeded`); reaching Google Drive (token, folder lookup) can
+    take longer. Karta now runs restic with `-o rclone.timeout=5m`, explains such errors in Greek («Το cloud άργησε
+    να απαντήσει…»), and after a failed upload tries again an hour later (and hourly until it works) instead of
+    waiting until the last good one is 36 hours old.

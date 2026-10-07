@@ -85,6 +85,17 @@ def test_cloud_schedule():
         with db.tx() as c:
             db.put_setting(c, "cloud_last_try", (evening + timedelta(hours=36, minutes=40)).isoformat())
         assert not cloud.due(evening + timedelta(hours=37))      # tried 20′ ago: wait an hour
+        # last night's upload failed (a slow cloud): try again an hour later, not 36 hours after the last good one
+        night = evening + timedelta(days=1)
+        with db.tx() as c:
+            db.put_setting(c, "cloud_last_try", night.isoformat())
+            db.put_setting(c, "cloud_status", '{"at": "2026-10-07T20:45:00", "state": "fail", "error": "x"}')
+        assert not cloud.due(night + timedelta(minutes=30))
+        assert cloud.due(night + timedelta(hours=1, minutes=1))
+        with db.tx() as c:
+            db.put_setting(c, "cloud_status", '{"at": "2026-10-07T21:46:00", "state": "ok", "error": ""}')
+            db.put_setting(c, "cloud_last_ok", (night + timedelta(hours=1)).isoformat())
+        assert not cloud.due(night + timedelta(hours=3))         # it worked: back to the nightly upload
     finally:
         cloud.connected = orig
 
