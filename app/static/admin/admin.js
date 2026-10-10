@@ -632,12 +632,15 @@
     s.value = value || fallback;
     return s;
   }
+  const loginTests = {};          // the last «Δοκιμή σύνδεσης» per Ergani user (production / trial), for this page
   function erganiUser(C, group, target, names, typeFallback) {
     const [U, P, T] = names;
     const user = input(C[group][U].value, { maxlength: "100", autocomplete: "off" });
     const pass = secretInput(C[group][P], "κωδικός");
     const type = userTypeSelect(C[group][T].value, typeFallback);
-    const result = el("span", { class: "small" });
+    // the result stays on screen: the settings box is drawn again after every button (act → load)
+    const last = loginTests[target];
+    const result = el("span", { class: last && !last.ok ? "small warn-text" : "small" }, last ? last.text : "");
     return {
       fields: [field("Όνομα χρήστη", user, C[group][U].source), field("Κωδικός", pass, C[group][P].source),
                field("Τύπος χρήστη", type, C[group][T].source)],
@@ -648,8 +651,10 @@
         result.textContent = "Δοκιμή…";
         const r = await api("/admin/api/config/login-test", { target, username: user.value.trim(),
           password: pass.value ? pass.value : null, user_type: type.value });
+        const at = new Date().toLocaleTimeString("el-GR", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: "Europe/Athens" });
+        loginTests[target] = { ok: r.ok, text: r.ok ? `✓ Η σύνδεση πέτυχε στις ${at} (δεν υποβλήθηκε τίποτα).` : `✗ ${r.message} (${at})` };
         result.className = r.ok ? "small" : "small warn-text";
-        result.textContent = r.ok ? "✓ Η σύνδεση πέτυχε (δεν υποβλήθηκε τίποτα)." : `✗ ${r.message}`;
+        result.textContent = loginTests[target].text;
       }) }, "Δοκιμή σύνδεσης"),
     };
   }
@@ -1223,6 +1228,7 @@
     ["weekly_legal_hours", "Νόμιμη εβδομάδα, μετά υπερωρία (ώρες)"],
     ["min_rest_hours", "Ελάχιστη ανάπαυση (ώρες)"],
   ];
+  let lastD = null;        // the last overview (the Ergani check compares with Karta's schedules)
   let editorsFor = null;   // active employee ids the editors were drawn for (and the declaration system)
   const editorsKey = d => d.employees.filter(e => e.active).map(e => e.id).join(",") + (d.retro ? "|retro" : "");
   let RETRO = false;       // the business declares changes and overtime afterwards (απολογιστικό σύστημα)
@@ -1941,6 +1947,7 @@
   async function load() {
     let d;
     try { d = await api("/admin/api/overview"); } catch (e) { toast(e.message, true); return; }
+    lastD = d;
     RETRO = !!d.retro;
     if (editorsFor !== editorsKey(d)) renderEditors(d);
     document.getElementById("erganiState").textContent = d.ergani_configured
@@ -2048,11 +2055,13 @@
   const STATUS_TXT = { new: "Νέος", match: "Υπάρχει ✓", name_differs: "Διαφορετική γραφή ονόματος" };
   async function erganiCheck() {
     const out = document.getElementById("erganiResult"), btn = document.getElementById("erganiCheck");
-    btn.disabled = true; btn.textContent = "Έλεγχος…"; out.replaceChildren(el("p", { class: "small" }, "Επικοινωνία με το ΕΡΓΑΝΗ…"));
+    const progress = el("p", { class: "small" });
+    btn.disabled = true; btn.textContent = "Έλεγχος…"; out.replaceChildren(progress);
     let r;
-    try { r = await api("/admin/api/ergani/review"); }
+    try { r = await cloudJob("/admin/api/ergani/review", {}, progress, "Ανάγνωση από το ΕΡΓΑΝΗ", "προσωπικό και ψηφιακό ωράριο, μπορεί να πάρει 1–2 λεπτά"); }
     catch (e) { out.replaceChildren(el("div", { class: "er-line bad" }, e.message)); btn.disabled = false; btn.textContent = "Έλεγχος ΕΡΓΑΝΗ"; return; }
     btn.disabled = false; btn.textContent = "Νέος έλεγχος";
+    editorsFor = null;                       // the stored facts changed: «Ωράρια» draws again with them
     const lines = [];
     const em = r.employer;
     if (r.mode === "trial") lines.push(el("div", { class: "er-line warn" },
@@ -2067,6 +2076,11 @@
     lines.push(el("div", { class: "er-line " + (found ? "" : "bad") },
       "Παραρτήματα: " + (r.branches.map(b => `#${b.number} ${b.address || ""}${b.status ? " (" + b.status + ")" : ""}`).join(" · ") || "—") +
       (found ? ` — η εφαρμογή χρησιμοποιεί το #${r.configured_branch} ✓` : ` — το παράρτημα #${r.configured_branch} των «Ρυθμίσεων» δεν υπάρχει στο ΕΡΓΑΝΗ`)));
+    if (r.refreshed) lines.push(el("div", { class: "er-line" }, `Τα στοιχεία ωραρίου ενημερώθηκαν για ${r.refreshed} ${r.refreshed === 1 ? "εργαζόμενο" : "εργαζόμενους"}: ` +
+      "τα χρησιμοποιεί η «Χρήση στοιχείων ΕΡΓΑΝΗ» στα «Ωράρια»."));
+    if (r.people.some(p => p.facts.digital)) lines.push(el("div", { class: "er-line muted" },
+      `Το ψηφιακό ωράριο το ΕΡΓΑΝΗ το δίνει μόνο έως ${dmy(r.declared_until)}/${r.declared_until.slice(0, 4)} (τον προηγούμενο μήνα). ` +
+      `Αλλαγές μετά από τότε (π.χ. από τον λογιστή) φαίνονται από την 1η του επόμενου μήνα — μέχρι τότε περάστε τες με το χέρι στα «Ωράρια».`));
     (r.mode === "trial" ? [] : r.not_in_ergani).forEach(x => {
       const off = el("button", { class: "link", onclick: act(async () => {
         await api(`/admin/api/employees/${x.employee_id}/active`, { active: false });
@@ -2078,25 +2092,48 @@
       lines.push(line);
     });
 
-    const rows = [], picks = [];
-    r.people.forEach(p => {
-      const cb = el("input", { type: "checkbox" }); const name = el("input", { type: "text", value: p.suggested_name || p.display_name || "", maxlength: "40" });
+    // one card per person, folded: the line says who and how; opened, everything Ergani says next to Karta
+    const picks = [];
+    const ERGANI_DAYS = values => weekText(DAYS.map((_, i) => values[String(i)] || ""));
+    const cards = r.people.map(p => {
+      const F = p.facts;
+      const cb = el("input", { type: "checkbox", "aria-label": `Επιλογή ${p.last_name} ${p.first_name}` });
+      const name = el("input", { type: "text", value: p.suggested_name || p.display_name || "", maxlength: "40" });
       if (p.status === "new" && p.in_branch) cb.checked = true;
       if (p.status === "name_differs") cb.checked = true;
-      if (p.status === "match") { cb.disabled = true; }
+      if (p.status === "match") cb.disabled = true;
       if (p.status !== "new") name.disabled = true;
       picks.push({ p, cb, name });
-      const info = erganiFacts(p.facts) + (p.facts.proposal ? " · ωράριο ανά ημέρα διαθέσιμο" : p.facts.digital ? " · ψηφιακό ωράριο" : "");
-      rows.push(el("tr", {},
-        el("td", {}, cb),
-        el("td", {}, `${p.last_name} ${p.first_name}`, el("span", { class: "sub" }, `ΑΦΜ …${p.afm.slice(-3)} · παράρτημα #${p.branch ?? "—"}${p.in_branch ? "" : " (άλλο παράρτημα)"}`)),
-        el("td", {}, STATUS_TXT[p.status], p.status === "name_differs" ? el("span", { class: "sub" }, `στην εφαρμογή: ${p.app_name} → θα γίνει όπως στο ΕΡΓΑΝΗ`) : null),
-        el("td", {}, name, p.status === "new" ? el("span", { class: "sub" }, "όπως θα φαίνεται στο tablet — βάλε τόνους") : null),
-        el("td", {}, el("span", { class: "sub" }, info || "—"))));
+      const short = [F.weekly_hours != null && `${F.weekly_hours} ώρες/εβδ.`, F.week_days && `${F.week_days}ήμερο`,
+                     F.digital ? "ψηφιακό ωράριο" : null].filter(Boolean).join(" · ");
+      const rows = [
+        ["Στοιχεία ΕΡΓΑΝΗ", erganiFacts(F)],
+        F.proposal ? [F.proposal_week ? `Ώρες ανά ημέρα (δηλωμένες ${dmy(F.proposal_week.from)}–${dmy(F.proposal_week.to)})` : "Ώρες ανά ημέρα",
+                      ERGANI_DAYS(F.proposal)] : null,
+        !F.proposal && F.digital ? ["Ώρες ανά ημέρα", "δεν βρέθηκαν στο ψηφιακό ωράριο των τελευταίων ημερών που δίνει το ΕΡΓΑΝΗ"] : null,
+        !F.proposal && F.schedule_text ? ["Ωράριο (κείμενο ΕΡΓΑΝΗ)", F.schedule_text] : null,
+      ].filter(Boolean);
+      let differs = false;
+      if (p.employee_id && lastD) {
+        const cur = (lastD.schedules || {})[String(p.employee_id)] || {};
+        const mine = DAYS.map((_, i) => cur[String(i)] || "");
+        const same = F.proposal && DAYS.every((_, i) => { const a = parseSpan(mine[i]), z = parseSpan(F.proposal[String(i)] || "");
+          return (!a && !z) || (a && z && !a.error && !z.error && a.body === z.body); });
+        differs = !!F.proposal && !same;
+        rows.push(["Στην Karta", weekText(mine) + (F.proposal ? (same ? " — ίδιες ώρες ✓" : " — διαφέρουν από το ΕΡΓΑΝΗ") : "")]);
+      }
+      const det = el("details", { class: "er-person" },
+        el("summary", {}, cb, el("span", { class: "erp-name" }, el("strong", {}, `${p.last_name} ${p.first_name}`),
+            el("span", { class: "sub" }, `ΑΦΜ …${p.afm.slice(-3)} · παράρτημα #${p.branch ?? "—"}${p.in_branch ? "" : " (άλλο παράρτημα)"}`)),
+          el("span", { class: `erp-status ${p.status}` }, STATUS_TXT[p.status]), el("span", { class: "erp-short" }, short || "—"),
+          differs ? el("span", { class: "erp-status new" }, "⚠ άλλες ώρες στην Karta") : null),
+        el("dl", { class: "erp-facts" }, ...rows.flatMap(([k, v]) => [el("dt", {}, k), el("dd", {}, v)])),
+        p.status === "name_differs" ? el("p", { class: "small" }, `Στην εφαρμογή: ${p.app_name} → θα γίνει όπως στο ΕΡΓΑΝΗ.`) : null,
+        p.status === "new" ? el("label", { class: "erp-tablet" }, "Όνομα στο tablet (βάλε τόνους) ", name) : null);
+      cb.addEventListener("click", ev => ev.stopPropagation());
+      det.dataset.name = `${p.last_name} ${p.first_name}`.toLocaleLowerCase("el");
+      return det;
     });
-    const table = rows.length
-      ? el("div", { class: "scroll" }, el("table", { class: "er-table" }, el("tr", {}, el("th", {}, ""), el("th", {}, "Στο ΕΡΓΑΝΗ"), el("th", {}, "Κατάσταση"), el("th", {}, "Όνομα στο tablet"), el("th", {}, "Δηλωμένα")), ...rows))
-      : el("p", { class: "small" }, "Το ΕΡΓΑΝΗ δεν επέστρεψε εργαζόμενους.");
     const go = el("button", { class: "btn" }, "Εισαγωγή / ενημέρωση επιλεγμένων");
     const pinsBox = el("div", {});
     go.addEventListener("click", act(async () => {
@@ -2111,20 +2148,22 @@
       toast(`Έτοιμο: ${res.created.length} νέοι, ${people.length - res.created.length} ενημερώθηκαν`);
       editorsFor = null;
     }));
-    out.replaceChildren(...[...lines, table, rows.length && r.mode !== "trial" ? el("div", { class: "er-actions" }, go) : null, pinsBox].filter(Boolean));
+    // many people: search, open / fold all
+    const search = el("input", { type: "search", placeholder: "Αναζήτηση", "aria-label": "Αναζήτηση εργαζόμενου" });
+    const plain = t => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    search.addEventListener("input", () => { const q = plain(search.value.trim().toLocaleLowerCase("el"));
+      cards.forEach(c => { c.hidden = !!q && !plain(c.dataset.name).includes(q); }); });
+    const tools = cards.length > 3 ? el("div", { class: "sched-tools" }, search,
+      el("button", { type: "button", class: "link", onclick: () => cards.forEach(c => { if (!c.hidden) c.open = true; }) }, "Άνοιγμα όλων"),
+      el("button", { type: "button", class: "link", onclick: () => cards.forEach(c => { c.open = false; }) }, "Κλείσιμο όλων")) : null;
+    const list = cards.length ? el("div", { class: "er-people" }, ...cards) : el("p", { class: "small" }, "Το ΕΡΓΑΝΗ δεν επέστρεψε εργαζόμενους.");
+    out.replaceChildren(...[...lines, el("h3", {}, `Προσωπικό στο ΕΡΓΑΝΗ (${cards.length})`), tools, list,
+      cards.length && r.mode !== "trial" ? el("div", { class: "er-actions" }, go) : null, pinsBox].filter(Boolean));
   }
   document.getElementById("erganiCheck").addEventListener("click", erganiCheck);
   document.getElementById("alertsClear").addEventListener("click", act(async () => {
     if (!await askBox("Εκκαθάριση της λίστας ειδοποιήσεων;\n\nΟι ανοιχτές σημειώνονται «Εντάξει». Η μηνιαία αναφορά συνεχίζει να τις μετρά.")) return;
     const r = await api("/admin/api/alerts/clear", {}); toast(`Καθαρίστηκαν ${r.cleared} ειδοποιήσεις`);
-  }));
-  const refreshBtn = document.getElementById("erganiRefresh"), refreshProgress = el("p", { class: "small", hidden: "" });
-  refreshBtn.after(refreshProgress);
-  refreshBtn.addEventListener("click", act(async () => {
-    const r = await cloudJob("/admin/api/ergani/refresh", {}, refreshProgress, "Ανάγνωση στοιχείων ωραρίου από το ΕΡΓΑΝΗ",
-                             "μαζί με το ψηφιακό ωράριο των τελευταίων ημερών, μπορεί να πάρει 1–2 λεπτά");
-    editorsFor = null;
-    toast(`Ενημερώθηκαν τα στοιχεία ΕΡΓΑΝΗ για ${r.updated} εργαζόμενους`);
   }));
   document.getElementById("erganiServices").addEventListener("click", act(async () => {
     const box = document.getElementById("erganiExtra");

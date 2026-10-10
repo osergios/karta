@@ -646,3 +646,19 @@ database, encryption password, PIN_KEY — and showed these:
      in a row without a break is still pointed out.
 125. «Υπηρεσίες ΕΡΓΑΝΗ» listed every parameter of a service as a service of its own. Test staff get a fixed creation
      date (a report test failed from 8/10 on). New tables only, no migration step: going back to 1.8.x is safe.
+
+# «Έλεγχος ΕΡΓΑΝΗ» shows everything, one card per person (v1.9.1)
+
+126. **One reading instead of two.** «Έλεγχος ΕΡΓΑΝΗ» now also reads the hours last declared in the digital organisation
+     (EX_BASE_08) and stores everyone's schedule facts — what «Ενημέρωση στοιχείων ωραρίου από ΕΡΓΑΝΗ» did, which is
+     gone. It runs in the background (`POST`/`GET /admin/api/ergani/review`, `CloudJob`) with the time it has been.
+127. **One folded card per person.** The staff table became a list of `<details>`: the line shows name, ΑΦΜ, status,
+     weekly hours and «⚠ άλλες ώρες στην Karta» when the declared hours per day differ from Karta's schedule; opened,
+     everything Ergani says (facts, hours per day with the dates they come from, free-text schedule) next to what
+     Karta has. Search, «Άνοιγμα όλων», «Κλείσιμο όλων». The checkbox doesn't fold the card.
+128. **The current month is said plainly.** Ergani gives the digital organisation only up to the previous month: the
+     check says up to which date (`declared_until`), and that a change made during the month (by the accountant) shows
+     from the 1st of the next — until then by hand in «Ωράρια». Documented in Admin-Settings and
+     Admin-Schedules-and-Holidays (GR/EN).
+129. **«Δοκιμή σύνδεσης» keeps its result.** The settings box is drawn again after every button, so «✓ Η σύνδεση πέτυχε»
+     showed for a split second and vanished. The last result per Ergani user stays on screen now, with the time.

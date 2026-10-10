@@ -59,8 +59,7 @@ minimisation; the rest is discarded and never logged).
 
 | Button | What it does |
 |---|---|
-| **«Έλεγχος ΕΡΓΑΝΗ»** | Reads the employer, branches and current staff. Each person is marked «Νέος», «Υπάρχει ✓» or «Διαφορετική γραφή ονόματος». Tick the new ones and import them: this is how employees are added. |
-| **«Ενημέρωση στοιχείων ωραρίου από ΕΡΓΑΝΗ»** | Refreshes each employee's declared schedule, weekly hours, break and flexible arrival from Ergani, shown next to their schedule for comparison. |
+| **«Έλεγχος ΕΡΓΑΝΗ»** | Reads the employer, branches, current staff and each employee's declared schedule (weekly hours, break, flexible arrival and, with the digital organisation, each day's hours). It runs in the background (1–2 minutes, showing how long it has been). Each person is marked «Νέος», «Υπάρχει ✓» or «Διαφορετική γραφή ονόματος»; tick the new ones and import them: this is how employees are added. It also refreshes what «Χρήση στοιχείων ΕΡΓΑΝΗ» fills in, in «Ωράρια». |
 | **«Υπηρεσίες ΕΡΓΑΝΗ»** | Lists the Ergani web services available to your user (useful when checking credentials). |
 
 ### What «Έλεγχος ΕΡΓΑΝΗ» shows
@@ -69,9 +68,21 @@ minimisation; the rest is discarded and never logged).
   the digital work card, and whether the branch Karta uses exists in Ergani.
 - **Anyone in Karta who isn't in Ergani's current staff** (e.g. left the job), with an
   **«Απενεργοποίηση»** (deactivate) button next to them.
-- **Staff table:** each person's status, the **«Όνομα στο tablet»** (name on the tablet;
-  change it before importing, e.g. to add accents) and their declared schedule details.
-  New people in your branch are already ticked.
+- **The staff, one folded card each:** the line shows name, ΑΦΜ, status, weekly hours and,
+  when Ergani's hours differ from Karta's schedule, **«⚠ άλλες ώρες στην Karta»**. Press the
+  line to open the card with everything Ergani says (hours, days, full/part time, break,
+  arrangement, flexible arrival), the **hours per day** of the digital organisation with the
+  dates they come from, and next to it **what Karta has** («ίδιες ώρες ✓» or «διαφέρουν από το
+  ΕΡΓΑΝΗ»). For new people, that's where you change the **«Όνομα στο tablet»** (name on the
+  tablet, e.g. with accents). New people in your branch are already ticked. With many
+  employees: **«Αναζήτηση»** (search), **«Άνοιγμα όλων»** (open all), **«Κλείσιμο όλων»**
+  (fold all).
+- **The digital organisation up to the previous month.** Ergani gives each day's hours only
+  for the previous month and earlier. Whatever the accountant changes during the current month
+  (e.g. a new schedule from 5 October) **doesn't show** until the 1st of the next month; until
+  then enter it by hand in «Ωράρια», with the right «ισχύουν από» date. From the 1st, the
+  [month check](Admin-Reports-EN#έλεγχος-μήνα-με-εργανη-month-check-against-ergani) shows day
+  by day what differs.
 - **«Εισαγωγή / ενημέρωση επιλεγμένων»** (import / update selected): adds the new people
   and fixes the names that are spelled differently. It shows each new employee's PIN once.
 - In the Ergani test environment (`trial`) a warning appears, and import and deactivation

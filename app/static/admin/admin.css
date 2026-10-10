@@ -464,3 +464,26 @@ dialog.ask::backdrop { background: rgba(0, 0, 0, .45); }
 .ask-text { margin: 0 0 1rem; white-space: pre-line; line-height: 1.5; }
 dialog.ask input { width: 100%; box-sizing: border-box; font: inherit; padding: .55rem .7rem; margin: 0 0 1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); }
 .ask-actions { display: flex; justify-content: flex-end; gap: .6rem; flex-wrap: wrap; }
+
+/* «Έλεγχος ΕΡΓΑΝΗ»: one folded card per person */
+.er-people { display: flex; flex-direction: column; gap: .4rem; margin: .4rem 0 .8rem; }
+details.er-person { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+details.er-person[hidden] { display: none; }
+details.er-person > summary { display: flex; align-items: center; gap: .3rem .9rem; flex-wrap: wrap; padding: .55rem .8rem; cursor: pointer; list-style: none; }
+details.er-person > summary::-webkit-details-marker { display: none; }
+details.er-person > summary::after { content: "▸"; color: var(--accent); margin-left: auto; transition: transform .15s; }
+details.er-person[open] > summary::after { transform: rotate(90deg); }
+details.er-person[open] > summary { border-bottom: 1px solid var(--line); }
+.erp-name { display: flex; flex-direction: column; min-width: 12rem; }
+.erp-name .sub { font-size: .8rem; color: var(--ink-soft); }
+.erp-status { font-size: .8rem; font-weight: 600; padding: .1rem .5rem; border-radius: 999px; background: var(--accent-pale); color: var(--accent); }
+.erp-status.new { background: var(--warn-bg); color: var(--warn-ink); }
+.erp-status.name_differs { background: var(--warn-bg); color: var(--warn-ink); }
+.erp-short { font-size: .85rem; color: var(--ink-soft); }
+.erp-facts { display: grid; grid-template-columns: minmax(9rem, max-content) 1fr; gap: .35rem 1rem; margin: .7rem .9rem; font-size: .9rem; }
+.erp-facts dt { color: var(--ink-soft); }
+.erp-facts dd { margin: 0; }
+.erp-tablet { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; margin: 0 .9rem .8rem; font-size: .9rem; }
+.erp-tablet input { font: inherit; padding: .35rem .5rem; border: 1px solid var(--line); border-radius: 6px; }
+details.er-person > p.small { margin: 0 .9rem .7rem; }
+@media (max-width: 760px) { .erp-facts { grid-template-columns: 1fr; } .erp-facts dt { margin-top: .3rem; } }

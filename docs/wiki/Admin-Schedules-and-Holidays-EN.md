@@ -25,10 +25,16 @@ to type: just start and end times.
 > they declared it. Under each employee, Karta shows whether the weekly total **matches**
 > the Ergani hours («Ταιριάζει … ✓», or by how much it differs).
 >
-> With the **digital working-time organisation**, «Ενημέρωση στοιχείων ωραρίου από ΕΡΓΑΝΗ» also
-> reads the hours declared in the **last two weeks of the previous month** (Ergani does not give
-> the current month). The employee's card says which days they come from, and «Χρήση στοιχείων
-> ΕΡΓΑΝΗ» fills them in. If the schedule changed since, correct them before «Αποθήκευση».
+> With the **digital working-time organisation**, «Ρυθμίσεις» → «ΕΡΓΑΝΗ» → «Έλεγχος ΕΡΓΑΝΗ» also
+> reads the hours declared in the **last two weeks of the previous month**. The employee's
+> card says which days they come from, and «Χρήση στοιχείων ΕΡΓΑΝΗ» fills them in.
+>
+> **Note:** Ergani **does not give the current month**. If the accountant changed the schedule
+> during the month (e.g. from 5 October), «Χρήση στοιχείων ΕΡΓΑΝΗ» brings the **old** one. Then
+> enter the new one by hand, with «Οι αλλαγές που αποθηκεύεις ισχύουν από» set to the date of the
+> change. From the 1st of the next month the
+> [month check](Admin-Reports-EN#έλεγχος-μήνα-με-εργανη-month-check-against-ergani) shows
+> whether Karta matches what the accountant declared.
 
 ### Folded cards, search
 
@@ -163,7 +169,7 @@ Every save is kept with a start date (default: today).
 
 ### Importing from Ergani
 
-«Ρυθμίσεις» → «ΕΡΓΑΝΗ» → «Ενημέρωση στοιχείων ωραρίου από ΕΡΓΑΝΗ» fetches what Ergani
+«Ρυθμίσεις» → «ΕΡΓΑΝΗ» → «Έλεγχος ΕΡΓΑΝΗ» fetches what Ergani
 has declared (schedule, weekly hours, break, flexible arrival) and shows it next to each
 employee for comparison. This is what «Χρήση στοιχείων ΕΡΓΑΝΗ» fills in.
 
