@@ -24,6 +24,11 @@ to type: just start and end times.
 > each day. Fill in each day's hours from the **schedule your accountant gives you**, as
 > they declared it. Under each employee, Karta shows whether the weekly total **matches**
 > the Ergani hours («Ταιριάζει … ✓», or by how much it differs).
+>
+> With the **digital working-time organisation**, «Ενημέρωση στοιχείων ωραρίου από ΕΡΓΑΝΗ» also
+> reads the hours declared in the **last two weeks of the previous month** (Ergani does not give
+> the current month). The employee's card says which days they come from, and «Χρήση στοιχείων
+> ΕΡΓΑΝΗ» fills them in. If the schedule changed since, correct them before «Αποθήκευση».
 
 ### Folded cards, search
 

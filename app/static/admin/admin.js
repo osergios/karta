@@ -1614,7 +1614,8 @@
         let ref = null;
         if (ei) {
           const kids = [el("strong", {}, "ΕΡΓΑΝΗ: "), erganiFacts(ei), ` (ενημ. ${fmt(ei.fetched_at)})`];
-          if (!ei.proposal && ei.digital) kids.push(el("div", { class: "sub" }, "Οι ώρες ανά ημέρα είναι στο ψηφιακό ωράριο του ΕΡΓΑΝΗ και δεν επιστρέφονται σε αυτή την ανάγνωση — συμπλήρωσέ τες ίδιες με τη δήλωση."));
+          if (ei.proposal_week) kids.push(el("div", { class: "sub" }, `Ώρες ανά ημέρα από το ψηφιακό ωράριο που δηλώθηκε στο ΕΡΓΑΝΗ για ${dmy(ei.proposal_week.from)}–${dmy(ei.proposal_week.to)} (το ΕΡΓΑΝΗ δίνει μόνο προηγούμενους μήνες): αν άλλαξε το ωράριο από τότε, διόρθωσέ τες πριν την αποθήκευση.`));
+          else if (!ei.proposal && ei.digital) kids.push(el("div", { class: "sub" }, "Οι ώρες ανά ημέρα είναι στο ψηφιακό ωράριο του ΕΡΓΑΝΗ και δεν βρέθηκαν σε αυτή την ανάγνωση — συμπλήρωσέ τες ίδιες με τη δήλωση."));
           else if (!ei.proposal && ei.schedule_text) kids.push(el("div", { class: "sub" }, `Ωράριο ΕΡΓΑΝΗ (δεν διαβάστηκε αυτόματα): ${ei.schedule_text}`));
           if (ei.proposal || ei.break_minutes != null || ei.flex != null) kids.push(el("div", { class: "er-card-actions" }, el("button", { class: "link", type: "button", onclick: () => {
             const got = [];
@@ -2146,6 +2147,51 @@
   year.value = String(new Date().getFullYear());
   const setYearLink = () => { reportYearLink.href = `/admin/api/report-year.xlsx?year=${year.value}`; };
   year.addEventListener("input", setYearLink); setYearLink();
+
+  // ---- «Έλεγχος μήνα με ΕΡΓΑΝΗ»: read a closed month from Ergani (in the background) and list the differences
+  const ecMonth = document.getElementById("ecMonth"), ecRun = document.getElementById("ecRun"), ecBox = document.getElementById("ecResult");
+  { const t = new Date(); t.setDate(1); t.setMonth(t.getMonth() - 1); ecMonth.value = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}`; }
+  let ecPoll = null;
+  async function ecShow() {
+    clearTimeout(ecPoll);
+    let r;
+    try { r = await api(`/admin/api/ergani/month?month=${ecMonth.value}`); } catch (e) { ecBox.replaceChildren(el("p", { class: "an-line bad" }, e.message)); return; }
+    const run = r.running || {};
+    const mine = run.month === r.month;
+    const kids = [];
+    ecRun.disabled = !r.available || run.state === "running";
+    if (!r.available) kids.push(el("p", { class: "an-line muted" }, r.why_not));
+    if (mine && run.state === "running") {
+      kids.push(el("p", { class: "an-line" }, `Ανάγνωση από το ΕΡΓΑΝΗ: ${run.done} από ${run.total} ημέρες…`));
+      ecPoll = setTimeout(ecShow, 2000);
+    } else if (run.state === "running") {
+      kids.push(el("p", { class: "an-line" }, `Τρέχει έλεγχος για ${run.month}…`));
+      ecPoll = setTimeout(ecShow, 3000);
+    }
+    if (mine && run.state === "error") kids.push(el("p", { class: "an-line bad" }, `Ο έλεγχος σταμάτησε: ${run.error}`));
+    if (r.checked_at) {
+      const n = r.diffs.length;
+      kids.push(el("p", { class: `an-line ${n ? "warn" : ""}` }, `Έλεγχος ${dmyhm(r.checked_at)}: ` +
+        (n ? `${n} ${n === 1 ? "διαφορά" : "διαφορές"} ανάμεσα στην κάρτα και στο ΕΡΓΑΝΗ.` : "καμία διαφορά — η κάρτα και το ΕΡΓΑΝΗ συμφωνούν.")));
+      if (n) {
+        const t = el("table", { class: "cardify er-table" }, head("Εργαζόμενος", "Ημερομηνία", "Διαφορά", "Στην κάρτα", "Στο ΕΡΓΑΝΗ", "Τι χρειάζεται"),
+          ...r.diffs.map(x => el("tr", {}, el("td", {}, x.name), el("td", {}, dmy(x.date)), el("td", {}, x.title),
+            el("td", {}, x.karta), el("td", {}, x.ergani), el("td", { class: "small" }, x.todo))));
+        cardify(t);
+        kids.push(el("div", { class: "scroll" }, t));
+      }
+    } else if (r.available && !(mine && run.state === "running")) {
+      kids.push(el("p", { class: "small" }, "Δεν έχει γίνει έλεγχος για αυτόν τον μήνα."));
+    }
+    ecBox.replaceChildren(...kids);
+  }
+  ecMonth.addEventListener("change", ecShow);
+  ecRun.addEventListener("click", async () => {
+    ecRun.disabled = true;
+    try { await api("/admin/api/ergani/month", { month: ecMonth.value }); } catch (e) { toast(e.message, true); }
+    ecShow();
+  });
+  ecShow();
 
   const logo = document.getElementById("logo");
   if (logo) { logo.addEventListener("error", () => { logo.hidden = true; }); if (logo.complete && !logo.naturalWidth) logo.hidden = true; }

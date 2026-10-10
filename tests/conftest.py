@@ -33,7 +33,7 @@ PIN = "482916"
 # An ordinary working day: Tuesday 6 October 2026 (not a Greek public holiday)
 TUESDAY = datetime(2026, 10, 6, 10, 0, 0)
 
-_TABLES = ("movements", "alerts", "card_links", "leaves", "day_changes", "early_leaves", "ergani_info",
+_TABLES = ("movements", "alerts", "card_links", "leaves", "day_changes", "early_leaves", "ergani_week", "ergani_month", "ergani_info",
            "schedule_versions", "closures", "enroll_codes", "devices", "employees", "audit", "settings")
 
 
@@ -104,7 +104,9 @@ def add_employee(afm="900000001", last="Παπαδοπούλου", first="Μαρ
     with db.tx() as c:
         cur = c.execute(
             "INSERT INTO employees(afm, last_name, first_name, display_name, pin_hash, created_at) VALUES (?,?,?,?,?,?)",
-            (afm, last, first, display, security.hash_pin(pin), db.utc_now_iso()))
+            # a fixed date before every test day: with the real date, days earlier than the day the tests run were
+            # «before the employee existed» and the reports of those days came out empty
+            (afm, last, first, display, security.hash_pin(pin), "2026-09-01T00:00:00"))
         return cur.lastrowid
 
 

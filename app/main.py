@@ -16,8 +16,8 @@ from fastapi.responses import FileResponse, JSONResponse, Response as RawRespons
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from . import (appconfig, archive, brand, cloud, config, db, erganiread, hours, monitor, onboarding, report, restore,
-               security, submitter, updates)
+from . import (appconfig, archive, brand, cloud, config, db, erganicheck, erganiread, hours, monitor, onboarding, report,
+               restore, security, submitter, updates)
 from .timeutil import now_local
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -863,7 +863,8 @@ def admin_overview(admin: str = Depends(security.require_admin)):
     alerts = db.all_rows("SELECT a.*, e.display_name FROM alerts a LEFT JOIN employees e ON e.id=a.employee_id "
                          "WHERE a.cleared=0 ORDER BY a.id DESC LIMIT 60")
     salon = db.setting("salon_hours")
-    einfo = {str(r["employee_id"]): erganiread.facts(dict(r)) for r in db.all_rows("SELECT * FROM ergani_info")}
+    einfo = {str(r["employee_id"]): erganiread.facts(dict(r)) for r in db.all_rows(
+        "SELECT i.*, w.declared_week FROM ergani_info i LEFT JOIN ergani_week w ON w.employee_id=i.employee_id")}
     return {
         "salon_hours": json.loads(salon) if salon else {},
         "ergani_info": einfo,
@@ -1726,7 +1727,7 @@ def admin_delete_employee(employee_id: int, admin: str = Depends(security.requir
             "Το αρχείο χρόνου εργασίας πρέπει να διατηρείται, οπότε δεν διαγράφεται — χρησιμοποίησε «Απενεργοποίηση»."))
     with db.tx() as c:
         tests = c.execute("DELETE FROM movements WHERE employee_id=?", (employee_id,)).rowcount
-        for table in ("alerts", "schedule_versions", "ergani_info", "card_links", "leaves", "day_changes"):
+        for table in ("alerts", "schedule_versions", "ergani_info", "ergani_week", "card_links", "leaves", "day_changes"):
             c.execute(f"DELETE FROM {table} WHERE employee_id=?", (employee_id,))
         c.execute("DELETE FROM employees WHERE id=?", (employee_id,))
     db.audit(admin, "employee_deleted", f"name={emp['display_name']} afm=***{emp['afm'][-3:]} test_movements={tests}")
@@ -2238,6 +2239,29 @@ def admin_ergani_refresh(admin: str = Depends(security.require_admin)):
     except erganiread.ErganiReadError as e:
         log.warning("Ergani read failed: %s", e)
         raise HTTPException(status_code=424, detail=str(e))
+
+
+class MonthIn(BaseModel):
+    month: str = Field(pattern=r"^20\d\d-(0[1-9]|1[0-2])$")
+
+
+@app.get("/admin/api/ergani/month")
+def admin_ergani_month(month: str, admin: str = Depends(security.require_admin)):
+    """«Έλεγχος μήνα με ΕΡΓΑΝΗ»: the stored result for a month (differences) and the running check, if any."""
+    import re
+    if not re.fullmatch(r"20\d\d-(0[1-9]|1[0-2])", month or ""):
+        raise HTTPException(status_code=400, detail="month=YYYY-MM")
+    return erganicheck.summary(month)
+
+
+@app.post("/admin/api/ergani/month")
+def admin_ergani_month_start(body: MonthIn, admin: str = Depends(security.require_admin)):
+    """Read the month's declared organisation (EX_BASE_08) and actual work (EX_BASE_07) from Ergani, in the
+    background. Read-only: nothing is sent."""
+    try:
+        return erganicheck.start(body.month, admin)
+    except erganiread.ErganiReadError as e:
+        raise HTTPException(status_code=409, detail=str(e))
 
 
 @app.get("/admin/api/ergani/services")

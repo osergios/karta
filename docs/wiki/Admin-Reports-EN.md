@@ -66,6 +66,25 @@ There's a subtotal per employee.
 Each employee month by month, with a yearly total. Months with 3 or more forgotten
 punches are highlighted.
 
+## «Έλεγχος μήνα με ΕΡΓΑΝΗ» (month check against Ergani)
+
+Compares a closed month with what **Ergani itself** holds. Pick the month and press
+**«Έλεγχος με ΕΡΓΑΝΗ»**: Karta reads, for every day, the declared digital organisation
+(service EX_BASE_08) and the actual work log (EX_BASE_07), about a minute, and lists the
+differences:
+
+- **Schedule different from Ergani**: hours, split shift or break (minutes, inside/outside)
+  that don't match Karta's schedule that day.
+- **Leave on one side only**: leave in Ergani but not in Karta, or the other way round.
+- **A punch that was sent but is not in Ergani**, and **work in Ergani that doesn't come
+  from Karta**.
+- **An employee in Ergani who is not in Karta.**
+
+The check **only reads**: nothing is sent. Ergani gives these data **only for the previous
+month and earlier**, so September can be checked from 1 October. After a check, that
+month's report has an extra sheet **«Έλεγχος ΕΡΓΑΝΗ»** with the differences and what each
+needs. Run it again as often as you like (e.g. after the accountant fixes something).
+
 ## How hours are counted
 
 - **Exact to the minute** (seconds ignored, as in Ergani). Any difference shows, e.g.

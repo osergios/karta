@@ -387,6 +387,43 @@ def _declared(x: dict) -> str:
     return _sched_text(x["sched"])
 
 
+def _ergani_check_sheet(wb, info, first: date, yearly: bool) -> list:
+    """The sheet «Έλεγχος ΕΡΓΑΝΗ» when the month was checked against Ergani («Αναφορές» → «Έλεγχος με ΕΡΓΑΝΗ»);
+    returns the line for the summary notes (none when the month was not checked)."""
+    from . import erganicheck
+    if yearly:
+        return []
+    month = f"{first:%Y-%m}"
+    data = erganicheck.stored(month)
+    if data is None:
+        return []
+    diffs = erganicheck.compare(month, data)
+    ws = wb.create_sheet("Έλεγχος ΕΡΓΑΝΗ")
+    W = [26, 11, 34, 30, 30, 58]
+    when = datetime.fromisoformat(data["fetched_at"])
+    _info(ws, info[:3] + [
+        f"Σύγκριση με ό,τι έχει το ίδιο το ΕΡΓΑΝΗ για τον μήνα (ανάγνωση {when:%d/%m/%Y %H:%M}): το δηλωμένο ψηφιακό "
+        "ωράριο και οι άδειες (EX_BASE_08) με το ωράριο και τις άδειες της κάρτας, και κάθε χτύπημα που στάλθηκε με το "
+        "ημερολόγιο πραγματικής απασχόλησης του ΕΡΓΑΝΗ (EX_BASE_07). Τίποτα δεν στάλθηκε στο ΕΡΓΑΝΗ από τον έλεγχο."], 6, W)
+    _table_header(ws, 6, ["Εργαζόμενος", "Ημερομηνία", "Διαφορά", "Στην κάρτα", "Στο ΕΡΓΑΝΗ", "Τι χρειάζεται"])
+    _widths(ws, W)
+    for x in diffs:
+        title, todo = erganicheck.WHAT[x["what"]]
+        ws.append([x["name"], date.fromisoformat(x["date"]), title, x["karta"], x["ergani"], todo])
+        r = ws.max_row
+        ws.cell(r, 2).number_format = "DD/MM/YYYY"
+        for c in ws[r]:
+            c.border = THIN
+            c.alignment = Alignment(wrap_text=True, vertical="top")
+    if not diffs:
+        ws.cell(7, 1, "Καμία διαφορά: η κάρτα και το ΕΡΓΑΝΗ συμφωνούν για όλο τον μήνα.").font = OFF_FONT
+    else:
+        ws.auto_filter.ref = f"A6:F{ws.max_row}"
+    _print_setup(ws, 6)
+    return [f"Έλεγχος με το ΕΡΓΑΝΗ ({when:%d/%m/%Y}): " + (f"{len(diffs)} διαφορές — φύλλο «Έλεγχος ΕΡΓΑΝΗ»." if diffs
+                                                         else "καμία διαφορά.")]
+
+
 def build(year: int, month: int) -> bytes:
     """Monthly report."""
     return _build(date(year, month, 1), date(year, month, monthrange(year, month)[1]), f"{MONTHS[month - 1]} {year}", False)
@@ -666,7 +703,8 @@ def _build(first: date, last_day: date, label: str, yearly: bool) -> bytes:
             "Άδειες και αργίες σε εργάσιμες ημέρες (ημέρες με ωράριο). Αργία μέσα σε άδεια μετρά ως αργία, όχι ως άδεια.",
             "Ξεχασμένα χτυπήματα: κινήσεις που δεν έγιναν στην κάρτα και καταχωρήθηκαν μόνο εσωτερικά (δεν στάλθηκαν "
             "στο ΕΡΓΑΝΗ). Ανεκτά έως 3 τον μήνα ανά εργαζόμενο.",
-            "Αναλυτικά ανά ημέρα, για όλους μαζί, με ακριβείς ώρες και πρωτόκολλα ΕΡΓΑΝΗ: φύλλο «Αναλυτικά» (στη στήλη «Παρατηρήσεις» ό,τι θέλει προσοχή). Τι δηλώνεται εκ των υστέρων στο ΕΡΓΑΝΗ: φύλλο «Απολογιστικές δηλώσεις»."]):
+            "Αναλυτικά ανά ημέρα, για όλους μαζί, με ακριβείς ώρες και πρωτόκολλα ΕΡΓΑΝΗ: φύλλο «Αναλυτικά» (στη στήλη «Παρατηρήσεις» ό,τι θέλει προσοχή). Τι δηλώνεται εκ των υστέρων στο ΕΡΓΑΝΗ: φύλλο «Απολογιστικές δηλώσεις».",
+            *_ergani_check_sheet(wb, info, first, yearly)]):
         c = summary.cell(n + i, 1, t)
         c.font, c.alignment = Font(color="555555", italic=True), Alignment(wrap_text=True, vertical="top")
         summary.merge_cells(start_row=n + i, start_column=1, end_row=n + i, end_column=NS)

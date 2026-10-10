@@ -164,6 +164,17 @@ CREATE TABLE IF NOT EXISTS ergani_info (          -- what Ergani says (reference
     flex_arrival  TEXT,
     fetched_at    TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS ergani_week (          -- the hours last declared in Ergani's digital organisation (EX_BASE_08)
+    employee_id   INTEGER PRIMARY KEY REFERENCES employees(id),
+    declared_week TEXT NOT NULL,                  -- JSON {"proposal": {weekday: "HH:MM-HH:MM+…"}, "from": date, "to": date}
+    fetched_at    TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS ergani_month (         -- «Έλεγχος μήνα με ΕΡΓΑΝΗ»: what Ergani gave for a closed month
+    month       TEXT PRIMARY KEY,                 -- YYYY-MM
+    fetched_at  TEXT NOT NULL,
+    declared    TEXT NOT NULL,                    -- JSON {date: [{afm, type, start, end, break_min, break_in}]} (EX_BASE_08)
+    actual      TEXT NOT NULL                     -- JSON {date: [{afm, start, end, next_day}]} (EX_BASE_07)
+);
 """
 
 
