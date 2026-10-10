@@ -660,5 +660,10 @@ database, encryption password, PIN_KEY — and showed these:
      check says up to which date (`declared_until`), and that a change made during the month (by the accountant) shows
      from the 1st of the next — until then by hand in «Ωράρια». Documented in Admin-Settings and
      Admin-Schedules-and-Holidays (GR/EN).
-129. **«Δοκιμή σύνδεσης» keeps its result.** The settings box is drawn again after every button, so «✓ Η σύνδεση πέτυχε»
-     showed for a split second and vanished. The last result per Ergani user stays on screen now, with the time.
+129. **«Δοκιμή σύνδεσης» shows its result.** The settings box is drawn again after every button, so «✓ Η σύνδεση
+     πέτυχε» showed for a split second and vanished. Now a success shows for 5 seconds (with the time), an error stays
+     until the next test; kept per Ergani user, so the redraw doesn't wipe it.
+130. **Last month's hours are said to be last month's.** Only the hours per day come from the previous month (the
+     weekly hours, break etc. are Ergani's current staff data). The «Ωράρια» card says so in a warning («⚠ Οι ώρες ανά
+     ημέρα είναι του ψηφιακού ωραρίου που ίσχυε 17/09–30/09/2026…»), «Χρήση στοιχείων ΕΡΓΑΝΗ» asks before filling them
+     in, and «Έλεγχος ΕΡΓΑΝΗ» labels them «όπως ίσχυαν … · μπορεί να άλλαξαν από τότε».

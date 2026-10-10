@@ -640,7 +640,9 @@
     const type = userTypeSelect(C[group][T].value, typeFallback);
     // the result stays on screen: the settings box is drawn again after every button (act → load)
     const last = loginTests[target];
-    const result = el("span", { class: last && !last.ok ? "small warn-text" : "small" }, last ? last.text : "");
+    const shown = last && (!last.ok || Date.now() < last.until);
+    const result = el("span", { class: shown && !last.ok ? "small warn-text" : "small" }, shown ? last.text : "");
+    if (shown && last.ok) setTimeout(() => { result.textContent = ""; }, last.until - Date.now());
     return {
       fields: [field("Όνομα χρήστη", user, C[group][U].source), field("Κωδικός", pass, C[group][P].source),
                field("Τύπος χρήστη", type, C[group][T].source)],
@@ -652,9 +654,11 @@
         const r = await api("/admin/api/config/login-test", { target, username: user.value.trim(),
           password: pass.value ? pass.value : null, user_type: type.value });
         const at = new Date().toLocaleTimeString("el-GR", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: "Europe/Athens" });
-        loginTests[target] = { ok: r.ok, text: r.ok ? `✓ Η σύνδεση πέτυχε στις ${at} (δεν υποβλήθηκε τίποτα).` : `✗ ${r.message} (${at})` };
+        loginTests[target] = { ok: r.ok, until: Date.now() + 5000,         // a success shows for 5″, an error stays
+                               text: r.ok ? `✓ Η σύνδεση πέτυχε στις ${at} (δεν υποβλήθηκε τίποτα).` : `✗ ${r.message} (${at})` };
         result.className = r.ok ? "small" : "small warn-text";
         result.textContent = loginTests[target].text;
+        if (r.ok) setTimeout(() => { result.textContent = ""; }, 5000);
       }) }, "Δοκιμή σύνδεσης"),
     };
   }
@@ -1621,10 +1625,15 @@
         let ref = null;
         if (ei) {
           const kids = [el("strong", {}, "ΕΡΓΑΝΗ: "), erganiFacts(ei), ` (ενημ. ${fmt(ei.fetched_at)})`];
-          if (ei.proposal_week) kids.push(el("div", { class: "sub" }, `Ώρες ανά ημέρα από το ψηφιακό ωράριο που δηλώθηκε στο ΕΡΓΑΝΗ για ${dmy(ei.proposal_week.from)}–${dmy(ei.proposal_week.to)} (το ΕΡΓΑΝΗ δίνει μόνο προηγούμενους μήνες): αν άλλαξε το ωράριο από τότε, διόρθωσέ τες πριν την αποθήκευση.`));
+          const oldHours = ei.proposal_week ? `${dmy(ei.proposal_week.from)}–${dmy(ei.proposal_week.to)}/${ei.proposal_week.to.slice(0, 4)}` : "";
+          if (ei.proposal_week) kids.push(el("div", { class: "sub warn-text" }, `⚠ Οι ώρες ανά ημέρα είναι του ψηφιακού ωραρίου που ίσχυε ${oldHours}: ` +
+            "το ΕΡΓΑΝΗ δεν δίνει τον τρέχοντα μήνα, οπότε μια αλλαγή μετά από τότε (π.χ. από τον λογιστή) δεν φαίνεται εδώ. " +
+            "Οι υπόλοιπες τιμές (ώρες/εβδομάδα, διάλειμμα κ.λπ.) είναι οι τωρινές."));
           else if (!ei.proposal && ei.digital) kids.push(el("div", { class: "sub" }, "Οι ώρες ανά ημέρα είναι στο ψηφιακό ωράριο του ΕΡΓΑΝΗ και δεν βρέθηκαν σε αυτή την ανάγνωση — συμπλήρωσέ τες ίδιες με τη δήλωση."));
           else if (!ei.proposal && ei.schedule_text) kids.push(el("div", { class: "sub" }, `Ωράριο ΕΡΓΑΝΗ (δεν διαβάστηκε αυτόματα): ${ei.schedule_text}`));
-          if (ei.proposal || ei.break_minutes != null || ei.flex != null) kids.push(el("div", { class: "er-card-actions" }, el("button", { class: "link", type: "button", onclick: () => {
+          if (ei.proposal || ei.break_minutes != null || ei.flex != null) kids.push(el("div", { class: "er-card-actions" }, el("button", { class: "link", type: "button", onclick: async () => {
+            if (ei.proposal_week && !await askBox(`Οι ώρες ανά ημέρα θα έρθουν από το ψηφιακό ωράριο του ΕΡΓΑΝΗ για ${oldHours}.\n\n` +
+                "Αν ο λογιστής άλλαξε το ωράριο μετά από τότε, δεν θα είναι οι σωστές: διορθώστε τες πριν την «Αποθήκευση».", { ok: "Συμπλήρωση" })) return;
             const got = [];
             if (ei.break_minutes != null) {
               setSelect(brkSel, ei.break_minutes, breakLabel);
@@ -1633,7 +1642,7 @@
             }
             if (ei.flex != null) { setSelect(flexSel, ei.flex, flexLabel); got.push("ευέλικτη προσέλευση"); }
             if (ei.proposal) { rows.set(DAYS.map((_, i) => ei.proposal[String(i)] || "")); got.unshift("ώρες"); }
-            refresh(); toast(`Από το ΕΡΓΑΝΗ: ${got.join(", ")} — έλεγξέ τα και πάτα Αποθήκευση`);
+            refresh(); toast(`Από το ΕΡΓΑΝΗ: ${got.join(", ")}${ei.proposal_week ? ` (οι ώρες όπως ίσχυαν ${oldHours})` : ""} — έλεγξέ τα και πάτα Αποθήκευση`);
           } }, "Χρήση στοιχείων ΕΡΓΑΝΗ")));
           ref = el("div", { class: "er-ref" }, ...kids);
         }
@@ -2078,8 +2087,8 @@
       (found ? ` — η εφαρμογή χρησιμοποιεί το #${r.configured_branch} ✓` : ` — το παράρτημα #${r.configured_branch} των «Ρυθμίσεων» δεν υπάρχει στο ΕΡΓΑΝΗ`)));
     if (r.refreshed) lines.push(el("div", { class: "er-line" }, `Τα στοιχεία ωραρίου ενημερώθηκαν για ${r.refreshed} ${r.refreshed === 1 ? "εργαζόμενο" : "εργαζόμενους"}: ` +
       "τα χρησιμοποιεί η «Χρήση στοιχείων ΕΡΓΑΝΗ» στα «Ωράρια»."));
-    if (r.people.some(p => p.facts.digital)) lines.push(el("div", { class: "er-line muted" },
-      `Το ψηφιακό ωράριο το ΕΡΓΑΝΗ το δίνει μόνο έως ${dmy(r.declared_until)}/${r.declared_until.slice(0, 4)} (τον προηγούμενο μήνα). ` +
+    if (r.people.some(p => p.facts.digital)) lines.push(el("div", { class: "er-line warn" },
+      `⚠ Οι ώρες ανά ημέρα παρακάτω είναι του ψηφιακού ωραρίου όπως ίσχυε έως ${dmy(r.declared_until)}/${r.declared_until.slice(0, 4)}: το ΕΡΓΑΝΗ δεν δίνει τον τρέχοντα μήνα. ` +
       `Αλλαγές μετά από τότε (π.χ. από τον λογιστή) φαίνονται από την 1η του επόμενου μήνα — μέχρι τότε περάστε τες με το χέρι στα «Ωράρια».`));
     (r.mode === "trial" ? [] : r.not_in_ergani).forEach(x => {
       const off = el("button", { class: "link", onclick: act(async () => {
@@ -2108,7 +2117,7 @@
                      F.digital ? "ψηφιακό ωράριο" : null].filter(Boolean).join(" · ");
       const rows = [
         ["Στοιχεία ΕΡΓΑΝΗ", erganiFacts(F)],
-        F.proposal ? [F.proposal_week ? `Ώρες ανά ημέρα (δηλωμένες ${dmy(F.proposal_week.from)}–${dmy(F.proposal_week.to)})` : "Ώρες ανά ημέρα",
+        F.proposal ? [F.proposal_week ? `Ώρες ανά ημέρα (όπως ίσχυαν ${dmy(F.proposal_week.from)}–${dmy(F.proposal_week.to)}· μπορεί να άλλαξαν από τότε)` : "Ώρες ανά ημέρα",
                       ERGANI_DAYS(F.proposal)] : null,
         !F.proposal && F.digital ? ["Ώρες ανά ημέρα", "δεν βρέθηκαν στο ψηφιακό ωράριο των τελευταίων ημερών που δίνει το ΕΡΓΑΝΗ"] : null,
         !F.proposal && F.schedule_text ? ["Ωράριο (κείμενο ΕΡΓΑΝΗ)", F.schedule_text] : null,
