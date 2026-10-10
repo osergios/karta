@@ -369,12 +369,12 @@
       return ((d.schedules || {})[String(e.id)] || {})[String(wd)] || "";
     };
     const hh = x => `${String(Math.floor(x / 60)).padStart(2, "0")}:${String(x % 60).padStart(2, "0")}`;
-    // the day's break: the one of that weekday, else the one of the week; on parts longer than 4 hours, as in «Ωράρια»
+    // the day's break: the one of that weekday, else the one of the week; on a day over 4 hours, as in «Ωράρια»
     const breakFor = iso => { const r = parseSpan(regularOf(iso)); return r && !r.error && r.b ? { b: r.b, out: r.bo } : weekBreak(week); };
     const hours = weekRows([""], { off: "χωρίς ώρες", who: e.display_name, labels: [""], names: ["ημέρα"], onChange: () => refresh() });
     const hoursBox = el("div", {}, el("div", { class: "small" }, "Ώρες της ημέρας"), hours.node);
     const textOf = () => { const v = hours.bodies()[0], sp = parseSpan(v), wb = breakFor(day.value);
-      return sp && !sp.error && wb && longest(sp) > 240 ? `${v}/${wb.out ? "+" : ""}${wb.b}` : v; };
+      return sp && !sp.error && wb && sp.g > 240 ? `${v}/${wb.out ? "+" : ""}${wb.b}` : v; };
     const refresh = () => {
       hoursBox.hidden = kind.value === "off";
       const reg = parseSpan(regularOf(day.value));
@@ -974,7 +974,7 @@
   }
   // Slow steps with the cloud run on the server (minutes on Google Drive; a page request may last only 100 seconds
   // behind Cloudflare): start it, then ask every 3 seconds how it is going, showing how long it has been.
-  async function cloudJob(path, body, progress, what) {
+  async function cloudJob(path, body, progress, what, hint = "στο Google Drive μπορεί να πάρει 1–2 λεπτά") {
     await api(path, body);
     if (progress) progress.hidden = false;
     try {
@@ -984,7 +984,7 @@
         if (st.state === "fail") throw new Error(st.error || "Το cloud δεν απάντησε");
         if (st.state !== "running") throw new Error("Διακόπηκε (η Karta ξεκίνησε ξανά)· δοκιμάστε ξανά.");
         const t = st.seconds >= 60 ? `${Math.floor(st.seconds / 60)}′${String(st.seconds % 60).padStart(2, "0")}″` : `${st.seconds}″`;
-        if (progress) progress.textContent = `${what}… ${t} (στο Google Drive μπορεί να πάρει 1–2 λεπτά)`;
+        if (progress) progress.textContent = `${what}… ${t}${hint ? ` (${hint})` : ""}`;
         await new Promise(r => setTimeout(r, 3000));
       }
     } finally {
@@ -1287,7 +1287,7 @@
         const ot = Math.max(0, n - legalDay);
         if (ot > 0) { parts.push(`${H(ot)} υπερωρία (${RETRO ? "απολογιστική δήλωση στο ΕΡΓΑΝΗ" : "δήλωση στο ΕΡΓΑΝΗ πριν ξεκινήσει"}, +40%)`); cls = "bad"; weekOT += ot; }
       }
-      // a break is due after 4 hours of work in a row: on a split shift, only if one part is longer than that
+      // a missing break is pointed out after 4 hours of work in a row (on a split shift: a part longer than that)
       const run = Math.max(...sp.segs.map(([a, z]) => z - a));
       if (run > 240 && sp.b < 15) { notes.push("πάνω από 4 ώρες συνεχόμενα χωρίς διάλειμμα (χρειάζεται τουλάχιστον 15′)"); cls = "bad"; }
       else if (sp.b > 30) { notes.push("διάλειμμα πάνω από 30′: για μεγαλύτερο κενό, σπαστό ωράριο"); if (cls === "ok") cls = "warn"; }
@@ -1405,7 +1405,6 @@
     if (!m || +m[1] > 23 || +(m[2] || 0) > 59) return null;
     return hm(+m[1] * 60 + +(m[2] || 0));
   }
-  const longest = sp => Math.max(...sp.segs.map(([a, z]) => z - a));
   function weekRows(initial, { off, who, onChange, labels = DAYS, names = DAY_FULL }) {
     const state = initial.map(t => { const sp = parseSpan(t); return sp && !sp.error ? sp.segs.map(([a, z]) => [hm(a), hm(z)]) : []; });
     const rows = labels.map(() => el("div", { class: "wk-row" }));
@@ -1560,7 +1559,9 @@
         [brkSel, inR, outR, flexSel].forEach(x => x.addEventListener("change", () => refresh()));
         const brk = () => +brkSel.value, out = () => outR.checked, flex = () => +flexSel.value;
         // the break goes on every day with more than 4 hours in a row (a split shift with short parts needs none)
-        const full = () => rows.bodies().map(v => { const sp = parseSpan(v); return sp && !sp.error && brk() && longest(sp) > 240 ? `${v}/${out() ? "+" : ""}${brk()}` : v; });
+        // the break goes on every working day over 4 hours, a split shift included: Ergani declares it per day
+        // that way (e.g. 10:00–14:00 + 17:00–21:00 with 20′), and Karta's schedule must be the declared one
+        const full = () => rows.bodies().map(v => { const sp = parseSpan(v); return sp && !sp.error && brk() && sp.g > 240 ? `${v}/${out() ? "+" : ""}${brk()}` : v; });
         live[e.id] = () => ({ bodies: rows.bodies(), b: brk(), out: out() });
 
         refresh = () => {
@@ -1577,7 +1578,7 @@
             el("div", {}, !b ? "Χωρίς διάλειμμα. Ημέρες με πάνω από 4 ώρες συνεχόμενης εργασίας χρειάζονται τουλάχιστον 15′."
               : out() ? `Διάλειμμα ${b}′ εκτός ωραρίου, χωρίς χτύπημα κάρτας: η αποχώρηση γίνεται έως ${b}′ μετά τη λήξη${first ? ` (π.χ. λήξη ${hm(first.e)} → αποχώρηση έως ${hm(first.e + b)})` : ""}.`
               : `Διάλειμμα ${b}′ μέσα στις ώρες, όποτε βολεύει, χωρίς χτύπημα κάρτας.`),
-            b ? el("div", {}, "Μπαίνει σε κάθε ημέρα με πάνω από 4 ώρες συνεχόμενης εργασίας (στο σπαστό, μόνο αν ένα κομμάτι ξεπερνά τις 4 ώρες).") : null,
+            b ? el("div", {}, "Μπαίνει σε κάθε ημέρα με πάνω από 4 ώρες εργασίας, και στο σπαστό, όπως το δηλώνει το ΕΡΓΑΝΗ.") : null,
             el("div", {}, "Διάλειμμα που φεύγει από το κατάστημα και χτυπά κάρτα; Γράψτε την ημέρα ως σπαστό ωράριο («+ σπαστό»)."),
             flex() ? el("div", {}, `Ευέλικτη προσέλευση: μπορεί να έρθει έως ${flex()}′ μετά την έναρξη χωρίς να είναι καθυστέρηση· η αποχώρηση μετακινείται το ίδιο. Μόνο με γραπτή συμφωνία δηλωμένη στο ΕΡΓΑΝΗ. Ισχύει αμέσως με την αποθήκευση.`) : null].filter(Boolean));
         };
@@ -2117,8 +2118,12 @@
     if (!await askBox("Εκκαθάριση της λίστας ειδοποιήσεων;\n\nΟι ανοιχτές σημειώνονται «Εντάξει». Η μηνιαία αναφορά συνεχίζει να τις μετρά.")) return;
     const r = await api("/admin/api/alerts/clear", {}); toast(`Καθαρίστηκαν ${r.cleared} ειδοποιήσεις`);
   }));
-  document.getElementById("erganiRefresh").addEventListener("click", act(async () => {
-    const r = await api("/admin/api/ergani/refresh", {}); editorsFor = null;
+  const refreshBtn = document.getElementById("erganiRefresh"), refreshProgress = el("p", { class: "small", hidden: "" });
+  refreshBtn.after(refreshProgress);
+  refreshBtn.addEventListener("click", act(async () => {
+    const r = await cloudJob("/admin/api/ergani/refresh", {}, refreshProgress, "Ανάγνωση στοιχείων ωραρίου από το ΕΡΓΑΝΗ",
+                             "μαζί με το ψηφιακό ωράριο των τελευταίων ημερών, μπορεί να πάρει 1–2 λεπτά");
+    editorsFor = null;
     toast(`Ενημερώθηκαν τα στοιχεία ΕΡΓΑΝΗ για ${r.updated} εργαζόμενους`);
   }));
   document.getElementById("erganiServices").addEventListener("click", act(async () => {

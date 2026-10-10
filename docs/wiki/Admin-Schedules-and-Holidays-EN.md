@@ -81,9 +81,10 @@ Each employee has **one break for the whole week**:
 - **«μέσα στις ώρες»** (inside the hours) or **«εκτός ωραρίου (μετά τη λήξη)»** (outside
   the hours, after the end), as declared in Ergani.
 
-It's applied automatically to every day with **more than 4 hours of continuous work** (a
-break is due after 4 hours of work). On a split shift, it's applied only if one part is
-longer than 4 hours. Neither kind **needs a card punch**:
+It's applied automatically to every day with **more than 4 hours of work**, split shifts
+included, as Ergani declares it (e.g. 10:00–14:00 + 17:00–21:00 with 20′). If one part goes
+over 4 hours in a row with no break, Karta points it out. Neither kind **needs a card
+punch**:
 
 | Kind | Meaning |
 |---|---|

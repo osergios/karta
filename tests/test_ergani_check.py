@@ -213,3 +213,26 @@ def test_refresh_stores_the_declared_week_for_the_schedule_card(client, admin, c
     assert erganiread.refresh_info("admin@example.com") == 1
     ei = client.get("/admin/api/overview").json()["ergani_info"][str(a)]
     assert ei["proposal"] == {"2": "11:00-19:00"} and ei["proposal_week"]["to"] == "2026-09-30"
+
+
+def test_the_refresh_runs_in_the_background(client, admin, monkeypatch):
+    """«Ενημέρωση στοιχείων ωραρίου από ΕΡΓΑΝΗ» reads up to 14 more days now: it must not hang on the page request."""
+    monkeypatch.setattr(erganiread, "refresh_info", lambda admin: 3)
+    assert client.post("/admin/api/ergani/refresh").json()["state"] == "running"
+    for _ in range(100):
+        st = client.get("/admin/api/ergani/refresh").json()
+        if st["state"] != "running":
+            break
+        time.sleep(0.05)
+    assert st["state"] == "done" and st["result"] == {"updated": 3}
+
+    def down(admin):
+        raise erganiread.ErganiReadError("Το ΕΡΓΑΝΗ δεν απάντησε")
+    monkeypatch.setattr(erganiread, "refresh_info", down)
+    client.post("/admin/api/ergani/refresh")
+    for _ in range(100):
+        st = client.get("/admin/api/ergani/refresh").json()
+        if st["state"] != "running":
+            break
+        time.sleep(0.05)
+    assert st["state"] == "fail" and "δεν απάντησε" in st["error"]

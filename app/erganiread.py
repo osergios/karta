@@ -499,7 +499,7 @@ def declared_recent_weeks() -> dict:
     days, t0 = {}, time.monotonic()
     for k in range(14):
         d = end - timedelta(days=k)
-        if time.monotonic() - t0 > 40:      # stay well inside the 100 s a page request may take
+        if time.monotonic() - t0 > 150:     # runs in the background («Ενημέρωση…»); a slow Ergani still has an end
             break
         try:
             days[d] = declared_day(d)
