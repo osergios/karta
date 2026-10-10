@@ -2204,13 +2204,19 @@ def admin_salon_hours(body: ScheduleIn, admin: str = Depends(security.require_ad
 
 
 # ------------------------------------------------------------------ Ergani import (read-only queries)
-@app.get("/admin/api/ergani/review")
+# «Έλεγχος ΕΡΓΑΝΗ» in the background: the staff list and up to 14 days of the declared digital organisation
+# (EX_BASE_08) can take longer than a page request may last. It also updates the stored schedule facts.
+_review_job = CloudJob("Ο έλεγχος ΕΡΓΑΝΗ τρέχει ήδη.")
+
+
+@app.post("/admin/api/ergani/review")
 def admin_ergani_review(admin: str = Depends(security.require_admin)):
-    try:
-        return {**erganiread.review(), "mode": config.ERGANI_MODE}
-    except erganiread.ErganiReadError as e:
-        log.warning("Ergani read failed: %s", e)
-        raise HTTPException(status_code=424, detail=str(e))
+    return _review_job.start("review", lambda: {**erganiread.review(admin), "mode": config.ERGANI_MODE})
+
+
+@app.get("/admin/api/ergani/review")
+def admin_ergani_review_state(admin: str = Depends(security.require_admin)):
+    return _review_job.view()
 
 
 class ImportItem(BaseModel):
@@ -2230,21 +2236,6 @@ def admin_ergani_import(body: ImportIn, admin: str = Depends(security.require_ad
         log.warning("Ergani read failed: %s", e)
         raise HTTPException(status_code=424, detail=str(e))
     return {"ok": True, "created": created}
-
-
-# «Ενημέρωση στοιχείων ωραρίου από ΕΡΓΑΝΗ» in the background: besides the staff list it reads up to 14 days of the
-# declared digital organisation (EX_BASE_08), which together can take longer than a page request may last.
-_refresh_job = CloudJob("Η ενημέρωση από το ΕΡΓΑΝΗ τρέχει ήδη.")
-
-
-@app.post("/admin/api/ergani/refresh")
-def admin_ergani_refresh(admin: str = Depends(security.require_admin)):
-    return _refresh_job.start("refresh", lambda: {"updated": erganiread.refresh_info(admin)})
-
-
-@app.get("/admin/api/ergani/refresh")
-def admin_ergani_refresh_state(admin: str = Depends(security.require_admin)):
-    return _refresh_job.view()
 
 
 class MonthIn(BaseModel):

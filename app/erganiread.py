@@ -122,15 +122,21 @@ def fetch() -> dict:
     }
 
 
-def review() -> dict:
-    """Ergani data compared with the app's employees."""
+def review(admin: str | None = None) -> dict:
+    """«Έλεγχος ΕΡΓΑΝΗ»: Ergani's data compared with the app's employees, with each person's schedule facts and the
+    hours last declared in the digital organisation. With `admin`, the facts of the employees already in the app are
+    stored too (what «Ωράρια» → «Χρήση στοιχείων ΕΡΓΑΝΗ» uses): one reading does both."""
     data = fetch()
+    weeks = declared_recent_weeks()
+    data["refreshed"] = _store(data, weeks, admin) if admin else 0
     app = {r["afm"]: r for r in db.all_rows("SELECT id, afm, last_name, first_name, display_name, active FROM employees")}
     ergani_afms = set()
+    data["declared_until"] = readable_until(now_local().date()).isoformat()
     for p in data["people"]:
         ergani_afms.add(p["afm"])
         p["in_branch"] = p["branch"] == config.BRANCH_NUMBER
-        p["facts"] = facts(p)
+        w = weeks.get(p["afm"])
+        p["facts"] = facts({**p, "declared_week": json.dumps(w) if w else None})
         a = app.get(p["afm"])
         if a is None:
             p["status"] = "new"
@@ -195,8 +201,10 @@ def store_info(c, employee_id: int, p: dict, now: str) -> None:
 def refresh_info(admin: str) -> int:
     """Re-read Ergani and update the stored schedule facts of employees already in the app, with the hours last
     declared in the digital organisation (EX_BASE_08) when Ergani gives them."""
-    data = fetch()
-    weeks = declared_recent_weeks()
+    return _store(fetch(), declared_recent_weeks(), admin)
+
+
+def _store(data: dict, weeks: dict, admin: str) -> int:
     now = now_local().isoformat(timespec="seconds")
     n = 0
     with db.tx() as c:

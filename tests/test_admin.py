@@ -92,9 +92,14 @@ def test_slow_ergani_gives_a_clear_answer_before_cloudflare_gives_up(client, adm
 
     monkeypatch.setattr(erganiread, "READ_DEADLINE", 0.2)
     monkeypatch.setattr(erganiread, "_client", lambda: SlowClient())
+    import time
     try:
-        r = client.get("/admin/api/ergani/review")
+        assert client.post("/admin/api/ergani/review").json()["state"] == "running"     # in the background now
+        for _ in range(100):
+            st = client.get("/admin/api/ergani/review").json()
+            if st["state"] != "running":
+                break
+            time.sleep(0.05)
     finally:
         release.set()
-    assert r.status_code == 424
-    assert "δεν απάντησε" in r.json()["detail"]
+    assert st["state"] == "fail" and "δεν απάντησε" in st["error"]

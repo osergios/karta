@@ -215,24 +215,28 @@ def test_refresh_stores_the_declared_week_for_the_schedule_card(client, admin, c
     assert ei["proposal"] == {"2": "11:00-19:00"} and ei["proposal_week"]["to"] == "2026-09-30"
 
 
-def test_the_refresh_runs_in_the_background(client, admin, monkeypatch):
-    """«Ενημέρωση στοιχείων ωραρίου από ΕΡΓΑΝΗ» reads up to 14 more days now: it must not hang on the page request."""
-    monkeypatch.setattr(erganiread, "refresh_info", lambda admin: 3)
-    assert client.post("/admin/api/ergani/refresh").json()["state"] == "running"
+def test_the_ergani_check_shows_and_stores_the_declared_hours(client, admin, monkeypatch):
+    """«Έλεγχος ΕΡΓΑΝΗ» (in the background) gives each person's facts with the hours last declared, and stores them
+    for the employees already in Karta: the separate «Ενημέρωση στοιχείων ωραρίου» is no longer needed."""
+    a = add_employee(afm=EMP_A, last="Παπαδοπούλου", first="Μαρία", display="Μαρία")
+    people = [{"afm": EMP_A, "last_name": "Παπαδοπούλου", "first_name": "Μαρία", "branch": 0, "schedule": "ΨΗΦΙΑΚΗ ΟΡΓΑΝΩΣΗ",
+               "digital_org": "ΝΑΙ", "break_minutes": 20, "weekly_hours": "40"},
+              {"afm": EMP_B, "last_name": "Νικολάου", "first_name": "Ελένη", "branch": 0, "schedule": None}]
+    monkeypatch.setattr(erganiread, "fetch", lambda: {"employer": {"name": "Demo", "afm_matches": True, "in_card_sector": True},
+                                                      "branches": [{"number": 0, "address": "", "status": ""}],
+                                                      "configured_branch": 0, "people": [dict(p) for p in people]})
+    monkeypatch.setattr(erganiread, "declared_recent_weeks",
+                        lambda: {EMP_A: {"proposal": {"0": "10:00-14:00+17:00-21:00"}, "from": "2026-09-17", "to": "2026-09-30"}})
+    assert client.post("/admin/api/ergani/review").json()["state"] == "running"
     for _ in range(100):
-        st = client.get("/admin/api/ergani/refresh").json()
+        st = client.get("/admin/api/ergani/review").json()
         if st["state"] != "running":
             break
         time.sleep(0.05)
-    assert st["state"] == "done" and st["result"] == {"updated": 3}
-
-    def down(admin):
-        raise erganiread.ErganiReadError("Το ΕΡΓΑΝΗ δεν απάντησε")
-    monkeypatch.setattr(erganiread, "refresh_info", down)
-    client.post("/admin/api/ergani/refresh")
-    for _ in range(100):
-        st = client.get("/admin/api/ergani/refresh").json()
-        if st["state"] != "running":
-            break
-        time.sleep(0.05)
-    assert st["state"] == "fail" and "δεν απάντησε" in st["error"]
+    assert st["state"] == "done", st
+    r = st["result"]
+    assert r["refreshed"] == 1 and r["declared_until"]
+    mine = next(p for p in r["people"] if p["afm"] == EMP_A)
+    assert mine["facts"]["proposal"] == {"0": "10:00-14:00+17:00-21:00"} and mine["facts"]["proposal_week"]["from"] == "2026-09-17"
+    ei = client.get("/admin/api/overview").json()["ergani_info"][str(a)]                      # stored for «Ωράρια»
+    assert ei["proposal"] == {"0": "10:00-14:00+17:00-21:00"} and ei["weekly_hours"] == 40
