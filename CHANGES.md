@@ -624,3 +624,25 @@ database, encryption password, PIN_KEY — and showed these:
 121. **Questions inside the page.** The 29 `confirm()` and 4 `prompt()` of the admin page are now a `<dialog>` in the page
      (`askBox`): the browser's own windows can be switched off for a site («Να μην επιτρέπεται… άλλα παράθυρα
      διαλόγου») and then fail without a word. Esc or «Άκυρο» cancels.
+
+# The month checked against Ergani itself (v1.9.0)
+
+122. **«Έλεγχος μήνα με ΕΡΓΑΝΗ»** in «Αναφορές». For a closed month Karta reads, day by day and in the background, the
+     declared digital organisation (EX_BASE_08: hours, split shift, break, leave) and the actual work log (EX_BASE_07:
+     what Ergani recorded from the punches), stores them (`ergani_month`) and lists the differences with Karta: schedule
+     or break different, leave on one side only, a punch sent but missing in Ergani, work in Ergani not from Karta, an
+     employee in Ergani who is not in Karta — each with what to do. The same list is the sheet «Έλεγχος ΕΡΓΑΝΗ» of that
+     month's report. Read-only. Ergani answers only for the previous month and earlier; a later month gets the date it
+     becomes available (`erganicheck.py`, readers in `erganiread.py` built on the real reply shapes).
+123. **Each day's hours from the digital organisation.** «Ενημέρωση στοιχείων ωραρίου από ΕΡΓΑΝΗ» also reads the last 14
+     days Ergani gives (EX_BASE_08) and keeps each employee's last declared week (`ergani_week`; a leave day is
+     skipped); «Χρήση στοιχείων ΕΡΓΑΝΗ» fills those hours in, and the card says which days they come from. The reading
+     now runs in the background with progress (`POST`/`GET /admin/api/ergani/refresh`, the same `CloudJob` as the cloud
+     steps): with the 14 extra calls it could outlast a page request.
+124. **The weekly break also on split shifts.** Ergani declares the break per day, split shifts included (a real
+     declaration: 10:00–14:00 + 17:00–21:00 with 20′ outside the hours). The editor put it only where one part was
+     longer than 4 hours (1.8.0), so such a schedule was saved without it and every split day would show as a
+     difference in the month check. Now the break goes on every working day over 4 hours; a part of more than 4 hours
+     in a row without a break is still pointed out.
+125. «Υπηρεσίες ΕΡΓΑΝΗ» listed every parameter of a service as a service of its own. Test staff get a fixed creation
+     date (a report test failed from 8/10 on). New tables only, no migration step: going back to 1.8.x is safe.

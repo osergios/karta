@@ -103,7 +103,7 @@ def parse_ergani_qr(text: str | None) -> dict | None:
 
 
 def name_key(name: str | None) -> str:
-    """Compare names ignoring accents, case, spaces and punctuation (ΣΤΡΆΤΗ == Στράτη)."""
+    """Compare names ignoring accents, case, spaces and punctuation (ΠΑΠΑΔΟΠΟΎΛΟΥ == Παπαδοπούλου)."""
     import unicodedata
     t = unicodedata.normalize("NFD", (name or "").upper())
     return "".join(ch for ch in t if ch.isalpha() and not unicodedata.combining(ch))

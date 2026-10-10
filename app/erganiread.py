@@ -193,8 +193,10 @@ def store_info(c, employee_id: int, p: dict, now: str) -> None:
 
 
 def refresh_info(admin: str) -> int:
-    """Re-read Ergani and update the stored schedule facts of employees already in the app."""
+    """Re-read Ergani and update the stored schedule facts of employees already in the app, with the hours last
+    declared in the digital organisation (EX_BASE_08) when Ergani gives them."""
     data = fetch()
+    weeks = declared_recent_weeks()
     now = now_local().isoformat(timespec="seconds")
     n = 0
     with db.tx() as c:
@@ -202,6 +204,11 @@ def refresh_info(admin: str) -> int:
             row = c.execute("SELECT id FROM employees WHERE afm=?", (p["afm"],)).fetchone()
             if row:
                 store_info(c, row["id"], p, now); n += 1
+                w = weeks.get(p["afm"])
+                if w:
+                    c.execute("INSERT INTO ergani_week(employee_id, declared_week, fetched_at) VALUES (?,?,?) "
+                              "ON CONFLICT(employee_id) DO UPDATE SET declared_week=excluded.declared_week, "
+                              "fetched_at=excluded.fetched_at", (row["id"], json.dumps(w, ensure_ascii=False), now))
     db.audit(admin, "ergani_refresh", f"employees={n}")
     return n
 
@@ -272,6 +279,14 @@ def parse_schedule_text(text: str | None) -> dict | None:
     return {str(k): v for k, v in sorted(out.items())} or None
 
 
+def _week(info: dict) -> dict:
+    try:
+        w = json.loads(info.get("declared_week") or "null")
+    except ValueError:
+        return {}
+    return w if isinstance(w, dict) and isinstance(w.get("proposal"), dict) else {}
+
+
 def facts(info: dict) -> dict:
     """Normalised, UI-ready view of what Ergani says for one employee."""
     return {
@@ -282,7 +297,10 @@ def facts(info: dict) -> dict:
         "break_within": _yes(info.get("break_within")),
         "arrangement": _yes(info.get("arrangement")),
         "digital": _yes(info.get("digital_org")) is True or "ΨΗΦΙΑΚΗ" in _norm(info.get("schedule")),
-        "proposal": parse_schedule_text(info.get("schedule")),
+        "proposal": parse_schedule_text(info.get("schedule")) or _week(info).get("proposal"),
+        # where the hours came from when they are the digital schedule last declared (EX_BASE_08)
+        "proposal_week": (lambda w: {"from": w["from"], "to": w["to"]} if w.get("proposal") and not
+                          parse_schedule_text(info.get("schedule")) else None)(_week(info)),
         # what Ergani reports as flexible hours (minutes when it is a plain number); set in the app by hand
         "flex_text": info.get("flex_arrival"),
         "flex": (lambda n: n if n is not None and 0 <= n <= 120 and str(info.get("flex_arrival")).strip().isdigit()
@@ -318,6 +336,7 @@ def services() -> list[dict]:
                         if isinstance(pr, dict):
                             names.append(str(next(iter(pr.values()), "")))
                 found.append({"code": code.strip(), "description": str(desc or "").strip(), "parameters": names[:10]})
+                return          # a service: its parameters ({"name": "afm", …}) are not services themselves
             for v in x.values():
                 if isinstance(v, (dict, list)):
                     walk(v)
@@ -330,3 +349,160 @@ def services() -> list[dict]:
         if f["code"] not in seen:
             seen.add(f["code"]); unique.append(f)
     return unique[:300]
+
+
+# ---------- EX_BASE_08 (declared digital schedule) and EX_BASE_07 (actual work log) ----------
+# Ergani answers both only for dates of the PREVIOUS month and earlier («Περιορισμός σε ημ/νιες προηγούμενου
+# μήνα και πίσω»), one date and one branch per call. The reply shapes below are the real ones (production
+# account, 30/09/2026), not the field names guessed in the unmerged SDK branches:
+#   {"EX_BASE_08": {"Working": [{"aa": "0", "Afm": "…", "Date": "30/09/2026", "Type": "ΕΡΓ",
+#                                "HourFrom": "10:00:00", "HourTo": "14:00:00", "Extra": null,
+#                                "BreakMinutes": "20", "BreakInWork": "0"}, …]}}     (one row per block of a split shift)
+#   {"EX_BASE_07": {"RealWorking": [{"Aa", "Afm", "Date", "HourFrom", "HourTo", "IsEndDateDifferentThanDate"}]}}
+#   null when there is nothing for that date.
+# Only these fields are kept (data minimisation), never names or anything else Ergani might add.
+NOT_YET = ("Το ΕΡΓΑΝΗ δίνει αυτά τα στοιχεία μόνο για τον προηγούμενο μήνα και πιο πίσω — "
+           "για {m} θα είναι διαθέσιμα από {d}.")
+WORK_TYPES = {"ΕΡΓ", "ΤΗΛ"}          # working (in the shop / remote); everything else = no work that day
+REST_TYPES = {"ΑΝ", "ΜΕ"}            # ανάπαυση/ρεπό, μη εργασία
+TYPE_NAMES = {"ΕΡΓ": "Εργασία", "ΤΗΛ": "Τηλεργασία", "ΑΝ": "Ανάπαυση / ρεπό", "ΜΕ": "Μη εργασία",
+              "ΑΔΚΑΝ": "Κανονική άδεια", "ΑΔΑΑ": "Άδεια άνευ αποδοχών", "ΑΔΓΑΜ": "Άδεια γάμου",
+              "ΑΔΑΙΜ": "Αιμοδοτική άδεια", "ΑΔΕΞ": "Άδεια εξετάσεων", "ΑΔΜΗ": "Άδεια μητρότητας",
+              "ΑΔΠΑ": "Άδεια πατρότητας", "ΑΔΦΠ": "Άδεια φροντίδας παιδιού", "ΑΔΓΟΝ": "Γονική άδεια",
+              "ΑΔΦΡΟ": "Άδεια φροντιστή", "ΑΔΑΠΑΒ": "Απουσία λόγω ανωτέρας βίας"}
+
+
+def type_name(code: str | None) -> str:
+    c = (code or "").strip().upper()
+    return TYPE_NAMES.get(c) or ("Άδεια" + (f" ({c})" if c else "") if c.startswith("ΑΔ") else (c or "—"))
+
+
+def is_leave(code: str | None) -> bool:
+    return (code or "").strip().upper().startswith("ΑΔ")
+
+
+def first_available(day):
+    """The first date on which Ergani answers for `day`: the 1st of the following month (from then on `day`'s month
+    is «the previous month»)."""
+    from datetime import date as _d
+    y, m = (day.year + 1, 1) if day.month == 12 else (day.year, day.month + 1)
+    return _d(y, m, 1)
+
+
+def readable_until(today):
+    """The last date Ergani gives these data for, today: the last day of the previous month."""
+    from datetime import timedelta
+    return today.replace(day=1) - timedelta(days=1)
+
+
+def _rows(payload, key: str) -> list:
+    """The list under `key` (any case, any depth); [] for null / nothing."""
+    if isinstance(payload, dict):
+        for k, v in payload.items():
+            if k.lower() == key.lower() and isinstance(v, list):
+                return v
+        for v in payload.values():
+            r = _rows(v, key)
+            if r:
+                return r
+    elif isinstance(payload, list):
+        for v in payload:
+            r = _rows(v, key)
+            if r:
+                return r
+    return []
+
+
+def _hhmm(v) -> str | None:
+    import re
+    m = re.match(r"\s*(\d{1,2}):(\d{2})", str(v or ""))
+    return f"{int(m.group(1)):02d}:{m.group(2)}" if m else None
+
+
+def _day_query(code: str, key: str, day) -> list[dict]:
+    """One EX_BASE_07/08 call for the configured branch and `day`; the raw rows (still unfiltered)."""
+    if day > readable_until(now_local().date()):
+        raise ErganiReadError(NOT_YET.format(m=f"{day:%m/%Y}", d=f"{first_available(day):%d/%m/%Y}"))
+    try:
+        resp = _within_deadline(lambda: _client()._execute_service(
+            code, {"PararthmaAa": str(config.BRANCH_NUMBER), "Date": f"{day:%d/%m/%Y}"}))
+        payload = resp.json() if resp is not None and (resp.text or "").strip() else None
+    except ErganiReadError:
+        raise
+    except AuthenticationError as e:
+        raise ErganiReadError(f"Το ΕΡΓΑΝΗ απέρριψε τα στοιχεία σύνδεσης ({e}).")
+    except APIError as e:
+        if "criteria" in str(e).lower():
+            raise ErganiReadError(NOT_YET.format(m=f"{day:%m/%Y}", d=f"{first_available(day):%d/%m/%Y}"))
+        raise ErganiReadError(f"Σφάλμα ΕΡΓΑΝΗ ({code}, {day:%d/%m/%Y}): {e}")
+    except Exception as e:
+        raise ErganiReadError(f"Δεν ήταν δυνατή η ανάγνωση {code} για {day:%d/%m/%Y} ({type(e).__name__}: {e})")
+    return [r for r in _rows(payload, key) if isinstance(r, dict)]
+
+
+def declared_day(day) -> list[dict]:
+    """EX_BASE_08 for `day`: [{afm, type, start, end, break_min, break_in}] (one row per block)."""
+    out = []
+    for r in _day_query("EX_BASE_08", "Working", day):
+        afm = str(r.get("Afm") or r.get("afm") or "").strip()
+        if not afm:
+            continue
+        bm = _int_prefix(r.get("BreakMinutes"))
+        bi = str(r.get("BreakInWork") if r.get("BreakInWork") is not None else "").strip()
+        out.append({"afm": afm, "type": str(r.get("Type") or "").strip().upper(),
+                    "start": _hhmm(r.get("HourFrom")), "end": _hhmm(r.get("HourTo")),
+                    "break_min": bm, "break_in": True if bi == "1" else False if bi == "0" else None})
+    return out
+
+
+def actual_day(day) -> list[dict]:
+    """EX_BASE_07 for `day`: [{afm, start, end, next_day}] — the work Ergani recorded from the card."""
+    out = []
+    for r in _day_query("EX_BASE_07", "RealWorking", day):
+        afm = str(r.get("Afm") or r.get("afm") or "").strip()
+        if not afm:
+            continue
+        out.append({"afm": afm, "start": _hhmm(r.get("HourFrom")), "end": _hhmm(r.get("HourTo")),
+                    "next_day": str(r.get("IsEndDateDifferentThanDate") or "0").strip() == "1"})
+    return out
+
+
+def week_from_declared(days: dict) -> dict:
+    """{afm: {"proposal": {weekday: 'HH:MM-HH:MM+…'}, "from": iso, "to": iso}} from EX_BASE_08 rows of several
+    dates ({date: rows}). Per weekday the latest date where the person worked or was off wins; a leave day says
+    nothing about the usual schedule and is skipped."""
+    out: dict = {}
+    for d in sorted(days, reverse=True):
+        by_afm: dict = {}
+        for r in days[d]:
+            by_afm.setdefault(r["afm"], []).append(r)
+        for afm, rows in by_afm.items():
+            types = {r["type"] for r in rows}
+            if any(is_leave(t) for t in types) or not types <= (WORK_TYPES | REST_TYPES):
+                continue
+            w = out.setdefault(afm, {"proposal": {}, "from": d.isoformat(), "to": d.isoformat()})
+            key = str(d.weekday())
+            if key in w["proposal"]:
+                continue
+            blocks = sorted((r["start"], r["end"]) for r in rows if r["type"] in WORK_TYPES and r["start"] and r["end"])
+            w["proposal"][key] = "+".join(f"{a}-{b}" for a, b in blocks)
+            w["from"] = min(w["from"], d.isoformat())
+    return out
+
+
+def declared_recent_weeks() -> dict:
+    """The schedule last declared in Ergani's digital organisation, per employee (see week_from_declared), read from
+    the last 14 days Ergani gives. {} when this account has no EX_BASE_08 or it fails: it is only a convenience."""
+    import time
+    from datetime import timedelta
+    end = readable_until(now_local().date())
+    days, t0 = {}, time.monotonic()
+    for k in range(14):
+        d = end - timedelta(days=k)
+        if time.monotonic() - t0 > 150:     # runs in the background («Ενημέρωση…»); a slow Ergani still has an end
+            break
+        try:
+            days[d] = declared_day(d)
+        except ErganiReadError:
+            return {}
+    return week_from_declared(days)

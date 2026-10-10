@@ -24,6 +24,11 @@ to type: just start and end times.
 > each day. Fill in each day's hours from the **schedule your accountant gives you**, as
 > they declared it. Under each employee, Karta shows whether the weekly total **matches**
 > the Ergani hours («Ταιριάζει … ✓», or by how much it differs).
+>
+> With the **digital working-time organisation**, «Ενημέρωση στοιχείων ωραρίου από ΕΡΓΑΝΗ» also
+> reads the hours declared in the **last two weeks of the previous month** (Ergani does not give
+> the current month). The employee's card says which days they come from, and «Χρήση στοιχείων
+> ΕΡΓΑΝΗ» fills them in. If the schedule changed since, correct them before «Αποθήκευση».
 
 ### Folded cards, search
 
@@ -76,9 +81,10 @@ Each employee has **one break for the whole week**:
 - **«μέσα στις ώρες»** (inside the hours) or **«εκτός ωραρίου (μετά τη λήξη)»** (outside
   the hours, after the end), as declared in Ergani.
 
-It's applied automatically to every day with **more than 4 hours of continuous work** (a
-break is due after 4 hours of work). On a split shift, it's applied only if one part is
-longer than 4 hours. Neither kind **needs a card punch**:
+It's applied automatically to every day with **more than 4 hours of work**, split shifts
+included, as Ergani declares it (e.g. 10:00–14:00 + 17:00–21:00 with 20′). If one part goes
+over 4 hours in a row with no break, Karta points it out. Neither kind **needs a card
+punch**:
 
 | Kind | Meaning |
 |---|---|
