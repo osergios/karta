@@ -59,6 +59,16 @@ def test_a_maintenance_is_ergani_down_not_a_wrong_password(client, admin, clock,
     assert "ergani_down" in kinds and "ergani_auth" not in kinds
 
 
+def test_a_missing_login_address_is_ergani_down(client, admin, clock, employee, production, monkeypatch):
+    """Later in the same maintenance the login answered HTTP 404 with no maintenance page: the address itself was gone."""
+    _login_fails(monkeypatch, Resp(404, "<html>Not Found</html>"))
+    mid = _pending(employee)
+    submitter.process(mid, force=True)
+    row = db.one("SELECT * FROM movements WHERE id=?", (mid,))
+    assert row["status"] == "pending" and row["pending_reason"] == "ERGANI_SYSTEMS_UNAVAILABLE"
+    assert db.one("SELECT 1 FROM alerts WHERE kind='ergani_auth'") is None
+
+
 def test_a_wrong_password_is_still_a_login_problem(client, admin, clock, employee, production, monkeypatch):
     _login_fails(monkeypatch, Resp(401, "{}", "application/json"))
     mid = _pending(employee)

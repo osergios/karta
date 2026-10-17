@@ -99,12 +99,15 @@ def test_a_login_error_without_a_message_says_what_happened(monkeypatch):
     good, msg = wizard.ergani_login("user", "pass", "01")
     assert not good and "HTTP 503" in msg and "δεν είναι διαθέσιμο" in msg and "Error message" not in msg
     page = "<!DOCTYPE html><html><h1>ΠΣ ΕΡΓΑΝΗ — Προσωρινή συντήρηση</h1>ERGANI is temporarily unavailable due to scheduled maintenance.</html>"
-    monkeypatch.setattr(requests, "post", lambda url, json=None, **kw: _Resp(503, None, page) if False else _html(503, page))
+    monkeypatch.setattr(requests, "post", lambda url, json=None, **kw: _html(503, page))
     good, msg = wizard.ergani_login("user", "pass", "01")
     assert not good and "σε συντήρηση" in msg and "<" not in msg
     monkeypatch.setattr(requests, "post", lambda url, json=None, **kw: _html(200, page))     # the page with a 200
     good, msg = wizard.ergani_login("user", "pass", "01")
     assert not good and "σε συντήρηση" in msg
+    monkeypatch.setattr(requests, "post", lambda url, json=None, **kw: _html(404, "<html>Not Found</html>"))
+    good, msg = wizard.ergani_login("user", "pass", "01")     # the login address missing: maintenance, not a password
+    assert not good and "HTTP 404" in msg and "δεν είναι διαθέσιμο" in msg and "λάθος" not in msg
     monkeypatch.setattr(requests, "post", lambda url, json=None, **kw: _Resp(401, {}, ""))
     good, msg = wizard.ergani_login("user", "bad", "01")
     assert not good and "HTTP 401" in msg and "λάθος όνομα χρήστη" in msg
