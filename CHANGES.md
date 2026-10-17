@@ -704,6 +704,6 @@ Found on a Saturday, 17/10/2026, with Ergani showing «ΠΣ ΕΡΓΑΝΗ — Π�
      someone punched that day after all; a dot marks days with punches (`/admin/api/movements/days`,
      `/admin/api/movements`). What needs a decision (failed, «προς έλεγχο στο ΕΡΓΑΝΗ») is listed above it always,
      whatever day it was, with «Νέα αποστολή» / «Υπάρχει στο ΕΡΓΑΝΗ». The overview no longer carries 300 rows every
-     30 seconds.
+     30 seconds. On the PC the calendar sits on the left and stays in view while the days scroll on the right.
 137. **No «Πώς τα πάνε» table.** The onboarding-period table (punches, correct days, corrections) is gone; the same
      thing is now read day by day in «Κινήσεις».

@@ -522,6 +522,13 @@ details.er-person > p.small { margin: 0 .9rem .7rem; }
 .mov-ok { color: var(--accent); font-size: .85rem; }
 .mov-more { flex-basis: 100%; padding-left: 3.6rem; }
 #movAttention .mov-punch { padding: .55rem .85rem; margin-bottom: .4rem; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--error); border-radius: 8px; }
+/* on the PC the calendar stays on the left, in view, while the days scroll on the right */
+@media (min-width: 960px) {
+  .mov-layout { display: grid; grid-template-columns: 23rem minmax(0, 1fr); gap: 1.75rem; align-items: start; }
+  .mov-layout .mov-pick { position: sticky; top: 4.25rem; margin: .5rem 0 0; }
+  .mov-layout .mov-pick .cal { max-width: none; }
+  .mov-result > .mov-day:first-child { margin-top: .5rem; }
+}
 @media (max-width: 640px) {
   .mov-more { padding-left: 0; }
   .mov-who, .mov-punches { min-width: 0; flex-basis: 100%; }

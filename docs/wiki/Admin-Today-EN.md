@@ -194,7 +194,8 @@ The exact punch times, for whatever days you want:
 The calendar won't let you pick days with nothing to see: future days, days before the
 first punch, public holidays and shop closures (struck through) and, for one employee,
 their days off and leave. If someone punched on such a day after all, the day opens. Hover
-over a grey day to see why. A dot under a day means it has punches.
+over a grey day to see why. A dot under a day means it has punches. On the PC the calendar
+sits on the left and stays in view while the days scroll on the right.
 
 For each day you see every employee with their schedule and punches: time, in or out, how
 it was made («· PIN», «· QR», «· QR ΕΡΓΑΝΗ», «· από διαχείριση» = by the admin), its status
