@@ -693,3 +693,17 @@ Found on a Saturday, 17/10/2026, with Ergani showing «ΠΣ ΕΡΓΑΝΗ — Π�
 135. **«Πάτα εδώ για να ενεργοποιηθεί ο ήχος» stayed on the shop screen.** The button is there only until the browser
      lets the page play sound, and the kiosk hid it then; but its `display: inline-flex` beat the `hidden` attribute, so
      it stayed on screen with the sound already on (`.sound-btn[hidden]`).
+
+# «Κινήσεις» in «Σήμερα» (v1.10.0)
+
+136. **The punches of the days you pick.** «Ρυθμίσεις» → «Κινήσεις» listed the last 300 punches, newest first. It is
+     now «Σήμερα» → «Κινήσεις»: an employee (or «Όλοι») and a calendar. One tap shows a day, a second tap a range (up to
+     62 days). For each day: everyone who punched or was due, their schedule, and every punch (time, in/out, how, what
+     Ergani got, protocol), or «Δεν χτύπησε». The calendar offers only days with something to see: not the future,
+     not before the first punch, not a holiday or closure, and for one person not their days off or leave, unless
+     someone punched that day after all; a dot marks days with punches (`/admin/api/movements/days`,
+     `/admin/api/movements`). What needs a decision (failed, «προς έλεγχο στο ΕΡΓΑΝΗ») is listed above it always,
+     whatever day it was, with «Νέα αποστολή» / «Υπάρχει στο ΕΡΓΑΝΗ». The overview no longer carries 300 rows every
+     30 seconds.
+137. **No «Πώς τα πάνε» table.** The onboarding-period table (punches, correct days, corrections) is gone; the same
+     thing is now read day by day in «Κινήσεις».

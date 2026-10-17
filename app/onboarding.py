@@ -18,7 +18,6 @@ from . import config, db
 from .timeutil import now_local
 
 STATUS = "onboarding"
-KIOSK_METHODS = ("pin", "qr", "qr_ergani")
 
 
 def _date(v):
@@ -102,45 +101,3 @@ def check_alerts(now) -> None:
                                          f"{config.ERGANI_MODE}: τίποτα δεν πάει στο πραγματικό ΕΡΓΑΝΗ. «Ρυθμίσεις» → "
                                          "«Επιχείρηση και σύνδεση με το ΕΡΓΑΝΗ» → «Λειτουργία» → "
                                          "«Κανονική λειτουργία».", None, now)
-
-
-def progress() -> list[dict]:
-    """How each active employee copes during the period (from its start until yesterday; punches include today)."""
-    from . import report
-    s, u = since(), until()
-    if s is None or u is None:
-        return []
-    now = now_local()
-    today = now.date()
-    end = min(today, u)                      # completed days: start .. end-1
-    out = []
-    for e in db.all_rows("SELECT id, display_name, last_name, first_name, afm, created_at FROM employees "
-                         "WHERE active=1 ORDER BY display_name"):
-        if e["afm"] == config.EMPLOYER_AFM:
-            continue
-        first = max(s, _date((e["created_at"] or "")[:10]) or s)
-        lo, hi = first.isoformat(), u.isoformat()
-        rows = db.all_rows("SELECT type, status, auth_method FROM movements WHERE employee_id=? AND mode=? "
-                           "AND movement_at>=? AND movement_at<?", (e["id"], config.ERGANI_MODE, lo, hi))
-        kiosk = [r for r in rows if r["auth_method"] in KIOSK_METHODS]
-        fixed = sum(1 for r in rows if r["auth_method"] == "admin")      # forgotten punches entered by you
-        days = good = missing = 0
-        d = first
-        while d < end:
-            x = report._day(e, d, today, now)
-            if x["show"] and not x["leave"] and not x["shut"]:
-                if x["rows"]:
-                    days += 1
-                    spans_ok = all(r["status"] != "local" for r in x["rows"]) and len(x["rows"]) % 2 == 0
-                    if spans_ok and not db.one(
-                            "SELECT 1 FROM movements WHERE employee_id=? AND mode=? AND auth_method='admin' "
-                            "AND movement_at>=? AND movement_at<? LIMIT 1",
-                            (e["id"], config.ERGANI_MODE, d.isoformat(), (d + timedelta(days=1)).isoformat())):
-                        good += 1
-                elif x["sched"] is not None:
-                    missing += 1
-            d += timedelta(days=1)
-        out.append({"id": e["id"], "name": e["display_name"], "punches": len(kiosk),
-                    "qr": sum(1 for r in kiosk if r["auth_method"] != "pin"),
-                    "fixed": fixed, "days": days, "good_days": good, "missing_days": missing})
-    return out

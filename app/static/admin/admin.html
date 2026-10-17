@@ -46,11 +46,19 @@
     </section>
 
     <section>
+      <h2>Κινήσεις</h2>
+      <p class="small">Οι ακριβείς ώρες που χτύπησαν. Διάλεξε εργαζόμενο (ή «Όλοι») και ημέρα στο ημερολόγιο· για διάστημα, πάτα την πρώτη και μετά την τελευταία ημέρα. Το ημερολόγιο δεν αφήνει να διαλέξεις ημέρες που δεν έχουν τίποτα να δεις: μελλοντικές, πριν από την πρώτη κίνηση, αργίες και κλειστό κατάστημα, ρεπό και άδειες (εκτός αν κάποιος χτύπησε τελικά εκείνη την ημέρα). Η τελεία κάτω από μια ημέρα σημαίνει ότι έχει χτυπήματα. Για κάθε χτύπημα βλέπεις πώς έγινε (QR, PIN ή από τη διαχείριση) και τι έγινε με το ΕΡΓΑΝΗ (υποβλήθηκε με πρωτόκολλο, σε αναμονή, απέτυχε…). Όσα θέλουν απόφαση (απέτυχε, προς έλεγχο στο ΕΡΓΑΝΗ) εμφανίζονται πάντα πάνω πάνω.</p>
+      <div id="movAttention"></div>
+      <div id="movPick" class="mov-pick"></div>
+      <div id="movResult"></div>
+      <div id="testMoves"></div>
+    </section>
+
+    <section>
       <h2>Οθόνη καταστήματος και αποστολή</h2>
       <div id="remState" class="send-state"></div>
       <div id="kioskReload" class="send-state"></div>
       <div id="sendState" class="send-state"></div>
-      <div id="onboardState" class="send-state"></div>
     </section>
     </div>
     <div class="tab" data-tab="sched" hidden>
@@ -149,13 +157,6 @@
         <button class="btn">Δημιουργία κωδικού εγγραφής</button>
       </form>
       <p id="code" class="code" hidden></p>
-    </section>
-
-    <section>
-      <h2>Κινήσεις</h2>
-      <p class="small">Οι τελευταίες 300 κινήσεις.</p>
-      <div id="testMoves"></div>
-      <div class="scroll"><table id="movs" class="cardify"></table></div>
     </section>
     </div>
   </div>

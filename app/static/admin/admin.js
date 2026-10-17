@@ -1154,29 +1154,6 @@
   const dayLong = new Intl.DateTimeFormat("el-GR", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Athens" });
   const fmtDayLong = iso => { const t = dayLong.format(new Date(iso + "T12:00:00Z")); return (t.startsWith("Σάββατο") ? "το " : "την ") + t; };
   const isoPlus = (iso, n) => { const x = new Date(iso + "T12:00:00Z"); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
-  function renderOnboarding(d) {
-    const box = document.getElementById("onboardState");
-    if (!box || editing(box)) return;
-    const ob = d.onboarding && d.onboarding.active ? d.onboarding : null;
-    const kids = [];
-    const P = d.onboarding_progress;
-    if (P && P.length) {
-      const pct = (a, b) => b ? `${Math.round(100 * a / b)}%` : "—";
-      kids.push(el("h3", { class: "onb-h" }, ob ? "Πώς τα πάνε" : "Πώς τα πήγαν στην περίοδο προσαρμογής"),
-        el("p", { class: "small" }, "Από την αρχή της περιόδου έως χθες. «Σωστές ημέρες»: προσέλευση και αποχώρηση χτυπήθηκαν από τον/την ίδιο/α, " +
-          "χωρίς διόρθωση από εσένα. Οι διορθώσεις (ξεχασμένα χτυπήματα) και οι ημέρες χωρίς κινήσεις είναι αυτά που θα μετρούσαν στο ΕΡΓΑΝΗ."),
-        el("div", { class: "scroll" }, el("table", { class: "cardify onb-table" },
-          head("Εργαζόμενος", "Χτυπήματα", "Σωστές ημέρες", "Διορθώσεις από εσένα", "Ημέρες χωρίς κινήσεις"),
-          ...P.map(p => el("tr", { class: p.fixed || p.missing_days ? "onb-warn" : "" },
-            el("td", { "data-label": "Εργαζόμενος" }, p.name),
-            el("td", { "data-label": "Χτυπήματα" }, `${p.punches}${p.punches ? ` (QR ${pct(p.qr, p.punches)})` : ""}`),
-            el("td", { "data-label": "Σωστές ημέρες" }, p.days ? `${p.good_days} / ${p.days} (${pct(p.good_days, p.days)})` : "—"),
-            el("td", { "data-label": "Διορθώσεις" }, String(p.fixed)),
-            el("td", { "data-label": "Χωρίς κινήσεις" }, String(p.missing_days)))))));
-    }
-    box.replaceChildren(...kids);
-  }
-
   // One line on «Σήμερα»: the mode chosen in «Ρυθμίσεις» (same names) and what it means for Ergani.
   function renderSendState(d) {
     const box = document.getElementById("sendState");
@@ -1953,6 +1930,167 @@
       }) }, "Απόκρυψη"));
   }
 
+  // ---------- «Κινήσεις»: the exact punches of the days you pick, for everyone or for one person ----------
+  // The calendar offers only days with something to see (the server marks the rest: future, before the first punch,
+  // closed shop, day off, leave — unless someone punched after all). One tap = that day; a second tap = up to there.
+  const HOW = { qr: "QR", qr_ergani: "QR ΕΡΓΑΝΗ", pin: "PIN", admin: "από διαχείριση" };
+  const WEEKDAYS = ["Κυριακή", "Δευτέρα", "Τρίτη", "Τετάρτη", "Πέμπτη", "Παρασκευή", "Σάββατο"];
+  const MONTHS = ["Ιανουάριος", "Φεβρουάριος", "Μάρτιος", "Απρίλιος", "Μάιος", "Ιούνιος", "Ιούλιος", "Αύγουστος",
+                  "Σεπτέμβριος", "Οκτώβριος", "Νοέμβριος", "Δεκέμβριος"];
+  const MONTHS_OF = ["Ιανουαρίου", "Φεβρουαρίου", "Μαρτίου", "Απριλίου", "Μαΐου", "Ιουνίου", "Ιουλίου", "Αυγούστου",
+                     "Σεπτεμβρίου", "Οκτωβρίου", "Νοεμβρίου", "Δεκεμβρίου"];
+  const MOVES_MAX_DAYS = 62;
+  const dayTitle = iso => { const x = new Date(iso + "T12:00:00Z"); return `${WEEKDAYS[x.getUTCDay()]} ${x.getUTCDate()} ${MONTHS_OF[x.getUTCMonth()]}`; };
+  const dayGap = (a, b) => Math.round((Date.parse(b + "T12:00:00Z") - Date.parse(a + "T12:00:00Z")) / 864e5);
+  const mv = { emp: "", from: null, to: null, anchor: null, month: todayAthens().slice(0, 7), cal: null, started: false, seq: 0 };
+  const movPick = document.getElementById("movPick"), movResult = document.getElementById("movResult");
+  const empSel = el("select", { "aria-label": "Εργαζόμενος", onchange: () => { mv.emp = empSel.value; loadCal(); loadMoves(); } });
+  const calBox = el("div", { class: "cal" }), selLine = el("p", { class: "small mov-sel", "aria-live": "polite" });
+  const quick = (label, fn) => el("button", { type: "button", class: "btn ghost small-btn", onclick: () => {
+    const [from, to] = fn(); setRange(from, to);
+  } }, label);
+  movPick.append(
+    el("div", { class: "mov-tools" }, el("label", {}, "Εργαζόμενος ", empSel),
+      quick("Σήμερα", () => [todayAthens(), todayAthens()]),
+      quick("Τελευταίες 7 ημέρες", () => [isoPlus(todayAthens(), -6), todayAthens()]),
+      quick("Όλος ο μήνας", () => {
+        const end = isoPlus(isoPlus(mv.month + "-01", 32).slice(0, 7) + "-01", -1);
+        return [mv.month + "-01", end < todayAthens() ? end : todayAthens()];
+      })),
+    calBox, selLine);
+
+  function syncMovEmps(d) {
+    const key = d.employees.map(e => `${e.id}:${e.display_name}:${e.active}`).join("|");
+    if (key === syncMovEmps.key) return;
+    syncMovEmps.key = key;
+    const opt = e => el("option", { value: String(e.id) }, e.display_name);
+    const off = d.employees.filter(e => !e.active);
+    empSel.replaceChildren(el("option", { value: "" }, "Όλοι"), ...d.employees.filter(e => e.active).map(opt),
+      off.length ? el("optgroup", { label: "Ανενεργοί" }, ...off.map(opt)) : "");
+    empSel.value = mv.emp;
+    if (empSel.value !== mv.emp) { mv.emp = ""; empSel.value = ""; }
+  }
+  // stay = keep the month on screen (a tap in the calendar); the quick buttons show the month of the last day
+  function setRange(from, to, stay = false) {
+    if (dayGap(from, to) >= MOVES_MAX_DAYS) { to = isoPlus(from, MOVES_MAX_DAYS - 1); toast(`Έως ${MOVES_MAX_DAYS} ημέρες τη φορά: ως ${dmy(to)}.`); }
+    mv.from = from; mv.to = to; mv.anchor = null;
+    if (!stay && to.slice(0, 7) !== mv.month) { mv.month = to.slice(0, 7); loadCal(); } else renderCal();
+    loadMoves();
+  }
+  function pickDay(iso) {
+    if (mv.anchor && iso !== mv.anchor) { const a = mv.anchor; setRange(a < iso ? a : iso, a < iso ? iso : a, true); return; }
+    mv.from = mv.to = mv.anchor = iso;
+    renderCal(); loadMoves();
+  }
+  async function loadCal(quiet = false) {
+    const q = new URLSearchParams({ month: mv.month });
+    if (mv.emp) q.set("employee_id", mv.emp);
+    try { mv.cal = await api(`/admin/api/movements/days?${q}`); } catch (e) { if (!quiet) toast(e.message, true); return; }
+    renderCal();
+  }
+  function defaultDay() {          // today, or the latest day before it that has something to see
+    const open = (mv.cal ? mv.cal.days : []).filter(x => x.state === "open");
+    const best = open.filter(x => x.punches).pop() || open.pop();
+    if (best && !mv.from) setRange(best.date, best.date);       // not a tap: the next tap starts afresh
+    else renderCal();
+  }
+  function renderCal() {
+    const r = mv.cal;
+    if (!r) return;
+    const [y, m] = r.month.split("-").map(Number);
+    const now = r.today.slice(0, 7), oldest = r.first ? r.first.slice(0, 7) : now;
+    const go = step => { const x = new Date(Date.UTC(y, m - 1 + step, 1)); mv.month = x.toISOString().slice(0, 7); loadCal(); };
+    const prev = el("button", { type: "button", class: "link cal-nav", "aria-label": "Προηγούμενος μήνας", onclick: () => go(-1) }, "‹");
+    const next = el("button", { type: "button", class: "link cal-nav", "aria-label": "Επόμενος μήνας", onclick: () => go(1) }, "›");
+    prev.disabled = r.month <= oldest; next.disabled = r.month >= now;
+    const lead = (new Date(Date.UTC(y, m - 1, 1)).getUTCDay() + 6) % 7;        // Monday first
+    const cells = Array.from({ length: lead }, () => el("span", { class: "cal-blank" }));
+    for (const x of r.days) {
+      const inSel = mv.from && x.date >= mv.from && x.date <= mv.to;
+      const cls = ["cal-day", x.state, x.punches ? "has" : "", inSel ? "sel" : "",
+                   x.date === mv.from || x.date === mv.to ? "edge" : "", x.date === r.today ? "today" : ""].filter(Boolean).join(" ");
+      const why = x.label || (x.punches ? `${x.punches} ${x.punches === 1 ? "χτύπημα" : "χτυπήματα"}` : "");
+      const b = el("button", { type: "button", class: cls, title: why, "aria-label": `${dayTitle(x.date)}${why ? " — " + why : ""}`,
+        "aria-pressed": inSel ? "true" : "false", onclick: () => pickDay(x.date) }, String(Number(x.date.slice(8))));
+      b.disabled = x.state !== "open";
+      cells.push(b);
+    }
+    calBox.replaceChildren(el("div", { class: "cal-head" }, prev, el("strong", {}, `${MONTHS[m - 1]} ${y}`), next),
+      el("div", { class: "cal-grid" }, ...["Δε", "Τρ", "Τε", "Πε", "Πα", "Σα", "Κυ"].map(w => el("span", { class: "cal-wd", "aria-hidden": "true" }, w)), ...cells),
+      el("p", { class: "cal-legend" }, el("span", {}, el("i", { class: "dot" }), "έχει χτυπήματα"),
+        el("span", {}, el("s", {}, "25"), "κλειστό / ρεπό / άδεια"), el("span", {}, "αχνό: τίποτα να δεις")));
+    selLine.textContent = !mv.from ? "Διάλεξε ημέρα στο ημερολόγιο."
+      : mv.from === mv.to ? `${dayTitle(mv.from)}${mv.anchor ? " · πάτα κι άλλη ημέρα για διάστημα" : ""}`
+      : `${dayTitle(mv.from)} – ${dayTitle(mv.to)}`;
+  }
+  // one punch: time, punch in/out and how, what Ergani got, and what you can do about it
+  const moveAct = fn => act(async ev => { await fn(ev); await loadMoves(true); });
+  function punchLine(m, withWho = false) {
+    const more = [
+      m.late_justification ? el("div", { class: "small" }, `Εκπρόθεσμη: ${m.late_justification}`) : null,
+      m.note ? el("div", { class: "small" }, `Σημείωση: ${m.note}`) : null,
+      m.last_error && m.status !== "submitted" ? el("div", { class: "small" }, `${m.attempts} προσπάθειες: ${m.last_error}`) : null,
+      m.payload ? el("details", {}, el("summary", {}, "Τι θα στελνόταν"), el("pre", {}, m.payload)) : null,
+      m.status === "failed" ? el("button", { class: "link", onclick: moveAct(async () => {
+        await api(`/admin/api/movements/${m.id}/retry`, {}); toast("Μπήκε ξανά στην ουρά");
+      }) }, "Νέα αποστολή") : null,
+      m.status === "uncertain" ? el("div", {},
+        el("div", { class: "small warn-text" }, "Δεν ξέρουμε αν έφτασε στο ΕΡΓΑΝΗ. Έλεγξε τις κινήσεις κάρτας στο ΕΡΓΑΝΗ πριν διαλέξεις:"),
+        el("button", { class: "link", onclick: moveAct(async () => {
+          const protocol = await askBox("Υπάρχει στο ΕΡΓΑΝΗ. Αριθμός πρωτοκόλλου (προαιρετικό):", { input: true });
+          if (protocol === null) return;
+          await api(`/admin/api/movements/${m.id}/uncertain`, { sent: true, protocol: protocol.trim() }); toast("Σημειώθηκε ως υποβληθείσα");
+        }) }, "Υπάρχει στο ΕΡΓΑΝΗ"),
+        el("button", { class: "link danger", onclick: moveAct(async () => {
+          if (!await askBox("Η κίνηση ΔΕΝ υπάρχει στο ΕΡΓΑΝΗ; Θα σταλεί τώρα (ως εκπρόθεσμη αν πέρασε η ώρα).")) return;
+          await api(`/admin/api/movements/${m.id}/uncertain`, { sent: false }); toast("Στέλνεται ξανά");
+        }) }, "Δεν υπάρχει — νέα αποστολή")) : null].filter(Boolean);
+    return el("div", { class: "mov-punch" },
+      el("span", { class: "mov-time", title: m.movement_at.slice(11, 19) }, m.movement_at.slice(11, 16)),
+      el("span", {}, withWho ? `${dmy(m.movement_at)} · ${m.name} · ` : "", LABEL[m.type],
+        HOW[m.auth_method] ? el("span", { class: "small muted" }, ` · ${HOW[m.auth_method]}`) : null),
+      m.status === "submitted" ? el("span", { class: "mov-ok", title: STATUS.submitted }, `✓ ${m.protocol ? "πρωτ. " + m.protocol : STATUS.submitted}`)
+        : el("span", { class: "tag " + m.status }, STATUS[m.status] || m.status),
+      m.mode === "trial" ? el("span", { class: "tag trial" }, "Δοκιμαστικό ΕΡΓΑΝΗ · ΑΚΥΡΟ") : null,
+      m.protocol && m.status !== "submitted" ? el("span", { class: "small muted" }, `πρωτ. ${m.protocol}`) : null,
+      more.length ? el("div", { class: "mov-more" }, ...more) : null);
+  }
+  async function loadMoves(quiet = false) {
+    if (!mv.from) { movResult.replaceChildren(); return; }
+    if (quiet && editing(movResult)) return;
+    const seq = ++mv.seq;
+    const q = new URLSearchParams({ start: mv.from, end: mv.to });
+    if (mv.emp) q.set("employee_id", mv.emp);
+    let r;
+    try { r = await api(`/admin/api/movements?${q}`); } catch (e) { if (!quiet) toast(e.message, true); return; }
+    if (seq !== mv.seq) return;                  // a newer choice is on its way
+    const one = !!mv.emp, today = todayAthens();
+    const kids = [];
+    for (const day of r.days) {
+      kids.push(el("h3", { class: "mov-day" }, dayTitle(day.date), day.closed ? el("span", { class: "small muted" }, ` · ${day.closed}`) : null));
+      for (const p of day.people) {
+        const none = !p.schedule && p.off ? p.off
+          : p.late ? (day.date === today ? "Δεν έχει χτυπήσει ακόμα" : "Δεν χτύπησε") : "Αναμένεται";
+        const about = p.schedule ? `Ωράριο ${p.schedule}` : p.movements.length ? p.off || "Χωρίς ωράριο" : "";
+        kids.push(el("div", { class: "mov-person" },
+          one && !about ? null : el("div", { class: "mov-who" }, one ? null : el("strong", {}, p.name),
+            el("span", { class: "small muted" }, about)),
+          el("div", { class: "mov-punches" }, ...(p.movements.length ? p.movements.map(m => punchLine(m))
+            : [el("div", { class: p.late ? "warn-text" : "muted" }, none)]))));
+      }
+    }
+    if (!r.days.length) kids.push(el("p", { class: "small muted" }, "Τίποτα για αυτές τις ημέρες."));
+    if (r.skipped && r.start !== r.end) kids.push(el("p", { class: "small muted" },
+      `${r.skipped} ${r.skipped === 1 ? "ημέρα" : "ημέρες"} χωρίς κάτι να δεις (κλειστό, ρεπό, άδεια) δεν εμφανίζονται.`));
+    movResult.replaceChildren(...kids);
+  }
+  function renderAttention(d) {
+    const box = document.getElementById("movAttention");
+    if (editing(box)) return;
+    const A = d.attention || [];
+    box.replaceChildren(...(A.length ? [el("h3", {}, `Θέλουν απόφαση (${A.length})`), ...A.map(m => punchLine(m, true))] : []));
+  }
+
   async function load() {
     let d;
     try { d = await api("/admin/api/overview"); } catch (e) { toast(e.message, true); return; }
@@ -1975,7 +2113,6 @@
     document.getElementById("status").textContent = `${d.onboarding && d.onboarding.active ? "Περίοδος προσαρμογής" : MODE[d.mode]} · παράρτημα ${d.branch} · ${d.admin}`;
     document.body.classList.toggle("env-trial", d.mode === "trial");
     renderSendState(d);
-    renderOnboarding(d);
     renderRemState(d);
     renderOffDays(d);
     renderBrand(d);
@@ -2018,35 +2155,14 @@
             await api(`/admin/api/devices/${v.id}/delete`, {}); toast("Η συσκευή διαγράφηκε");
           }) }, "Διαγραφή")))));
 
-    if (!editing(document.getElementById("movs"))) document.getElementById("movs").replaceChildren(
-      head("Ώρα", "Εργαζόμενος", "Κίνηση", "Κατάσταση", "Πρωτόκολλο", "Λεπτομέρειες"),
-      ...d.movements.map(m => el("tr", {},
-        el("td", {}, fmt(m.movement_at)),
-        el("td", {}, m.name),
-        el("td", {}, LABEL[m.type], m.auth_method ? el("span", { class: "small" }, ({ qr: " · QR", qr_ergani: " · QR ΕΡΓΑΝΗ", pin: " · PIN", admin: " · από διαχείριση" })[m.auth_method] || "") : null),
-        el("td", {}, el("span", { class: "tag " + m.status }, STATUS[m.status] || m.status),
-          m.mode === "trial" ? el("span", { class: "tag trial" }, "Δοκιμαστικό ΕΡΓΑΝΗ · ΑΚΥΡΟ") : null,
-          m.late_justification ? el("div", { class: "small" }, `Εκπρόθεσμη: ${m.late_justification}`) : null),
-        el("td", {}, m.protocol || "-"),
-        el("td", {},
-          m.note ? el("div", { class: "small" }, `Σημείωση: ${m.note}`) : null,
-          m.last_error ? el("div", { class: "small" }, `${m.attempts} προσπάθειες: ${m.last_error}`) : null,
-          m.payload ? el("details", {}, el("summary", {}, "Τι θα στελνόταν"), el("pre", {}, m.payload)) : null,
-          m.status === "failed" ? el("button", { class: "link", onclick: act(async () => {
-            await api(`/admin/api/movements/${m.id}/retry`, {}); toast("Μπήκε ξανά στην ουρά");
-          }) }, "Νέα αποστολή") : null,
-          m.status === "uncertain" ? el("div", {},
-            el("div", { class: "small warn-text" }, "Δεν ξέρουμε αν έφτασε στο ΕΡΓΑΝΗ. Έλεγξε τις κινήσεις κάρτας στο ΕΡΓΑΝΗ πριν διαλέξεις:"),
-            el("button", { class: "link", onclick: act(async () => {
-              const protocol = await askBox("Υπάρχει στο ΕΡΓΑΝΗ. Αριθμός πρωτοκόλλου (προαιρετικό):", { input: true });
-              if (protocol === null) return;
-              await api(`/admin/api/movements/${m.id}/uncertain`, { sent: true, protocol: protocol.trim() }); toast("Σημειώθηκε ως υποβληθείσα");
-            }) }, "Υπάρχει στο ΕΡΓΑΝΗ"),
-            el("button", { class: "link danger", onclick: act(async () => {
-              if (!await askBox("Η κίνηση ΔΕΝ υπάρχει στο ΕΡΓΑΝΗ; Θα σταλεί τώρα (ως εκπρόθεσμη αν πέρασε η ώρα).")) return;
-              await api(`/admin/api/movements/${m.id}/uncertain`, { sent: false }); toast("Στέλνεται ξανά");
-            }) }, "Δεν υπάρχει — νέα αποστολή")) : null))));
-    cardify(document.getElementById("devs")); cardify(document.getElementById("movs"));
+    renderAttention(d);
+    syncMovEmps(d);
+    if (!mv.started) { mv.started = true; loadCal().then(defaultDay); }
+    else {
+      if (mv.month === todayAthens().slice(0, 7)) loadCal(true);         // new punches: the dots of today
+      if (mv.to && mv.to >= todayAthens()) loadMoves(true);
+    }
+    cardify(document.getElementById("devs"));
   }
 
   document.getElementById("addDev").addEventListener("submit", act(async ev => {

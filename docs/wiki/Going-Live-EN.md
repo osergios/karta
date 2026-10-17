@@ -30,7 +30,7 @@ count from the first real punch of the current mode, so test days before it don'
 as absences. A report made outside production has «… — ΔΟΚΙΜΑΣΤΙΚΑ ΔΕΔΟΜΕΝΑ» (test data)
 in its title.
 
-When you've finished testing, «Ρυθμίσεις» → «Κινήσεις» → **«Διαγραφή δοκιμαστικών
+When you've finished testing, «Σήμερα» → «Κινήσεις» → **«Διαγραφή δοκιμαστικών
 κινήσεων»** removes the test punches.
 
 ## Recommended path
@@ -78,7 +78,7 @@ Staff practise in **«Δοκιμαστική»**, before the onboarding period o
   «Δοκιμαστική λειτουργία: δεν στάλθηκε στο ΕΡΓΑΝΗ».
 - In «Πρώτα βήματα» (first steps), «Δοκιμή με το προσωπικό» (trial run with the staff)
   ticks itself off with the first test punch.
-- Afterwards: «Ρυθμίσεις» → «Κινήσεις» → **«Διαγραφή δοκιμαστικών κινήσεων»** (delete test
+- Afterwards: «Σήμερα» → «Κινήσεις» → **«Διαγραφή δοκιμαστικών κινήσεων»** (delete test
   punches), and change the mode in «Ρυθμίσεις».
 
 ## Onboarding period («Περίοδος προσαρμογής»)
@@ -100,10 +100,7 @@ Until that date:
 - The shop screen looks exactly as normal (no banner, no "test" wording), so nobody
   takes it less seriously. After a punch, only a faint «✓ καταγράφηκε» line appears for a
   few seconds.
-- A **«Πώς τα πάνε»** (how it's going) table on «Σήμερα» shows, per employee, from the
-  start of the period up to yesterday: punches (and how many by QR), days done correctly,
-  corrections you had to make, and days without punches. It stays visible (as «Πώς τα
-  πήγαν στην περίοδο προσαρμογής») for a month after the period ends.
+- How everyone is punching shows on «Σήμερα» → **«Κινήσεις»**, for whatever days you pick.
 
 On the mandatory date, sending starts by itself. You can end it earlier with «Τέλος
 περιόδου τώρα», or move the date with «Αλλαγή ημερομηνίας». A departure always follows its arrival: a shift

@@ -687,7 +687,7 @@ def first_steps():
          "κρυπτογραφημένο στο cloud (Google Drive, Dropbox, Backblaze B2) ή σε USB (./setup.sh usb).",
          _offsite_ok() or "backup" in marked, {"tab": "settings", "target": "backupBox"}),
         ("training", "Δοκιμή με το προσωπικό", "Στη «Δοκιμαστική» λειτουργία όλοι δοκιμάζουν να χτυπήσουν· τίποτα δεν "
-         "στέλνεται στο ΕΡΓΑΝΗ. Μετά: «Κινήσεις» → «Διαγραφή δοκιμαστικών κινήσεων».",
+         "στέλνεται στο ΕΡΓΑΝΗ. Μετά: «Σήμερα» → «Κινήσεις» → «Διαγραφή δοκιμαστικών κινήσεων».",
          db.one("SELECT 1 FROM movements WHERE mode<>'production' LIMIT 1") is not None or "training" in marked,
          {"tab": "settings", "target": "cfgBox"}),
         ("live", "Έναρξη στο ΕΡΓΑΝΗ", "«Περίοδος προσαρμογής» μέχρι να γίνει υποχρεωτική η κάρτα, ή «Κανονική λειτουργία» "
@@ -845,9 +845,10 @@ def admin_mode(body: ModeIn, admin: str = Depends(security.require_admin)):
 def admin_overview(admin: str = Depends(security.require_admin)):
     emps = db.all_rows("SELECT * FROM employees ORDER BY active DESC, display_name")
     devices = db.all_rows("SELECT id, name, created_at, last_seen, revoked FROM devices WHERE hidden=0 ORDER BY id DESC")
-    movements = db.all_rows(
+    attention = db.all_rows(
         """SELECT m.*, e.display_name FROM movements m JOIN employees e ON e.id=m.employee_id
-           ORDER BY m.id DESC LIMIT 300""")
+           WHERE m.status IN ('failed', 'uncertain') AND m.mode=? ORDER BY m.movement_at DESC, m.id DESC LIMIT 100""",
+        (config.ERGANI_MODE,))
     # the editor shows each employee's latest saved schedule (possibly starting in the future) and its history
     today_iso = now_local().date().isoformat()
     schedules: dict = {}
@@ -889,7 +890,6 @@ def admin_overview(admin: str = Depends(security.require_admin)):
         "onboarding": onboarding.info(),
         "onboarding_until": (lambda u: u.isoformat() if u else None)(onboarding.until()),
         "onboarding_since": (lambda u: u.isoformat() if u else None)(onboarding.since()),
-        "onboarding_progress": onboarding_review(),
         "onboarding_count": db.one("SELECT COUNT(*) n FROM movements WHERE status=? AND mode=?",
                                    (onboarding.STATUS, config.ERGANI_MODE))["n"],
         "held": db.one("SELECT COUNT(*) n FROM movements WHERE status='pending' AND mode=?", (config.ERGANI_MODE,))["n"],
@@ -943,14 +943,153 @@ def admin_overview(admin: str = Depends(security.require_admin)):
             **employee_state(e["id"]),
         } for e in emps],
         "devices": [dict(d) for d in devices],
-        "movements": [{
-            "id": m["id"], "name": m["display_name"], "type": m["type"], "movement_at": m["movement_at"],
-            "mode": m["mode"], "status": m["status"], "attempts": m["attempts"],
-            "late_justification": m["late_justification"], "protocol": m["protocol"],
-            "last_error": m["last_error"], "auth_method": m["auth_method"], "payload": m["response_json"] if m["status"] == "dry_run" else None,
-            "note": m["note"],
-        } for m in movements],
+        "attention": [movement_view(m) for m in attention],    # failed / «προς έλεγχο»: they wait for a decision
     }
+
+
+def movement_view(m) -> dict:
+    """One punch for «Κινήσεις», with what it needs to show its state and the actions on it."""
+    return {"id": m["id"], "employee_id": m["employee_id"], "name": m["display_name"], "type": m["type"],
+            "movement_at": m["movement_at"], "mode": m["mode"], "status": m["status"], "attempts": m["attempts"],
+            "late_justification": m["late_justification"], "protocol": m["protocol"], "last_error": m["last_error"],
+            "auth_method": m["auth_method"], "note": m["note"],
+            "payload": m["response_json"] if m["status"] == "dry_run" else None}
+
+
+# ---- «Κινήσεις»: the punches of the days you pick, for everyone or for one person. The calendar only offers days
+# there is something to see: not the future, not before the first punch, not a closed shop, a leave or a day off
+# (unless someone punched that day after all).
+MOVES_MAX_DAYS = 62
+
+
+def _moves_by_day(lo: date, hi: date, employee_id: int | None) -> dict:
+    """{'YYYY-MM-DD': [movement rows]} of the current mode, lo..hi inclusive."""
+    rows = db.all_rows(
+        "SELECT m.*, e.display_name FROM movements m JOIN employees e ON e.id=m.employee_id "
+        "WHERE m.mode=? AND m.movement_at>=? AND m.movement_at<?" + (" AND m.employee_id=?" if employee_id else "")
+        + " ORDER BY m.movement_at, m.id",
+        (config.ERGANI_MODE, lo.isoformat(), (hi + timedelta(days=1)).isoformat())
+        + ((employee_id,) if employee_id else ()))
+    out: dict = {}
+    for r in rows:
+        out.setdefault(r["movement_at"][:10], []).append(r)
+    return out
+
+
+def _expected(e, d: date):
+    """(schedule, None) if the person was due at work that day, else (None, why not)."""
+    if (e["created_at"] or "")[:10] > d.isoformat():
+        return None, "Δεν είχε προστεθεί ακόμα"
+    off = hours.day_off(e["id"], d)
+    if off:
+        return None, off["label"]
+    sched = hours.schedule_for(e["id"], d)
+    if sched is None:
+        ch = hours.day_change(e["id"], d)
+        return None, "Ρεπό (αλλαγή ημέρας)" if ch is not None else "Ρεπό"
+    return sched, None
+
+
+def _moves_employees(employee_id: int | None):
+    if employee_id:
+        e = db.one("SELECT * FROM employees WHERE id=?", (employee_id,))
+        if e is None:
+            raise HTTPException(status_code=404, detail="Δεν βρέθηκε ο εργαζόμενος.")
+        return [e]
+    return db.all_rows("SELECT * FROM employees ORDER BY display_name")
+
+
+def _first_move_day(employee_id: int | None):
+    """The day of the first punch (of that person) in the current mode: the card was not in use before it."""
+    r = db.one("SELECT MIN(movement_at) a FROM movements WHERE mode=?" + (" AND employee_id=?" if employee_id else ""),
+               (config.ERGANI_MODE,) + ((employee_id,) if employee_id else ()))
+    return date.fromisoformat(r["a"][:10]) if r and r["a"] else None
+
+
+def _day_state(d: date, today: date, first: date | None, emps, punched: int):
+    """('open'|'closed'|'future'|'none', why) for one calendar day."""
+    if d > today:
+        return "future", None
+    if punched:
+        return "open", None
+    if first is None or d < first:
+        return "none", "Χωρίς κινήσεις"
+    whys = []
+    for e in emps:
+        if not e["active"] and len(emps) > 1:
+            continue
+        sched, why = _expected(e, d)
+        if sched is not None:
+            return "open", None
+        whys.append(why)
+    shut = hours.closure_on(d)
+    if shut:
+        return "closed", shut["label"]
+    return "closed", whys[0] if len(emps) == 1 and whys else "Κανείς δεν είχε ωράριο"
+
+
+@app.get("/admin/api/movements/days")
+def admin_movement_days(month: str, employee_id: int | None = None, admin: str = Depends(security.require_admin)):
+    """The calendar of one month: which days can be picked, and how many punches each has."""
+    try:
+        first_of = datetime.strptime(month, "%Y-%m").date()
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Μη έγκυρος μήνας.")
+    nxt = (first_of + timedelta(days=32)).replace(day=1)
+    today = now_local().date()
+    emps = _moves_employees(employee_id)
+    first = _first_move_day(employee_id)
+    moves = _moves_by_day(first_of, nxt - timedelta(days=1), employee_id)
+    days = []
+    d = first_of
+    while d < nxt:
+        n = len(moves.get(d.isoformat(), []))
+        state, why = _day_state(d, today, first, emps, n)
+        days.append({"date": d.isoformat(), "state": state, "label": why, "punches": n})
+        d += timedelta(days=1)
+    return {"month": month, "first": first.isoformat() if first else None, "today": today.isoformat(), "days": days}
+
+
+@app.get("/admin/api/movements")
+def admin_movements(start: str, end: str, employee_id: int | None = None, admin: str = Depends(security.require_admin)):
+    """The punches of the days start..end, day by day: who punched, at what time, how, and what Ergani got. Days with
+    nothing to see (closed, everyone off, the future) are left out and counted."""
+    try:
+        lo, hi = date.fromisoformat(start), date.fromisoformat(end)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Μη έγκυρη ημερομηνία.")
+    if hi < lo:
+        lo, hi = hi, lo
+    today = now_local().date()
+    hi = min(hi, today)
+    if (hi - lo).days >= MOVES_MAX_DAYS:
+        raise HTTPException(status_code=400, detail=f"Έως {MOVES_MAX_DAYS} ημέρες τη φορά.")
+    emps = _moves_employees(employee_id)
+    first = _first_move_day(employee_id)
+    moves = _moves_by_day(lo, hi, employee_id)
+    out, skipped = [], 0
+    d = lo
+    while d <= hi:
+        rows = moves.get(d.isoformat(), [])
+        people = []
+        for e in (emps if first and d >= first else []):        # before the first punch the card was not in use
+            mine = [r for r in rows if r["employee_id"] == e["id"]]
+            sched, why = _expected(e, d)
+            # who punched or was due (and still works here); for one person also a leave / closed shop, said as such
+            shown_off = len(emps) == 1 and sched is None and hours.day_off(e["id"], d) is not None
+            if not mine and not shown_off and (sched is None or not e["active"] and len(emps) > 1):
+                continue
+            people.append({"employee_id": e["id"], "name": e["display_name"], "active": bool(e["active"]),
+                           "schedule": sched.label() if sched else None, "off": why,
+                           "late": bool(sched and not mine and (d < today or now_local() >= sched.arrive_by)),
+                           "movements": [movement_view(r) for r in mine]})
+        if people:
+            shut = hours.closure_on(d)
+            out.append({"date": d.isoformat(), "closed": shut["label"] if shut else None, "people": people})
+        else:
+            skipped += 1
+        d += timedelta(days=1)
+    return {"start": lo.isoformat(), "end": hi.isoformat(), "days": out, "skipped": skipped}
 
 
 def today_info(employee_id: int):
@@ -1034,16 +1173,6 @@ def admin_issue_qr(employee_id: int, admin: str = Depends(security.require_admin
 
 
 # ---- onboarding period («Περίοδος προσαρμογής»): real use of the card, nothing sent to Ergani until a date
-ONBOARDING_REVIEW_DAYS = 31     # the «how is it going» table stays visible this long after the card became mandatory
-
-
-def onboarding_review():
-    u = onboarding.until()
-    if u is None or (now_local().date() - u).days > ONBOARDING_REVIEW_DAYS:
-        return None
-    return onboarding.progress()
-
-
 def _onboarding_date(raw: str, today) -> date:
     try:
         until = datetime.fromisoformat(raw).date()

@@ -390,8 +390,6 @@ details.help > p { margin: 0; max-width: 75ch; color: var(--ink-soft); font-size
 .onb-actions { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
 .onb-actions label { display: flex; gap: .4rem; align-items: center; font-size: .9rem; }
 .onb-actions input[type=date] { font: inherit; padding: .4rem .5rem; border: 1px solid var(--line); border-radius: 6px; }
-.onb-h { font-size: 1rem; margin: 1rem 0 .2rem; }
-.onb-table tr.onb-warn td:nth-child(4), .onb-table tr.onb-warn td:nth-child(5) { color: var(--warn-ink); font-weight: 600; }
 
 @media (hover: hover) {
   .btn:hover { filter: brightness(.9); }
@@ -444,7 +442,7 @@ button:disabled { cursor: default; }
 .steps-bar i { display: block; height: 100%; background: var(--accent); }
 .flash { animation: flash 1.6s ease-out; border-radius: 8px; }
 @keyframes flash { 0%, 40% { box-shadow: 0 0 0 4px var(--accent-pale); } 100% { box-shadow: 0 0 0 0 transparent; } }
-@media (prefers-reduced-motion: reduce) { .flash { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .flash { animation: none; } .cal-day { transition: none; } }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* «Λειτουργία»: one row per mode, the current one marked */
@@ -487,3 +485,44 @@ details.er-person[open] > summary { border-bottom: 1px solid var(--line); }
 .erp-tablet input { font: inherit; padding: .35rem .5rem; border: 1px solid var(--line); border-radius: 6px; }
 details.er-person > p.small { margin: 0 .9rem .7rem; }
 @media (max-width: 760px) { .erp-facts { grid-template-columns: 1fr; } .erp-facts dt { margin-top: .3rem; } }
+
+/* «Κινήσεις»: the day picker and the punches of the chosen days */
+.mov-pick { display: flex; flex-direction: column; gap: .6rem; margin: .5rem 0 1rem; max-width: 38rem; }
+.mov-pick .cal { max-width: 30rem; }
+.mov-tools { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.mov-tools label { display: flex; gap: .4rem; align-items: center; font-size: .9rem; }
+.mov-tools select { font: inherit; padding: .4rem .5rem; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); max-width: 14rem; }
+.mov-sel { margin: 0; }
+.cal-legend { display: flex; flex-wrap: wrap; gap: .3rem 1rem; margin: .5rem 0 0; font-size: .8rem; color: var(--ink-soft); }
+.cal-legend span { display: inline-flex; align-items: center; gap: .35rem; }
+.cal-legend .dot { width: .35rem; height: .35rem; border-radius: 50%; background: var(--accent); }
+.cal-legend s { opacity: .6; }
+.cal { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: .6rem .7rem .7rem; }
+.cal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: .4rem; }
+.cal-nav { font-size: 1.5rem; line-height: 1; padding: .1rem .7rem; }
+.cal-nav:disabled { opacity: .3; cursor: default; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: .2rem; }
+.cal-wd { text-align: center; font-size: .75rem; color: var(--ink-soft); padding-bottom: .2rem; }
+.cal-day { position: relative; height: 2.75rem; border: 1px solid transparent; border-radius: 8px; background: none; font: inherit; color: var(--ink); cursor: pointer; font-variant-numeric: tabular-nums; transition: background-color .15s ease-out, border-color .15s ease-out; }   /* 44px: a finger on the phone */
+.cal-day:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+.cal-day:hover:not(:disabled) { border-color: var(--accent); }
+.cal-day:disabled { color: var(--ink-soft); opacity: .4; cursor: not-allowed; }
+.cal-day.closed:disabled { text-decoration: line-through; }
+.cal-day.has::after { content: ""; position: absolute; left: 50%; bottom: .3rem; width: .3rem; height: .3rem; margin-left: -.15rem; border-radius: 50%; background: var(--accent); }
+.cal-day.today { border-color: var(--line); font-weight: 700; }
+.cal-day.sel { background: var(--accent-pale); }
+.cal-day.edge { background: var(--accent); color: #fff; }
+.cal-day.edge.has::after { background: #fff; }
+.mov-day { font-size: 1rem; margin: 1.1rem 0 .4rem; }
+.mov-person { display: flex; flex-wrap: wrap; gap: .3rem 1.2rem; padding: .6rem .85rem; margin-bottom: .4rem; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.mov-who { display: flex; flex-direction: column; min-width: 11rem; }
+.mov-punches { display: flex; flex-direction: column; gap: .35rem; flex: 1; min-width: 14rem; }
+.mov-punch { display: flex; flex-wrap: wrap; align-items: baseline; gap: .2rem .6rem; }
+.mov-time { font-weight: 700; font-variant-numeric: tabular-nums; min-width: 3rem; }
+.mov-ok { color: var(--accent); font-size: .85rem; }
+.mov-more { flex-basis: 100%; padding-left: 3.6rem; }
+#movAttention .mov-punch { padding: .55rem .85rem; margin-bottom: .4rem; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--error); border-radius: 8px; }
+@media (max-width: 640px) {
+  .mov-more { padding-left: 0; }
+  .mov-who, .mov-punches { min-width: 0; flex-basis: 100%; }
+}
