@@ -690,3 +690,6 @@ Found on a Saturday, 17/10/2026, with Ergani showing «ΠΣ ΕΡΓΑΝΗ — Π�
      χρήστη/κωδικό…», and a punch would have been queued as a login problem. Wrong credentials get 400/401, so a 404 on
      the login is now Ergani not available, like a 5xx: «003», «Το ΕΡΓΑΝΗ δεν απαντά», no giving up, and no hint to
      check the username/password.
+135. **«Πάτα εδώ για να ενεργοποιηθεί ο ήχος» stayed on the shop screen.** The button is there only until the browser
+     lets the page play sound, and the kiosk hid it then; but its `display: inline-flex` beat the `hidden` attribute, so
+     it stayed on screen with the sound already on (`.sound-btn[hidden]`).

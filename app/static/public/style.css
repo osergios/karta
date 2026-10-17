@@ -198,6 +198,7 @@ body.cardpage { background: var(--bg); min-height: 100vh; }
 .reminder strong { display: block; font-size: .8rem; letter-spacing: .06em; text-transform: uppercase; opacity: .85; font-weight: 600; }
 .sound-btn { align-self: flex-start; display: inline-flex; align-items: center; gap: .5rem; background: #fff3d6; border: 1px solid #e0a340; border-radius: 999px; padding: .5rem 1.05rem .5rem .8rem; font-size: .95rem; color: #6b4a12; text-align: left; }
 .sound-ico { width: 1.3em; height: 1.3em; flex: none; }
+.sound-btn[hidden] { display: none; }   /* its display: inline-flex would otherwise keep it on screen once sound works */
 @media (prefers-reduced-motion: no-preference) { .reminder { animation: remPulse 1.6s ease-in-out infinite; } }
 @keyframes remPulse { 0%, 100% { transform: none; } 50% { transform: scale(1.02); } }
 @media (max-width: 899px), (orientation: portrait) { .side .reminders { order: 4; } }
