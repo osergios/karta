@@ -132,12 +132,13 @@ def write_env(path: str, env: dict) -> str | None:
 # ------------------------------------------------------------------ Ergani
 
 def ergani_unavailable(e) -> bool:
-    """A failed login that is Ergani's side (down, maintenance), not wrong credentials: HTTP 5xx, or its maintenance
-    page («ΠΣ ΕΡΓΑΝΗ — Προσωρινή συντήρηση», whatever the status)."""
+    """A failed login that is Ergani's side (down, maintenance), not wrong credentials: HTTP 5xx, HTTP 404 (the login
+    address itself is missing, as during a maintenance; wrong credentials get 400/401), or its maintenance page
+    («ΠΣ ΕΡΓΑΝΗ — Προσωρινή συντήρηση», whatever the status)."""
     resp = getattr(e, "response", None)
     code = getattr(resp, "status_code", None)
     body = (getattr(resp, "text", "") or "")[:5000].lower()
-    return (code is not None and code >= 500) or "συντήρηση" in body or "maintenance" in body
+    return (code is not None and (code >= 500 or code == 404)) or "συντήρηση" in body or "maintenance" in body
 
 
 def auth_error_text(e) -> str:
@@ -154,7 +155,7 @@ def auth_error_text(e) -> str:
     body = (getattr(resp, "text", "") or "")[:5000].lower()
     if "συντήρηση" in body or "maintenance" in body:
         return f"το ΕΡΓΑΝΗ είναι σε συντήρηση· δοκιμάστε ξανά αργότερα (HTTP {code})"
-    if code >= 500:
+    if code >= 500 or code == 404:
         why = "το ΕΡΓΑΝΗ δεν είναι διαθέσιμο αυτή τη στιγμή (συνήθως προσωρινό, π.χ. συντήρηση)· δοκιμάστε ξανά αργότερα"
     elif code in (400, 401, 403):
         why = "λάθος όνομα χρήστη, κωδικός ή τύπος χρήστη, ή ο χρήστης δεν είναι ενεργός για web services"

@@ -685,3 +685,11 @@ Found on a Saturday, 17/10/2026, with Ergani showing «ΠΣ ΕΡΓΑΝΗ — Π�
      without a message of its own read «✗ το ΕΡΓΑΝΗ απέρριψε τη σύνδεση: Error message:». Now: «σε συντήρηση», «δεν
      είναι διαθέσιμο (HTTP 503)» or «λάθος όνομα χρήστη, κωδικός ή τύπος χρήστη (HTTP 401)» (`setup.auth_error_text`),
      in «Δοκιμή σύνδεσης», the mode switch and every reading from Ergani.
+134. **HTTP 404 during a maintenance (v1.9.3).** Later in the same maintenance the login answered HTTP 404, with no
+     maintenance page: the address itself was gone. It read «απρόσμενη απάντηση (HTTP 404). Έλεγξε όνομα
+     χρήστη/κωδικό…», and a punch would have been queued as a login problem. Wrong credentials get 400/401, so a 404 on
+     the login is now Ergani not available, like a 5xx: «003», «Το ΕΡΓΑΝΗ δεν απαντά», no giving up, and no hint to
+     check the username/password.
+135. **«Πάτα εδώ για να ενεργοποιηθεί ο ήχος» stayed on the shop screen.** The button is there only until the browser
+     lets the page play sound, and the kiosk hid it then; but its `display: inline-flex` beat the `hidden` attribute, so
+     it stayed on screen with the sound already on (`.sound-btn[hidden]`).
