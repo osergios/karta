@@ -8,7 +8,7 @@ safe and is sent as soon as possible.
 
 ## Movement statuses
 
-You'll see these in «Ρυθμίσεις» → «Κινήσεις» and in the reports.
+You'll see these in «Σήμερα» → «Κινήσεις» and in the reports.
 
 | Status | Meaning |
 |---|---|

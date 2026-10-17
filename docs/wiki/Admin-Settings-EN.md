@@ -182,15 +182,5 @@ The registered shop screens: name, when registered and last seen. Create a regis
 code with **«Δημιουργία κωδικού εγγραφής»** (see [Shop screen](Kiosk-EN)), revoke a device,
 or remove it from the list.
 
-## «Κινήσεις» (movements)
-
-The last 300 punches, with how they were made («· PIN», «· QR», «· QR ΕΡΓΑΝΗ», «· από
-διαχείριση» = by the admin), their status (see
-[How punches reach Ergani](Ergani-Submissions-EN)) and protocol number. From here you can:
-
-- see **«Τι θα στελνόταν»**: the exact payload, in `dry_run`;
-- **retry** a failed submission;
-- decide on an **uncertain** one («Υπάρχει στο ΕΡΓΑΝΗ» / «Δεν υπάρχει — νέα αποστολή»);
-- **«Διαγραφή δοκιμαστικών κινήσεων»:** remove every punch made in `dry_run` or `trial`
-  mode, including those made in these modes during the onboarding period. Punches made in
-  `production` mode are never touched, including onboarding‑period ones.
+The punches (exact times, failures, «προς έλεγχο») are now on «Σήμερα»: see
+[«Κινήσεις»](Admin-Today-EN#κινήσεις-movements).

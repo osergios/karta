@@ -693,3 +693,24 @@ Found on a Saturday, 17/10/2026, with Ergani showing «ΠΣ ΕΡΓΑΝΗ — Π�
 135. **«Πάτα εδώ για να ενεργοποιηθεί ο ήχος» stayed on the shop screen.** The button is there only until the browser
      lets the page play sound, and the kiosk hid it then; but its `display: inline-flex` beat the `hidden` attribute, so
      it stayed on screen with the sound already on (`.sound-btn[hidden]`).
+
+# «Κινήσεις» in «Σήμερα» (v1.10.0)
+
+136. **The punches of the days you pick.** «Ρυθμίσεις» → «Κινήσεις» listed the last 300 punches, newest first. It is
+     now «Σήμερα» → «Κινήσεις»: an employee (or «Όλοι») and a calendar. One tap shows a day, a second tap a range (up to
+     62 days). For each day: everyone who punched or was due, their schedule, and every punch (time, in/out, how, what
+     Ergani got, protocol), or «Δεν χτύπησε». The calendar offers only days with something to see: not the future,
+     not before the first punch, not a holiday or closure, and for one person not their days off or leave, unless
+     someone punched that day after all; a dot marks days with punches (`/admin/api/movements/days`,
+     `/admin/api/movements`). What needs a decision (failed, «προς έλεγχο στο ΕΡΓΑΝΗ») is listed above it always,
+     whatever day it was, with «Νέα αποστολή» / «Υπάρχει στο ΕΡΓΑΝΗ». The overview no longer carries 300 rows every
+     30 seconds. On the PC the calendar sits on the left and stays in view while the days scroll on the right.
+137. **No «Πώς τα πάνε» table.** The onboarding-period table (punches, correct days, corrections) is gone; the same
+     thing is now read day by day in «Κινήσεις».
+138. **One look across the tabs.** «Οδηγίες» of «Σήμερα» is under its title, as in every other section (it was below
+     the staff list); the device times read 19:02, not 7:02 μ.μ.; the logo is chosen with a button like the restore
+     file («Ανέβασμα λογότυπου…»), not the browser's bare «Choose File»; and every date field has the same frame and
+     colours (in the dark theme too).
+139. **The admin side says «εσείς».** The admin page, its alerts (phone too), errors and the accountant's report mixed
+     «Πάτα / Γράψε / σου» with «Πατήστε / Γράψτε / σας»; now always «εσείς», like the wiki. What the employees read
+     stays friendly («εσύ»): the shop screen, the card page on their phone and the message with their card link.

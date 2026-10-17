@@ -182,6 +182,41 @@ See [Alerts and reminders](Alerts-and-Reminders-EN).
 If phone alerts aren't configured, a note says so here (they're set up in «Ρυθμίσεις» →
 «Ειδοποιήσεις στο κινητό»).
 
+## «Κινήσεις» (movements)
+
+The exact punch times, for whatever days you want:
+
+1. Pick an **employee**, or «Όλοι» (everyone).
+2. Tap a **day** in the calendar. For a range, tap the last day too (up to 62 days at a
+   time). Shortcuts: «Σήμερα» (today), «Τελευταίες 7 ημέρες» (last 7 days), «Όλος ο μήνας»
+   (the whole month).
+
+The calendar won't let you pick days with nothing to see: future days, days before the
+first punch, public holidays and shop closures (struck through) and, for one employee,
+their days off and leave. If someone punched on such a day after all, the day opens. Hover
+over a grey day to see why. A dot under a day means it has punches. On the PC the calendar
+sits on the left and stays in view while the days scroll on the right.
+
+For each day you see every employee with their schedule and punches: time, in or out, how
+it was made («· PIN», «· QR», «· QR ΕΡΓΑΝΗ», «· από διαχείριση» = by the admin), its status
+in Ergani (see [How punches reach Ergani](Ergani-Submissions-EN)) and protocol number.
+Anyone who was due and didn't punch shows «Δεν χτύπησε» (didn't punch; today: «Δεν έχει
+χτυπήσει ακόμα» = not yet, or «Αναμένεται» = expected). In a range for one employee, leave
+and closed days show the reason.
+
+**«Θέλουν απόφαση»** (need a decision): above the calendar, always, whatever failed or is
+«προς έλεγχο στο ΕΡΓΑΝΗ» (to check in Ergani), whatever day it happened. From there (and
+from each day) you can:
+
+- see **«Τι θα στελνόταν»**: the exact payload, in `dry_run`;
+- **retry** a failed submission («Νέα αποστολή»);
+- decide on an **uncertain** one («Υπάρχει στο ΕΡΓΑΝΗ» / «Δεν υπάρχει — νέα αποστολή»).
+
+**«Διαγραφή δοκιμαστικών κινήσεων»** (shown only when there are any): removes every punch
+made in `dry_run` or `trial` mode, including those made in these modes during the
+onboarding period. Punches made in `production` mode are never touched, including
+onboarding‑period ones.
+
 ## «Οθόνη καταστήματος και αποστολή» (shop screen and sending)
 
 - **«Υπενθυμίσεις στο κατάστημα»:** shop‑screen reminders on or off. (Festive
@@ -202,6 +237,3 @@ If phone alerts aren't configured, a note says so here (they're set up in «Ρυ
   If anything is waiting or needs your check, the same line adds «σε αναμονή/επανάληψη: N»
   (pending/retrying) or «προς έλεγχο: N» (to check, see «Κινήσεις»). See
   [How punches reach Ergani](Ergani-Submissions-EN).
-- **«Πώς τα πάνε»** (how it's going): during the onboarding period, a table of how each
-  employee is punching (punches, days done correctly, corrections, days without punches).
-  It stays visible for a month after the period ends.

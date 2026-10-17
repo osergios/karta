@@ -104,13 +104,13 @@ def on_arrival(employee_id: int, name: str, when: datetime) -> None:
         raise_alert("leave_punch", employee_id, day, "warning",
                     f"{name} χτύπησε προσέλευση {when:%H:%M} ενώ είναι σε άδεια ({off['label']}, "
                     f"{leave['start_date'][8:10]}/{leave['start_date'][5:7]}–{leave['end_date'][8:10]}/{leave['end_date'][5:7]}). "
-                    f"Αν δουλεύει, ακύρωσε την άδεια στη διαχείριση και ενημέρωσε το ΕΡΓΑΝΗ.", None, when)
+                    f"Αν δουλεύει, ακυρώστε την άδεια στη διαχείριση και ενημερώστε το ΕΡΓΑΝΗ.", None, when)
     elif off:
         raise_alert("closed_punch", employee_id, day, "warning",
                     f"{name} χτύπησε προσέλευση {when:%H:%M} ενώ σήμερα {off['label'][0].lower() + off['label'][1:]}. "
-                    + ("Αν δουλεύει, η ημέρα δηλώνεται απολογιστικά στο ΕΡΓΑΝΗ έως το τέλος του επόμενου μήνα· πέρασέ τη και "
+                    + ("Αν δουλεύει, η ημέρα δηλώνεται απολογιστικά στο ΕΡΓΑΝΗ έως το τέλος του επόμενου μήνα· περάστε τη και "
                        "στη διαχείριση («Υπερωρία / αλλαγή ημέρας…»)." if config.RETRO else
-                       "Αν δουλεύει, δήλωσε ωράριο για σήμερα στο ΕΡΓΑΝΗ και πέρασέ το στη διαχείριση («Υπερωρία / αλλαγή ημέρας…»)."),
+                       "Αν δουλεύει, δηλώστε ωράριο για σήμερα στο ΕΡΓΑΝΗ και περάστε το στη διαχείριση («Υπερωρία / αλλαγή ημέρας…»)."),
                     None, when)
     elif sched is None:
         raise_alert("unscheduled", employee_id, day, "warning",
@@ -320,7 +320,7 @@ def _check_missed_arrival(eid: int, name: str, today, now: datetime, s: dict) ->
         if start + flex <= now < end and not hours.arrived_for_segment(eid, sched, i, now):
             raise_alert("missed_in" + _suffix(i), eid, today, "warning",
                         f"{name} δεν έχει χτυπήσει προσέλευση — το ωράριο ξεκίνησε {start:%H:%M} "
-                        f"(πέρασαν τα {s['grace_minutes']:g}′ ευελιξίας). Αν λείπει, βάλε άδεια στη διαχείριση.", None, now)
+                        f"(πέρασαν τα {s['grace_minutes']:g}′ ευελιξίας). Αν λείπει, βάλτε άδεια στη διαχείριση.", None, now)
 
 
 def active_alerts(for_kiosk: bool, now: datetime | None = None):
