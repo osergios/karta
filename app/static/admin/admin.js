@@ -569,7 +569,7 @@
     update();
     const logoImg = el("img", { class: "brand-logo", alt: "Λογότυπο", src: `/brand/logo?v=${Date.now()}` });
     logoImg.addEventListener("error", () => { logoImg.hidden = true; });
-    const file = el("input", { type: "file", accept: "image/png,image/jpeg,image/webp" });
+    const file = el("input", { type: "file", accept: "image/png,image/jpeg,image/webp", class: "visually-hidden", id: "logoFile" });
     file.addEventListener("change", act(async () => {
       const f = file.files[0]; if (!f) return;
       if (f.size > 1000000) { toast("Το λογότυπο πρέπει να είναι έως 1 MB", true); return; }
@@ -604,7 +604,7 @@
         el("button", { class: "link", type: "button", onclick: () => { theme.value = "karta"; theme.dispatchEvent(new Event("change")); } }, "Αρχικά χρώματα")),
       el("div", { class: "brand-logo-row" }, logoImg,
         el("div", {}, el("div", { class: "small" }, b.has_logo ? "Λογότυπο (PNG, JPG ή WebP, έως 1 MB· καλύτερα τετράγωνο με διάφανο φόντο):" : "Χωρίς λογότυπο: η οθόνη δείχνει την επωνυμία. Ανέβασε PNG, JPG ή WebP έως 1 MB (καλύτερα τετράγωνο με διάφανο φόντο):"),
-          file,
+          el("label", { class: "btn ghost", for: "logoFile" }, b.has_logo ? "Αλλαγή λογότυπου…" : "Ανέβασμα λογότυπου…"), file,
           b.has_logo ? el("button", { class: "link danger", onclick: act(async () => {
             if (!await askBox("Αφαίρεση του λογότυπου;")) return;
             await api("/admin/api/brand/logo/delete", {}); toast("Το λογότυπο αφαιρέθηκε");
@@ -1192,7 +1192,7 @@
   };
   const head = (...cols) => el("tr", {}, ...cols.map(c => el("th", {}, c)));
   const fmt = iso => iso ? iso.replace("T", " ").slice(0, 16) : "-";
-  const athens = new Intl.DateTimeFormat("el-GR", { dateStyle: "short", timeStyle: "short", timeZone: "Europe/Athens" });
+  const athens = new Intl.DateTimeFormat("el-GR", { dateStyle: "short", timeStyle: "short", hourCycle: "h23", timeZone: "Europe/Athens" });   // 19:02, not 7:02 μ.μ.
   const fmtUtc = iso => iso ? athens.format(new Date(iso + "Z")) : "-";
 
   const DAYS = ["Δευ", "Τρι", "Τετ", "Πεμ", "Παρ", "Σαβ", "Κυρ"];

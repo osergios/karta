@@ -707,3 +707,7 @@ Found on a Saturday, 17/10/2026, with Ergani showing «ΠΣ ΕΡΓΑΝΗ — Π�
      30 seconds. On the PC the calendar sits on the left and stays in view while the days scroll on the right.
 137. **No «Πώς τα πάνε» table.** The onboarding-period table (punches, correct days, corrections) is gone; the same
      thing is now read day by day in «Κινήσεις».
+138. **One look across the tabs.** «Οδηγίες» of «Σήμερα» is under its title, as in every other section (it was below
+     the staff list); the device times read 19:02, not 7:02 μ.μ.; the logo is chosen with a button like the restore
+     file («Ανέβασμα λογότυπου…»), not the browser's bare «Choose File»; and every date field has the same frame and
+     colours (in the dark theme too).

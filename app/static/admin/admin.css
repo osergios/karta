@@ -215,12 +215,12 @@ body.env-trial .bar { box-shadow: inset 0 -4px 0 #e0a340; }
 
 .leave-form { display: flex; flex-wrap: wrap; gap: .6rem 1rem; align-items: center; }
 .leave-form label { display: flex; align-items: center; gap: .4rem; font-size: .92rem; }
-.leave-form input { font: inherit; padding: .4rem .5rem; border: 1px solid var(--line); border-radius: 6px; }
+.leave-form input { font: inherit; padding: .4rem .5rem; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); }
 .leave-row { font-size: .92rem; }
 
 .sched-from { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; padding: 1rem; margin: 0 0 1rem; background: var(--sand); border-radius: 12px; }
 .sched-from label { font-weight: 600; }
-.sched-from input[type=date] { width: auto; min-width: 11rem; }
+.sched-from input[type=date] { width: auto; min-width: 11rem; font: inherit; padding: .4rem .5rem; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); }
 .sched-from p { flex-basis: 100%; margin: 0; }
 
 /* holidays and shop closures */
@@ -389,7 +389,7 @@ details.help > p { margin: 0; max-width: 75ch; color: var(--ink-soft); font-size
 /* onboarding period («Περίοδος προσαρμογής») */
 .onb-actions { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
 .onb-actions label { display: flex; gap: .4rem; align-items: center; font-size: .9rem; }
-.onb-actions input[type=date] { font: inherit; padding: .4rem .5rem; border: 1px solid var(--line); border-radius: 6px; }
+.onb-actions input[type=date] { font: inherit; padding: .4rem .5rem; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); }
 
 @media (hover: hover) {
   .btn:hover { filter: brightness(.9); }
@@ -451,7 +451,7 @@ button:disabled { cursor: default; }
 .mode-opt .mode-text { flex: 1 1 24rem; }
 .mode-now { color: var(--accent); font-weight: 600; }
 .mode-date { display: flex; gap: .4rem; align-items: center; margin-top: .4rem; font-size: .9rem; }
-.mode-date input[type=date] { font: inherit; padding: .35rem .5rem; border: 1px solid var(--line); border-radius: 6px; }
+.mode-date input[type=date] { font: inherit; padding: .4rem .5rem; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); }
 .mode-buttons { display: flex; flex-direction: column; gap: .4rem; align-items: stretch; }
 .cfg-advanced { margin-top: 1.4rem; padding-top: .8rem; border-top: 1px solid var(--line); }
 .cfg-sub { font-size: .95rem; margin: 1.1rem 0 .2rem; }
