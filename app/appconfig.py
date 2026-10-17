@@ -131,7 +131,7 @@ def save(group: str, values: dict, admin: str) -> None:
             continue
         clean[name] = CHECKS[name](str(v or "").strip())
     if group == "ntfy" and bool(clean.get("NTFY_URL")) != bool(clean.get("NTFY_TOPIC")):
-        raise ConfigError("Συμπλήρωσε και τον server και το θέμα, ή άφησέ τα και τα δύο κενά.")
+        raise ConfigError("Συμπληρώστε και τον server και το θέμα, ή αφήστε τα και τα δύο κενά.")
     if "EMPLOYER_AFM" in names and config.ERGANI_MODE != "dry_run" and not clean.get("EMPLOYER_AFM"):
         raise ConfigError("Το ΑΦΜ χρειάζεται όσο η Karta στέλνει στο ΕΡΓΑΝΗ.")
     if any(clean.get(n) for n in SECRETS) and not config.PIN_KEY:
@@ -210,9 +210,9 @@ def set_mode(mode: str, afm_typed: str, admin: str) -> None:
         return
     if mode != "dry_run":
         if not config.EMPLOYER_AFM:
-            raise ConfigError("Συμπλήρωσε πρώτα το ΑΦΜ της επιχείρησης.")
+            raise ConfigError("Συμπληρώστε πρώτα το ΑΦΜ της επιχείρησης.")
         if (afm_typed or "").strip() != config.EMPLOYER_AFM:
-            raise ConfigError("Για επιβεβαίωση γράψε ακριβώς το ΑΦΜ της επιχείρησης.")
+            raise ConfigError("Για επιβεβαίωση γράψτε ακριβώς το ΑΦΜ της επιχείρησης.")
         ok, msg = login_test(*creds_for(mode))
         if not ok:
             env = "δοκιμαστικό ΕΡΓΑΝΗ" if mode == "trial" else "ΕΡΓΑΝΗ"

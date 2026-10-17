@@ -711,3 +711,6 @@ Found on a Saturday, 17/10/2026, with Ergani showing «ΠΣ ΕΡΓΑΝΗ — Π�
      the staff list); the device times read 19:02, not 7:02 μ.μ.; the logo is chosen with a button like the restore
      file («Ανέβασμα λογότυπου…»), not the browser's bare «Choose File»; and every date field has the same frame and
      colours (in the dark theme too).
+139. **The admin side says «εσείς».** The admin page, its alerts (phone too), errors and the accountant's report mixed
+     «Πάτα / Γράψε / σου» with «Πατήστε / Γράψτε / σας»; now always «εσείς», like the wiki. What the employees read
+     stays friendly («εσύ»): the shop screen, the card page on their phone and the message with their card link.

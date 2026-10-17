@@ -37,10 +37,10 @@
 
   // errors that come from Cloudflare (not from Karta), in words the admin can act on
   function httpError(status) {
-    if (status === 524) return "Η Karta άργησε να απαντήσει και το Cloudflare σταμάτησε την αναμονή (σφάλμα 524). Δοκίμασε ξανά σε λίγο.";
+    if (status === 524) return "Η Karta άργησε να απαντήσει και το Cloudflare σταμάτησε την αναμονή (σφάλμα 524). Δοκιμάστε ξανά σε λίγο.";
     if (status === 502 || status === 503 || status === 530)
       return `Το Cloudflare δεν βρίσκει την Karta (σφάλμα ${status}): ο server ή το tunnel δεν τρέχει, ή δεν έχει internet.`;
-    if (status === 522 || status === 523) return `Το Cloudflare δεν φτάνει στην Karta (σφάλμα ${status}). Δοκίμασε ξανά σε λίγο.`;
+    if (status === 522 || status === 523) return `Το Cloudflare δεν φτάνει στην Karta (σφάλμα ${status}). Δοκιμάστε ξανά σε λίγο.`;
     return `Σφάλμα ${status}`;
   }
   async function api(path, body) {
@@ -81,7 +81,7 @@
     box.hidden = false;
     box.replaceChildren(el("strong", {}, r.pin.replace(/(\d{3})(\d{3})/, "$1 $2")),
       viewing ? `Τρέχον PIN για ${r.name}. Κρύβεται σε 20 δευτερόλεπτα.`
-              : `PIN για ${r.name}. Δώσ' το στον/στην εργαζόμενο/η — μπορείς να το ξαναδείς με «Εμφάνιση PIN».`);
+              : `PIN για ${r.name}. Δώστε το στον/στην εργαζόμενο/η — μπορείτε να το ξαναδείτε με «Εμφάνιση PIN».`);
     clearTimeout(showPin.h); showPin.h = setTimeout(() => hide(box), viewing ? 20000 : 120000);
   }
   // ---------- personal QR card (phone image / printable) ----------
@@ -102,7 +102,7 @@
       if (!L) {
         linkBox.replaceChildren(
           el("button", { class: "btn", onclick: act(async () => { renderLink(await api(`/admin/api/employees/${employee.id}/qr/link`, {}), true); }) }, "Σύνδεσμος για το κινητό"),
-          el("span", { class: "small" }, " Στέλνεις έναν σύνδεσμο (Viber/WhatsApp/SMS) που ισχύει 24 ώρες· ανοίγει την κάρτα στο κινητό του/της για αποθήκευση."));
+          el("span", { class: "small" }, " Στέλνετε έναν σύνδεσμο (Viber/WhatsApp/SMS) που ισχύει 24 ώρες· ανοίγει την κάρτα στο κινητό του/της για αποθήκευση."));
         return;
       }
       if (!fresh) {   // a link exists from before: its address is not stored, only its status
@@ -125,7 +125,7 @@
           el("a", { class: "btn ghost", href: `sms:?&body=${enc}` }, "SMS"),
           navigator.share ? el("button", { class: "btn ghost", onclick: async () => { try { await navigator.share({ text: msg }); } catch { /* cancelled */ } } }, "Αποστολή…") : null,
           el("button", { class: "link", onclick: async () => {
-            try { await navigator.clipboard.writeText(msg); toast("Αντιγράφηκε το μήνυμα με τον σύνδεσμο"); } catch { toast("Αντέγραψε τον σύνδεσμο από το πεδίο", true); }
+            try { await navigator.clipboard.writeText(msg); toast("Αντιγράφηκε το μήνυμα με τον σύνδεσμο"); } catch { toast("Αντιγράψτε τον σύνδεσμο από το πεδίο", true); }
           } }, "Αντιγραφή μηνύματος"),
           el("button", { class: "link danger", onclick: act(async () => { await api(`/admin/api/employees/${employee.id}/qr/link/revoke`, {}); renderLink(null); toast("Ο σύνδεσμος ακυρώθηκε"); }) }, "Ακύρωση συνδέσμου")));
     }
@@ -135,9 +135,9 @@
       el("img", { class: "qr-preview", src: url, alt: `Κάρτα QR ${employee.display_name}` }),
       el("div", { class: "qr-side" },
         el("strong", {}, `Κάρτα QR · ${employee.display_name}`),
-        el("p", { class: "small" }, "Στείλε την εικόνα στο κινητό του/της (π.χ. Viber) ή εκτύπωσέ την. Στην οθόνη του καταστήματος: «Κάρτα QR» και δείχνει την εικόνα στην κάμερα — χωρίς PIN."),
-        el("p", { class: "small warn-text" }, "Όποιος έχει την εικόνα μπορεί να χτυπήσει κάρτα για λογαριασμό του/της. Αν χαθεί ή δοθεί σε άλλον, πάτα «Νέα κάρτα»: η παλιά σταματά αμέσως."),
-        r.viewable === false ? el("p", { class: "small warn-text" }, "Χωρίς PIN_KEY η κάρτα δεν ξαναεμφανίζεται: κατέβασέ την τώρα.") : null,
+        el("p", { class: "small" }, "Στείλτε την εικόνα στο κινητό του/της (π.χ. Viber) ή εκτυπώστε την. Στην οθόνη του καταστήματος: «Κάρτα QR» και δείχνει την εικόνα στην κάμερα — χωρίς PIN."),
+        el("p", { class: "small warn-text" }, "Όποιος έχει την εικόνα μπορεί να χτυπήσει κάρτα για λογαριασμό του/της. Αν χαθεί ή δοθεί σε άλλον, πατήστε «Νέα κάρτα»: η παλιά σταματά αμέσως."),
+        r.viewable === false ? el("p", { class: "small warn-text" }, "Χωρίς PIN_KEY η κάρτα δεν ξαναεμφανίζεται: κατεβάστε την τώρα.") : null,
         el("div", { class: "qr-actions" },
           dl,
           canShare ? el("button", { class: "btn ghost", onclick: async () => { try { await navigator.share({ files: [file], title: fname }); } catch { /* cancelled */ } } }, "Αποστολή") : null,
@@ -182,7 +182,7 @@
     const nowR = radio("now"), forgotR = radio("forgot"), techR = radio("tech");
     (pastDay ? forgotR : nowR).checked = true;
     const time = el("input", { type: "time", value: pastDay ? "" : hhmm(new Date()), step: "60", "aria-label": "Ώρα αποχώρησης" });
-    const code = el("select", { "aria-label": "Αιτιολογία" }, el("option", { value: "" }, "— διάλεξε αιτιολογία —"),
+    const code = el("select", { "aria-label": "Αιτιολογία" }, el("option", { value: "" }, "— διαλέξτε αιτιολογία —"),
       ...LATE_CODES.map(([v, t]) => el("option", { value: v }, t)));
     const note = el("input", { type: "text", maxlength: "200", placeholder: "Σημείωση για το αρχείο", "aria-label": "Σημείωση" });
     const timeRow = el("label", {}, pastDay ? `Ώρα που έφυγε στις ${dayTxt} ` : "Ώρα που έφυγε ", time);
@@ -199,7 +199,7 @@
       help.textContent = onb && how === "now" ? "Περίοδος προσαρμογής: καταγράφεται στην κάρτα, ΔΕΝ στέλνεται στο ΕΡΓΑΝΗ (όπως και η προσέλευσή του/της)."
         : how === "now" ? "Στέλνεται στο ΕΡΓΑΝΗ τώρα, σε πραγματικό χρόνο. Μόνο αν φεύγει αυτή τη στιγμή."
         : how === "forgot" ? "ΔΕΝ στέλνεται στο ΕΡΓΑΝΗ. Η βάρδια κλείνει μόνο στην κάρτα (αναφορά, υπενθυμίσεις). Στο ΕΡΓΑΝΗ μένει ως παράλειψη χτυπήματος — η ξεχασμένη κάρτα δεν είναι τεχνικό πρόβλημα και δεν δηλώνεται εκπρόθεσμα."
-        : "Στέλνεται στο ΕΡΓΑΝΗ ως εκπρόθεσμη. ΜΟΝΟ αν υπήρξε πραγματικό τεχνικό πρόβλημα (ρεύμα, ίντερνετ, laptop/server, ΕΡΓΑΝΗ) — κράτα αποδεικτικά. Για απλή παράλειψη διάλεξε «Ξέχασε να χτυπήσει».";
+        : "Στέλνεται στο ΕΡΓΑΝΗ ως εκπρόθεσμη. ΜΟΝΟ αν υπήρξε πραγματικό τεχνικό πρόβλημα (ρεύμα, ίντερνετ, laptop/server, ΕΡΓΑΝΗ) — κρατήστε αποδεικτικά. Για απλή παράλειψη διαλέξτε «Ξέχασε να χτυπήσει».";
     };
     [nowR, forgotR, techR].forEach(r => r.addEventListener("change", sync));
     const go = el("button", { class: "btn", onclick: act(async () => {
@@ -207,15 +207,15 @@
       const body = { note: note.value.trim() };
       if (old) body.arrival_id = old.id;
       if (how !== "now") {
-        if (!time.value) { toast("Γράψε την ώρα που έφυγε", true); return; }
+        if (!time.value) { toast("Γράψτε την ώρα που έφυγε", true); return; }
         body.at = time.value;
       }
       if (how === "forgot") {
-        if (!body.note) { toast("Γράψε μια σημείωση (π.χ. ξέχασε να χτυπήσει αποχώρηση)", true); return; }
+        if (!body.note) { toast("Γράψτε μια σημείωση (π.χ. ξέχασε να χτυπήσει αποχώρηση)", true); return; }
         body.local = true;
       }
       if (how === "tech") {
-        if (!code.value) { toast("Διάλεξε αιτιολογία ΕΡΓΑΝΗ", true); return; }
+        if (!code.value) { toast("Διαλέξτε αιτιολογία ΕΡΓΑΝΗ", true); return; }
         body.justification = code.value;
       }
       const label = how === "now" ? "τώρα" : `στις ${pastDay ? dayTxt + " " : ""}${time.value}`;
@@ -263,8 +263,8 @@
       note,
       el("div", { class: "qr-actions" },
         el("button", { class: "btn", onclick: act(async () => {
-          if (!from.value || !to.value) { toast("Γράψε από–έως", true); return; }
-          if (!note.value.trim()) { toast("Γράψε μια σημείωση", true); return; }
+          if (!from.value || !to.value) { toast("Γράψτε από–έως", true); return; }
+          if (!note.value.trim()) { toast("Γράψτε μια σημείωση", true); return; }
           if (!await askBox(`Βάρδια ${e.display_name} ${day.value.slice(8, 10)}/${day.value.slice(5, 7)} ${from.value}–${to.value} μόνο στην κάρτα;\n\nΔεν στέλνεται στο ΕΡΓΑΝΗ.`)) return;
           await api(`/admin/api/employees/${e.id}/local-shift`, { day: day.value, start: from.value, end: to.value, note: note.value.trim() });
           close(); toast("Η βάρδια καταχωρήθηκε μόνο στην κάρτα");
@@ -298,7 +298,7 @@
         el("label", {}, "Είδος ", kind), el("label", {}, "Από ", from), el("label", {}, "Έως (τελευταία ημέρα άδειας) ", to), note),
       el("div", { class: "qr-actions" },
         el("button", { class: "btn", onclick: act(async () => {
-          if (!from.value || !to.value) { toast("Συμπλήρωσε ημερομηνίες", true); return; }
+          if (!from.value || !to.value) { toast("Συμπληρώστε ημερομηνίες", true); return; }
           await api(`/admin/api/employees/${e.id}/leaves`, { start: from.value, end: to.value, note: note.value.trim(), kind: kind.value });
           close(); toast(`${LEAVE_KINDS[kind.value]} ${e.display_name}: ${dmy(from.value)}–${dmy(to.value)}`);
         }) }, "Καταχώρηση άδειας"),
@@ -332,13 +332,13 @@
     box.replaceChildren(el("div", { class: "qr-side" },
       el("strong", {}, `Έφυγε νωρίτερα · ${e.display_name}`),
       t ? el("div", { class: "an-line warn" }, `Σήμερα αποχώρησε ${t.at}, ${Math.floor(t.minutes / 60)}:${String(t.minutes % 60).padStart(2, "0")} πριν τη λήξη (${t.end}).`) : null,
-      el("p", { class: "small" }, "Η αποχώρηση έχει ήδη σταλεί στο ΕΡΓΑΝΗ με την πραγματική ώρα — εδώ σημειώνεις μόνο τον λόγο. Η μηνιαία αναφορά δείχνει στο φύλλο «Απολογιστικές δηλώσεις» τις ώρες που δηλώνονται εκ των υστέρων στο ΕΡΓΑΝΗ (έως το τέλος του επόμενου μήνα). Την πληρωμή της ημέρας την κρίνει ο λογιστής."),
+      el("p", { class: "small" }, "Η αποχώρηση έχει ήδη σταλεί στο ΕΡΓΑΝΗ με την πραγματική ώρα — εδώ σημειώνετε μόνο τον λόγο. Η μηνιαία αναφορά δείχνει στο φύλλο «Απολογιστικές δηλώσεις» τις ώρες που δηλώνονται εκ των υστέρων στο ΕΡΓΑΝΗ (έως το τέλος του επόμενου μήνα). Την πληρωμή της ημέρας την κρίνει ο λογιστής."),
       ...(list.length ? [el("div", { class: "small" }, "Σημειώσεις:"), ...list] : []),
       el("div", { class: "leave-form" }, el("label", {}, "Ημέρα ", day), el("label", {}, "Λόγος ", reason), note),
       sickRow,
       el("div", { class: "qr-actions" },
         el("button", { class: "btn", onclick: act(async () => {
-          if (!day.value) { toast("Διάλεξε ημέρα", true); return; }
+          if (!day.value) { toast("Διαλέξτε ημέρα", true); return; }
           const sick = reason.value === "sick" && sickOn.checked;
           const from = new Date(Date.parse(day.value + "T12:00:00Z") + 864e5).toISOString().slice(0, 10);
           if (sick && (!sickTo.value || sickTo.value < from)) { toast("Η άδεια πρέπει να τελειώνει μετά την ημέρα της αποχώρησης", true); return; }
@@ -381,7 +381,7 @@
       const kids = [el("div", { class: "small" }, `Κανονικό ωράριο αυτής της ημέρας: ${reg && !reg.error ? reg.body.replace(/-/g, "–").replace(/\+/g, " + ") + (reg.b ? ` · διάλ. ${reg.b}′${reg.bo ? " εκτός ωραρίου" : ""}` : "") : "ρεπό"}`)];
       const sp = kind.value === "off" ? null : parseSpan(textOf());
       if (kind.value !== "off") {
-        if (!sp || sp.error) kids.push(el("div", { class: "an-line bad" }, "Γράψε τις ώρες της ημέρας όπως θα είναι δηλωμένες στο ΕΡΓΑΝΗ (αρχή και λήξη, «+ σπαστό» για δεύτερο κομμάτι)."));
+        if (!sp || sp.error) kids.push(el("div", { class: "an-line bad" }, "Γράψτε τις ώρες της ημέρας όπως θα είναι δηλωμένες στο ΕΡΓΑΝΗ (αρχή και λήξη, «+ σπαστό» για δεύτερο κομμάτι)."));
         else {
           const leave = sp.e + (sp.bo ? sp.b : 0);
           kids.push(el("div", { class: "an-line" }, `Πληρωμένες ώρες ${H(netMin(sp))}${sp.b ? ` · διάλειμμα ${sp.b}′${sp.bo ? " εκτός ωραρίου" : ""}` : ""} · αποχώρηση ${sp.bo ? `από ${hh(sp.e)} έως ${hh(leave)}` : `στις ${hh(sp.e)}`}` +
@@ -390,11 +390,11 @@
       }
       const t = e.today;
       if (day.value === today && t && kind.value !== "off" && !t.ot_by) {
-        kids.push(el("div", { class: "an-line" }, "Απολογιστικό σύστημα: πέρασέ την εδώ· στο ΕΡΓΑΝΗ δηλώνεται έως το τέλος του επόμενου μήνα (φύλλο «Απολογιστικές δηλώσεις» της μηνιαίας αναφοράς)."));
+        kids.push(el("div", { class: "an-line" }, "Απολογιστικό σύστημα: περάστε την εδώ· στο ΕΡΓΑΝΗ δηλώνεται έως το τέλος του επόμενου μήνα (φύλλο «Απολογιστικές δηλώσεις» της μηνιαίας αναφοράς)."));
       } else if (day.value === today && t && kind.value !== "off") {
         kids.push(el("div", { class: `an-line ${t.ot_passed ? "bad" : "warn"}` }, t.ot_passed
-          ? `Η προθεσμία για σήμερα ήταν ${t.ot_by} (${d.settings.ot_deadline_minutes}′ πριν τη λήξη ${t.end}). Αν η υπερωρία δεν δηλώθηκε εγκαίρως στο ΕΡΓΑΝΗ, ΜΗΝ την περάσεις: ${e.display_name} φεύγει έως ${t.end}.`
-          : `Δήλωσε πρώτα την υπερωρία στο ΕΡΓΑΝΗ — προθεσμία σήμερα έως ${t.ot_by} (${d.settings.ot_deadline_minutes}′ πριν τη λήξη ${t.end}). Μετά πέρασέ την εδώ.`));
+          ? `Η προθεσμία για σήμερα ήταν ${t.ot_by} (${d.settings.ot_deadline_minutes}′ πριν τη λήξη ${t.end}). Αν η υπερωρία δεν δηλώθηκε εγκαίρως στο ΕΡΓΑΝΗ, ΜΗΝ την περάσετε: ${e.display_name} φεύγει έως ${t.end}.`
+          : `Δηλώστε πρώτα την υπερωρία στο ΕΡΓΑΝΗ — προθεσμία σήμερα έως ${t.ot_by} (${d.settings.ot_deadline_minutes}′ πριν τη λήξη ${t.end}). Μετά περάστε την εδώ.`));
       }
       info.replaceChildren(...kids);
     };
@@ -410,17 +410,17 @@
       }) }, "Ακύρωση")));
     box.replaceChildren(el("div", { class: "qr-side" },
       el("strong", {}, `Υπερωρία / αλλαγή ημέρας · ${e.display_name}`),
-      el("p", { class: "small" }, "Για μία ημέρα: υπερωρία, άλλο ωράριο, ή ρεπό (και για εργασία σε αργία ή όταν το κατάστημα είναι κλειστό). ΠΡΩΤΑ τη δηλώνεις στο ΕΡΓΑΝΗ, ΜΕΤΑ την περνάς εδώ: οι υπενθυμίσεις, οι ειδοποιήσεις και η αναφορά ακολουθούν το νέο ωράριο, και η αναφορά δείχνει τις δηλωμένες επιπλέον ώρες χωριστά. Εδώ δεν στέλνεται τίποτα στο ΕΡΓΑΝΗ."),
+      el("p", { class: "small" }, "Για μία ημέρα: υπερωρία, άλλο ωράριο, ή ρεπό (και για εργασία σε αργία ή όταν το κατάστημα είναι κλειστό). ΠΡΩΤΑ τη δηλώνετε στο ΕΡΓΑΝΗ, ΜΕΤΑ την περνάτε εδώ: οι υπενθυμίσεις, οι ειδοποιήσεις και η αναφορά ακολουθούν το νέο ωράριο, και η αναφορά δείχνει τις δηλωμένες επιπλέον ώρες χωριστά. Εδώ δεν στέλνεται τίποτα στο ΕΡΓΑΝΗ."),
       ...(list.length ? [el("div", { class: "small" }, "Επόμενες αλλαγές:"), ...list] : []),
       el("div", { class: "leave-form" }, el("label", {}, "Ημέρα ", day), el("label", {}, "Είδος ", kind),
         note), hoursBox,
       info,
       el("div", { class: "qr-actions" },
         el("button", { class: "btn", onclick: act(async () => {
-          if (kind.value !== "off") { const sp = parseSpan(textOf()); if (!sp || sp.error) { toast("Γράψε σωστά τις ώρες της ημέρας", true); return; } }
+          if (kind.value !== "off") { const sp = parseSpan(textOf()); if (!sp || sp.error) { toast("Γράψτε σωστά τις ώρες της ημέρας", true); return; } }
           const t = e.today;
           if (day.value === today && t && t.ot_passed && kind.value !== "off" &&
-              !await askBox(`Η προθεσμία ήταν ${t.ot_by}.\n\nΠέρασέ την ΜΟΝΟ αν η αλλαγή δηλώθηκε στο ΕΡΓΑΝΗ πριν τις ${t.ot_by}. Αλλιώς ${e.display_name} πρέπει να φύγει έως ${t.end}.\n\nΣυνέχεια;`)) return;
+              !await askBox(`Η προθεσμία ήταν ${t.ot_by}.\n\nΠεράστε την ΜΟΝΟ αν η αλλαγή δηλώθηκε στο ΕΡΓΑΝΗ πριν τις ${t.ot_by}. Αλλιώς ${e.display_name} πρέπει να φύγει έως ${t.end}.\n\nΣυνέχεια;`)) return;
           const r = await api(`/admin/api/employees/${e.id}/day-change`, { day: day.value, kind: kind.value, text: kind.value === "off" ? "" : textOf(), note: note.value.trim() });
           close(); toast(`${e.display_name} ${dmy(day.value)}: ${kind.value === "off" ? "ρεπό" : r.text}` + (r.late_after ? ` — καταχωρήθηκε μετά την προθεσμία ${r.late_after}` : ""), !!r.late_after);
         }) }, "Καταχώρηση"),
@@ -446,7 +446,7 @@
         }) }, "Ακύρωση"))) : [el("p", { class: "small" }, "Κανένα προγραμματισμένο κλείσιμο.")]),
       el("div", { class: "leave-form" }, el("label", {}, "Από ", cFrom), el("label", {}, "Έως (τελευταία κλειστή ημέρα) ", cTo), cWhy,
         el("button", { class: "btn", onclick: act(async () => {
-          if (!cWhy.value.trim()) { toast("Γράψε την αιτία", true); return; }
+          if (!cWhy.value.trim()) { toast("Γράψτε την αιτία", true); return; }
           await api("/admin/api/closures", { start: cFrom.value, end: cTo.value, reason: cWhy.value.trim() });
           toast(`Κλειστό ${dmy(cFrom.value)}–${dmy(cTo.value)}`);
         }) }, "Προσθήκη")));
@@ -456,7 +456,7 @@
     const wdName = iso => DAYS[(new Date(iso + "T12:00:00Z").getUTCDay() + 6) % 7];
     const holBox = el("div", { class: "off-block" },
       el("h3", {}, "Αργίες (επόμενοι 12 μήνες)"),
-      el("p", { class: "small" }, "Υπολογίζονται μόνες τους κάθε χρόνο (και οι κινητές του Πάσχα). Τσεκαρισμένο = το κατάστημα είναι κλειστό. Η Μεγάλη Παρασκευή είναι από προεπιλογή ανοιχτή — τσέκαρέ την αν κλείνετε. Αν μια αργία μετατεθεί με απόφαση (συμβαίνει με την Πρωτομαγιά όταν πέφτει κοντά στο Πάσχα), ξετσέκαρε την αρχική ημερομηνία και βάλε τη νέα στο «Κλείσιμο καταστήματος»."),
+      el("p", { class: "small" }, "Υπολογίζονται μόνες τους κάθε χρόνο (και οι κινητές του Πάσχα). Τσεκαρισμένο = το κατάστημα είναι κλειστό. Η Μεγάλη Παρασκευή είναι από προεπιλογή ανοιχτή — τσεκάρετέ την αν κλείνετε. Αν μια αργία μετατεθεί με απόφαση (συμβαίνει με την Πρωτομαγιά όταν πέφτει κοντά στο Πάσχα), ξετσεκάρετε την αρχική ημερομηνία και βάλτε τη νέα στο «Κλείσιμο καταστήματος»."),
       el("table", { class: "hol-table" }, ...upcoming.map(h => {
         const cb = el("input", { type: "checkbox", "aria-label": `Κλειστά ${h.name}` });
         cb.checked = h.closed;
@@ -475,7 +475,7 @@
     const saveLocal = items => api("/admin/api/local-holidays", { items });
     const localBox = el("div", { class: "off-block" },
       el("h3", {}, "Τοπικές αργίες (κάθε χρόνο την ίδια ημερομηνία)"),
-      d.local_holidays.length ? null : el("p", { class: "small" }, "Καμία ακόμα. Πρόσθεσε π.χ. τη γιορτή του πολιούχου της πόλης σου, αν κλείνετε τότε."),
+      d.local_holidays.length ? null : el("p", { class: "small" }, "Καμία ακόμα. Προσθέστε π.χ. τη γιορτή του πολιούχου της πόλης σας, αν κλείνετε τότε."),
       ...d.local_holidays.map((x, i) => el("div", { class: "leave-row" }, `${x.md.slice(3, 5)}/${x.md.slice(0, 2)} · ${x.name} `,
         el("button", { class: "link danger", onclick: act(async () => {
           if (!await askBox(`Αφαίρεση της τοπικής αργίας «${x.name}»;`)) return;
@@ -484,7 +484,7 @@
       el("div", { class: "leave-form" }, lMd, lName,
         el("button", { class: "btn ghost", onclick: act(async () => {
           const m = /^(\d{1,2})\/(\d{1,2})$/.exec(lMd.value.trim());
-          if (!m || !lName.value.trim()) { toast("Γράψε ημέρα/μήνα (π.χ. 15/05) και όνομα", true); return; }
+          if (!m || !lName.value.trim()) { toast("Γράψτε ημέρα/μήνα (π.χ. 15/05) και όνομα", true); return; }
           const md = `${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`;
           await saveLocal([...d.local_holidays, { md, name: lName.value.trim() }]); toast("Η τοπική αργία προστέθηκε");
         }) }, "Προσθήκη")));
@@ -603,7 +603,7 @@
         el("button", { class: "btn", type: "button", onclick: save }, "Αποθήκευση στοιχείων"),
         el("button", { class: "link", type: "button", onclick: () => { theme.value = "karta"; theme.dispatchEvent(new Event("change")); } }, "Αρχικά χρώματα")),
       el("div", { class: "brand-logo-row" }, logoImg,
-        el("div", {}, el("div", { class: "small" }, b.has_logo ? "Λογότυπο (PNG, JPG ή WebP, έως 1 MB· καλύτερα τετράγωνο με διάφανο φόντο):" : "Χωρίς λογότυπο: η οθόνη δείχνει την επωνυμία. Ανέβασε PNG, JPG ή WebP έως 1 MB (καλύτερα τετράγωνο με διάφανο φόντο):"),
+        el("div", {}, el("div", { class: "small" }, b.has_logo ? "Λογότυπο (PNG, JPG ή WebP, έως 1 MB· καλύτερα τετράγωνο με διάφανο φόντο):" : "Χωρίς λογότυπο: η οθόνη δείχνει την επωνυμία. Ανεβάστε PNG, JPG ή WebP έως 1 MB (καλύτερα τετράγωνο με διάφανο φόντο):"),
           el("label", { class: "btn ghost", for: "logoFile" }, b.has_logo ? "Αλλαγή λογότυπου…" : "Ανέβασμα λογότυπου…"), file,
           b.has_logo ? el("button", { class: "link danger", onclick: act(async () => {
             if (!await askBox("Αφαίρεση του λογότυπου;")) return;
@@ -624,7 +624,7 @@
   }
   const input = (value, attrs = {}) => el("input", { type: "text", value: value || "", ...attrs });
   const secretInput = (info, ph) => el("input", { type: "password", autocomplete: "new-password",
-    placeholder: info.set ? "•••••• (αποθηκευμένος· άφησέ το κενό για να μείνει)" : ph });
+    placeholder: info.set ? "•••••• (αποθηκευμένος· αφήστε το κενό για να μείνει)" : ph });
   function userTypeSelect(value, fallback) {
     const s = el("select", {},
       el("option", { value: "01" }, "01: χρήστης API (web services)"),
@@ -701,7 +701,7 @@
     const today = todayAthens();
     const until = el("input", { type: "date", min: isoPlus(today, 1), max: isoPlus(today, 366), value: onboard ? onboard.until : "",
                                 "aria-label": "Υποχρεωτική χρήση από" });
-    const askAfm = async text => { const t = await askBox(`${text}\n\nΓια επιβεβαίωση γράψε το ΑΦΜ της επιχείρησης:`, { input: true, inputmode: "numeric" }); return t === null ? null : t.trim(); };
+    const askAfm = async text => { const t = await askBox(`${text}\n\nΓια επιβεβαίωση γράψτε το ΑΦΜ της επιχείρησης:`, { input: true, inputmode: "numeric" }); return t === null ? null : t.trim(); };
     const setMode = async (m, afm, onboarding_until, done) => { await api("/admin/api/mode", { mode: m, afm, onboarding_until }); toast(done); };
     const choose = {
       dry_run: async () => {
@@ -710,14 +710,14 @@
         await setMode("dry_run", "", null, "Δοκιμαστική λειτουργία");
       },
       onboarding: async () => {
-        if (!until.value) { toast("Διάλεξε την ημερομηνία που η κάρτα γίνεται υποχρεωτική", true); return; }
+        if (!until.value) { toast("Διαλέξτε την ημερομηνία που η κάρτα γίνεται υποχρεωτική", true); return; }
         if (onboard) {          // only a new date
-          if (until.value === onboard.until) { toast("Διάλεξε νέα ημερομηνία", true); return; }
+          if (until.value === onboard.until) { toast("Διαλέξτε νέα ημερομηνία", true); return; }
           await api("/admin/api/onboarding", { until: until.value }); toast(`Η κάρτα γίνεται υποχρεωτική ${fmtDayLong(until.value)}`);
           return;
         }
         const text = `Περίοδος προσαρμογής έως και ${fmtDayLong(isoPlus(until.value, -1))};\n\nΤα χτυπήματα καταγράφονται κανονικά αλλά ΔΕΝ στέλνονται ` +
-          `στο ΕΡΓΑΝΗ. Από ${fmtDayLong(until.value)} στέλνονται μόνα τους, χωρίς να κάνεις τίποτα.\n\nΜόνο αν η κάρτα δεν είναι ακόμα υποχρεωτική για την επιχείρηση.`;
+          `στο ΕΡΓΑΝΗ. Από ${fmtDayLong(until.value)} στέλνονται μόνα τους, χωρίς να κάνετε τίποτα.\n\nΜόνο αν η κάρτα δεν είναι ακόμα υποχρεωτική για την επιχείρηση.`;
         let afm = "";
         if (mode === "production") { if (!await askBox(text)) return; }
         else { afm = await askAfm(`${text} Πρώτα γίνεται δοκιμή σύνδεσης στο ΕΡΓΑΝΗ.`); if (afm === null) return; }
@@ -749,7 +749,7 @@
         ? `Από ${fmtDayLong(onboard.since)}: το προσωπικό χτυπά κανονικά (υπενθυμίσεις, ειδοποιήσεις, αναφορές), αλλά τίποτα δεν στέλνεται στο ΕΡΓΑΝΗ. ` +
           `Η κάρτα γίνεται υποχρεωτική ${fmtDayLong(onboard.until)} (${days(onboard.days_left)}) και τότε η αποστολή ξεκινά μόνη της.`
         : "Για όσο η κάρτα δεν είναι ακόμα υποχρεωτική: το προσωπικό τη χρησιμοποιεί κανονικά (υπενθυμίσεις, ειδοποιήσεις, αναφορές), αλλά τίποτα " +
-          "δεν στέλνεται στο ΕΡΓΑΝΗ μέχρι την ημερομηνία που ορίζεις· από εκείνη τη μέρα η αποστολή ξεκινά μόνη της."],
+          "δεν στέλνεται στο ΕΡΓΑΝΗ μέχρι την ημερομηνία που ορίζετε· από εκείνη τη μέρα η αποστολή ξεκινά μόνη της."],
       ["production", "Κανονική λειτουργία", "Κάθε χτύπημα δηλώνεται στο πραγματικό ΕΡΓΑΝΗ και έχει νομική ισχύ."],
     ];
     const buttons = k => k === "onboarding" && cur === "onboarding"
@@ -1141,13 +1141,13 @@
     const on = !!d.settings.kiosk_reminders;
     document.getElementById("remState").replaceChildren(el("div", { class: `an-line ${on ? "ok" : "muted"} send-row` },
       el("span", {}, on
-        ? `Υπενθυμίσεις στο κατάστημα: ενεργές — όποιος δεν έχει χτυπήσει προσέλευση/αποχώρηση στην ώρα του βλέπει και ακούει υπενθύμιση κάθε 30″. Μετά από ${d.settings.grace_minutes}′ ειδοποίηση στο κινητό σου${d.retro ? " (στη λήξη της ημέρας μετά από 10′, απολογιστικό σύστημα)" : ""}.`
-        : "Υπενθυμίσεις στο κατάστημα: απενεργοποιημένες (οι ειδοποιήσεις στο κινητό σου συνεχίζουν)."),
+        ? `Υπενθυμίσεις στο κατάστημα: ενεργές — όποιος δεν έχει χτυπήσει προσέλευση/αποχώρηση στην ώρα του βλέπει και ακούει υπενθύμιση κάθε 30″. Μετά από ${d.settings.grace_minutes}′ ειδοποίηση στο κινητό σας${d.retro ? " (στη λήξη της ημέρας μετά από 10′, απολογιστικό σύστημα)" : ""}.`
+        : "Υπενθυμίσεις στο κατάστημα: απενεργοποιημένες (οι ειδοποιήσεις στο κινητό σας συνεχίζουν)."),
       el("button", { class: on ? "btn ghost" : "btn", onclick: act(async () => {
         await api("/admin/api/settings", { values: { kiosk_reminders: on ? 0 : 1 } });
         toast(on ? "Οι υπενθυμίσεις στο κατάστημα απενεργοποιήθηκαν" : "Οι υπενθυμίσεις στο κατάστημα ενεργοποιήθηκαν");
       }) }, on ? "Απενεργοποίηση" : "Ενεργοποίηση")),
-      d.closed_today ? el("div", { class: "an-line muted" }, `Σήμερα: ${d.closed_today} — καμία υπενθύμιση ή ειδοποίηση, και η οθόνη δεν δέχεται προσέλευση (εκτός αν πέρασες ωράριο με «Υπερωρία / αλλαγή ημέρας…»).`) : "");
+      d.closed_today ? el("div", { class: "an-line muted" }, `Σήμερα: ${d.closed_today} — καμία υπενθύμιση ή ειδοποίηση, και η οθόνη δεν δέχεται προσέλευση (εκτός αν περάσατε ωράριο με «Υπερωρία / αλλαγή ημέρας…»).`) : "");
   }
 
   // ---------- onboarding period («Περίοδος προσαρμογής»): real use of the card, nothing sent until a date ----------
@@ -1163,7 +1163,7 @@
       : ob ? ["Περίοδος προσαρμογής", `τίποτα δεν στέλνεται ${where}· η αποστολή ξεκινά ${fmtDayLong(ob.until)}`]
       : d.mode === "trial" ? ["Δοκιμαστικό ΕΡΓΑΝΗ", "οι κινήσεις στέλνονται στο δοκιμαστικό ΕΡΓΑΝΗ, χωρίς ισχύ"]
       : ["Κανονική λειτουργία", "οι κινήσεις στέλνονται στο ΕΡΓΑΝΗ"];
-    const extra = (d.held ? ` · σε αναμονή/επανάληψη: ${d.held}` : "") + (d.uncertain ? ` · προς έλεγχο: ${d.uncertain} (δες «Κινήσεις»)` : "");
+    const extra = (d.held ? ` · σε αναμονή/επανάληψη: ${d.held}` : "") + (d.uncertain ? ` · προς έλεγχο: ${d.uncertain} (δείτε «Κινήσεις»)` : "");
     const cls = d.uncertain || d.mode === "dry_run" || d.mode === "trial" ? "warn" : "ok";
     box.replaceChildren(el("div", { class: `an-line ${cls} send-row` },
       el("span", {}, "Λειτουργία: ", el("strong", {}, name), ` · ${text}${extra}.`)));
@@ -1319,9 +1319,9 @@
       if (F.week_days && F.week_days !== work.length)
         lines.push({ cls: "warn", text: `Στο ΕΡΓΑΝΗ είναι ${F.week_days}ήμερη απασχόληση, εδώ ${work.length} ημέρες.` });
       if (F.full_time === false)
-        lines.push({ cls: "warn", text: "Μερική απασχόληση κατά το ΕΡΓΑΝΗ: κάθε ώρα πάνω από τις συμφωνημένες είναι πρόσθετη εργασία με προσαύξηση — ρώτα τον λογιστή." });
+        lines.push({ cls: "warn", text: "Μερική απασχόληση κατά το ΕΡΓΑΝΗ: κάθε ώρα πάνω από τις συμφωνημένες είναι πρόσθετη εργασία με προσαύξηση — ρωτήστε τον λογιστή." });
       if (F.arrangement === true)
-        lines.push({ cls: "ok", text: "Στο ΕΡΓΑΝΗ υπάρχει διευθέτηση χρόνου εργασίας: έως 10 ώρες/ημέρα χωρίς υπερωρία, αν τη συμψηφίζετε. Μπορείς να ορίσεις «Όριο ημέρας» 10 στα Όρια." });
+        lines.push({ cls: "ok", text: "Στο ΕΡΓΑΝΗ υπάρχει διευθέτηση χρόνου εργασίας: έως 10 ώρες/ημέρα χωρίς υπερωρία, αν τη συμψηφίζετε. Μπορείτε να ορίσετε «Όριο ημέρας» 10 στα Όρια." });
       else if (F.arrangement === false && weekOT > 0)
         lines.push({ cls: "warn", text: "Στο ΕΡΓΑΝΗ δεν υπάρχει δηλωμένη διευθέτηση χρόνου εργασίας, άρα οι ώρες πάνω από το όριο ημέρας είναι υπερωρία." });
     }
@@ -1331,7 +1331,7 @@
       const year = weekOT * 46 / 60;
       lines.push({ cls: year > 150 ? "bad" : "warn",
         text: `Υπερωρία ${H(weekOT)}/εβδομάδα ≈ ${Math.round(year)} ώρες τον χρόνο (όριο 150). ` +
-              (year > 150 ? "Ξεπερνά το ετήσιο όριο — χρειάζεται αλλαγή ωραρίου ή διευθέτηση χρόνου εργασίας (ρώτα τον λογιστή)."
+              (year > 150 ? "Ξεπερνά το ετήσιο όριο — χρειάζεται αλλαγή ωραρίου ή διευθέτηση χρόνου εργασίας (ρωτήστε τον λογιστή)."
                           : RETRO ? "Δηλώνεται απολογιστικά στο ΕΡΓΑΝΗ, έως το τέλος του επόμενου μήνα."
                                   : "Κάθε φορά πρέπει να δηλώνεται στο ΕΡΓΑΝΗ πριν γίνει.") });
     }
@@ -1341,7 +1341,7 @@
   function salonInsight(box, values, L) {
     const spans = values.map(parseSpan);
     const open = spans.map((sp, i) => ({ sp, i })).filter(x => x.sp && !x.sp.error);
-    if (!open.length) { box.replaceChildren(el("div", { class: "an-line muted" }, "Συμπλήρωσε τις ώρες λειτουργίας για να δεις τι σημαίνουν για το προσωπικό.")); return; }
+    if (!open.length) { box.replaceChildren(el("div", { class: "an-line muted" }, "Συμπληρώστε τις ώρες λειτουργίας για να δείτε τι σημαίνουν για το προσωπικό.")); return; }
     const total = open.reduce((a, x) => a + x.sp.g, 0);
     const oneFull = analyse(values.map(v => { const sp = parseSpan(v); return sp && !sp.error && sp.g > 240 ? `${v.trim()}/30` : v; }), L);
     const longDays = open.filter(x => netMin({ ...x.sp, b: 30 }) > L.daily_max_hours * 60).map(x => DAY_FULL[x.i]);
@@ -1357,14 +1357,14 @@
   }
 
   const LIMIT_HELP = {
-    grace_minutes: v => `Αν κάποιος δεν έχει χτυπήσει προσέλευση ${v}′ μετά την έναρξη του ωραρίου του, ή είναι ακόμα μέσα ${RETRO ? "10′ (απολογιστικό σύστημα)" : `${v}′`} μετά τη λήξη, σου έρχεται ειδοποίηση στο κινητό. Στο κατάστημα η υπενθύμιση ξεκινά από την ακριβή ώρα.`,
+    grace_minutes: v => `Αν κάποιος δεν έχει χτυπήσει προσέλευση ${v}′ μετά την έναρξη του ωραρίου του, ή είναι ακόμα μέσα ${RETRO ? "10′ (απολογιστικό σύστημα)" : `${v}′`} μετά τη λήξη, σας έρχεται ειδοποίηση στο κινητό. Στο κατάστημα η υπενθύμιση ξεκινά από την ακριβή ώρα.`,
     early_minutes: v => +v === 0
-      ? "Κανείς δεν μπορεί να χτυπήσει προσέλευση πριν την ώρα έναρξης του ωραρίου του. Αν προσπαθήσει, η οθόνη το αρνείται και σου έρχεται ειδοποίηση."
-      : `Επιτρέπεται προσέλευση έως ${v}′ πριν την έναρξη του ωραρίου. Νωρίτερα η οθόνη το αρνείται και σου έρχεται ειδοποίηση. (Το ΕΡΓΑΝΗ δεν δίνει ανοχή: για να είσαι 100% καλυμμένος άφησέ το 0.)`,
-    ot_deadline_minutes: v => `Υπερωρία ή αργότερη αποχώρηση δηλώνεται στο ΕΡΓΑΝΗ τουλάχιστον ${v}′ πριν τη λήξη του ωραρίου. Η λίστα εργαζομένων δείχνει κάθε μέρα την προθεσμία («υπερωρία δηλώνεται έως …»), και η «Υπερωρία / αλλαγή ημέρας…» σε προειδοποιεί αν πέρασε. Μετά τη λήξη χωρίς δηλωμένη υπερωρία: αποχώρηση αμέσως, με την πραγματική ώρα.`,
+      ? "Κανείς δεν μπορεί να χτυπήσει προσέλευση πριν την ώρα έναρξης του ωραρίου του. Αν προσπαθήσει, η οθόνη το αρνείται και σας έρχεται ειδοποίηση."
+      : `Επιτρέπεται προσέλευση έως ${v}′ πριν την έναρξη του ωραρίου. Νωρίτερα η οθόνη το αρνείται και σας έρχεται ειδοποίηση. (Το ΕΡΓΑΝΗ δεν δίνει ανοχή: για να είστε 100% καλυμμένος αφήστε το 0.)`,
+    ot_deadline_minutes: v => `Υπερωρία ή αργότερη αποχώρηση δηλώνεται στο ΕΡΓΑΝΗ τουλάχιστον ${v}′ πριν τη λήξη του ωραρίου. Η λίστα εργαζομένων δείχνει κάθε μέρα την προθεσμία («υπερωρία δηλώνεται έως …»), και η «Υπερωρία / αλλαγή ημέρας…» σας προειδοποιεί αν πέρασε. Μετά τη λήξη χωρίς δηλωμένη υπερωρία: αποχώρηση αμέσως, με την πραγματική ώρα.`,
     ot_notice_minutes: v => +v === 0
       ? "Καμία υπενθύμιση στο κινητό για την προθεσμία της υπερωρίας (η λίστα εργαζομένων τη δείχνει πάντα)."
-      : `Ειδοποίηση στο κινητό ${v}′ πριν την προθεσμία, με όσους είναι μέσα και λήγουν εκείνη την ώρα: «αν χρειαστεί να μείνει κάποιος, δήλωσε υπερωρία έως …». Μία φορά ανά ώρα λήξης.`,
+      : `Ειδοποίηση στο κινητό ${v}′ πριν την προθεσμία, με όσους είναι μέσα και λήγουν εκείνη την ώρα: «αν χρειαστεί να μείνει κάποιος, δηλώστε υπερωρία έως …». Μία φορά ανά ώρα λήξης.`,
     escalate_minutes: v => `Αν συνεχίζει ${v}′ αργότερα: επείγον, με ήχο κάθε 2 λεπτά μέχρι να χτυπήσει αποχώρηση.`,
     daily_max_hours: v => `Μετά από ${v} ώρες καθαρής εργασίας την ημέρα, κάθε λεπτό είναι υπερωρία και ${RETRO ? "δηλώνεται απολογιστικά στο ΕΡΓΑΝΗ έως το τέλος του επόμενου μήνα" : "πρέπει να έχει δηλωθεί στο ΕΡΓΑΝΗ πριν ξεκινήσει"}. Πενθήμερο: 9 · εξαήμερο: 8.`,
     weekly_max_hours: v => `Έως ${v} ώρες την εβδομάδα είναι κανονική εργασία (συμβατικό 40ωρο). Πάνω από αυτό: υπερεργασία, +20%.`,
@@ -1592,11 +1592,11 @@
         copy.addEventListener("change", () => {
           const v = copy.value; copy.value = "";
           if (!v) return;
-          if (v === "salon") { rows.set(salonValues()); toast("Αντιγράφηκε το ωράριο καταστήματος — προσάρμοσέ το και πάτα Αποθήκευση"); return; }
+          if (v === "salon") { rows.set(salonValues()); toast("Αντιγράφηκε το ωράριο καταστήματος — προσαρμόστε το και πατήστε Αποθήκευση"); return; }
           const o = staff.find(x => String(x.id) === v), src = sourceOf(o.id);
           setSelect(brkSel, src.b, breakLabel); inR.checked = !src.out; outR.checked = src.out;
           rows.set(src.bodies);
-          toast(`Αντιγράφηκαν οι ώρες και το διάλειμμα από ${o.display_name} — πάτα Αποθήκευση`);
+          toast(`Αντιγράφηκαν οι ώρες και το διάλειμμα από ${o.display_name} — πατήστε Αποθήκευση`);
         });
 
         let ref = null;
@@ -1606,7 +1606,7 @@
           if (ei.proposal_week) kids.push(el("div", { class: "sub warn-text" }, `⚠ Οι ώρες ανά ημέρα είναι του ψηφιακού ωραρίου που ίσχυε ${oldHours}: ` +
             "το ΕΡΓΑΝΗ δεν δίνει τον τρέχοντα μήνα, οπότε μια αλλαγή μετά από τότε (π.χ. από τον λογιστή) δεν φαίνεται εδώ. " +
             "Οι υπόλοιπες τιμές (ώρες/εβδομάδα, διάλειμμα κ.λπ.) είναι οι τωρινές."));
-          else if (!ei.proposal && ei.digital) kids.push(el("div", { class: "sub" }, "Οι ώρες ανά ημέρα είναι στο ψηφιακό ωράριο του ΕΡΓΑΝΗ και δεν βρέθηκαν σε αυτή την ανάγνωση — συμπλήρωσέ τες ίδιες με τη δήλωση."));
+          else if (!ei.proposal && ei.digital) kids.push(el("div", { class: "sub" }, "Οι ώρες ανά ημέρα είναι στο ψηφιακό ωράριο του ΕΡΓΑΝΗ και δεν βρέθηκαν σε αυτή την ανάγνωση — συμπληρώστε τες ίδιες με τη δήλωση."));
           else if (!ei.proposal && ei.schedule_text) kids.push(el("div", { class: "sub" }, `Ωράριο ΕΡΓΑΝΗ (δεν διαβάστηκε αυτόματα): ${ei.schedule_text}`));
           if (ei.proposal || ei.break_minutes != null || ei.flex != null) kids.push(el("div", { class: "er-card-actions" }, el("button", { class: "link", type: "button", onclick: async () => {
             if (ei.proposal_week && !await askBox(`Οι ώρες ανά ημέρα θα έρθουν από το ψηφιακό ωράριο του ΕΡΓΑΝΗ για ${oldHours}.\n\n` +
@@ -1619,7 +1619,7 @@
             }
             if (ei.flex != null) { setSelect(flexSel, ei.flex, flexLabel); got.push("ευέλικτη προσέλευση"); }
             if (ei.proposal) { rows.set(DAYS.map((_, i) => ei.proposal[String(i)] || "")); got.unshift("ώρες"); }
-            refresh(); toast(`Από το ΕΡΓΑΝΗ: ${got.join(", ")}${ei.proposal_week ? ` (οι ώρες όπως ίσχυαν ${oldHours})` : ""} — έλεγξέ τα και πάτα Αποθήκευση`);
+            refresh(); toast(`Από το ΕΡΓΑΝΗ: ${got.join(", ")}${ei.proposal_week ? ` (οι ώρες όπως ίσχυαν ${oldHours})` : ""} — ελέγξτε τα και πατήστε Αποθήκευση`);
           } }, "Χρήση στοιχείων ΕΡΓΑΝΗ")));
           ref = el("div", { class: "er-ref" }, ...kids);
         }
@@ -1657,7 +1657,7 @@
     const tools = el("div", { class: "sched-tools" }, search, el("label", {}, issuesOnly, " Μόνο όσοι θέλουν προσοχή"), count, fold);
     tools.hidden = staff.length < 2;
     document.getElementById("scheds").replaceChildren(tools, list,
-      ...(staff.length ? [] : [el("p", { class: "small" }, "Κάνε πρώτα εισαγωγή εργαζομένων από το ΕΡΓΑΝΗ.")]));
+      ...(staff.length ? [] : [el("p", { class: "small" }, "Κάντε πρώτα εισαγωγή εργαζομένων από το ΕΡΓΑΝΗ.")]));
 
     // limits, each with a live explanation of what the value means
     const form = document.getElementById("limits");
@@ -1699,7 +1699,7 @@
       e.active && !e.inside ? el("button", { class: e.today && e.today.left && !e.today.left.reason ? "link strong" : "link", onclick: () => showEarlyLeave(e) }, "Έφυγε νωρίτερα…") : null,
       e.active && !e.inside ? el("button", { class: "link", onclick: () => showLocalShift(e, d.schedules[String(e.id)]) }, "Ξεχασμένη βάρδια…") : null,
       e.active && !e.inside && !e.early_allowed_today ? el("button", { class: "link", onclick: act(async () => {
-        if (!await askBox(`Νωρίτερη προσέλευση σήμερα για ${e.display_name};\n\nΚάν' το ΜΟΝΟ αφού δηλώσεις στο ΕΡΓΑΝΗ την αλλαγή ωραρίου (νωρίτερη έναρξη). Ισχύει μόνο για σήμερα.`)) return;
+        if (!await askBox(`Νωρίτερη προσέλευση σήμερα για ${e.display_name};\n\nΚάντε το ΜΟΝΟ αφού δηλώσετε στο ΕΡΓΑΝΗ την αλλαγή ωραρίου (νωρίτερη έναρξη). Ισχύει μόνο για σήμερα.`)) return;
         await api(`/admin/api/employees/${e.id}/allow-early`, {}); toast(`${e.display_name}: επιτρέπεται νωρίτερη προσέλευση σήμερα`);
       }) }, "Νωρίτερη προσέλευση σήμερα") : null,
       e.active && !e.inside && e.today && !e.today.over ? el("button", { class: "link", onclick: act(async () => {
@@ -1722,7 +1722,7 @@
         showPin({ name: r.name, pin: r.pin }, true);
       }) }, "Εμφάνιση PIN") : null,
       el("button", { class: "link", onclick: act(async () => {
-        const pin = await askBox(`Δικό σου PIN για ${e.display_name} (6 ψηφία):`, { input: true, inputmode: "numeric" });
+        const pin = await askBox(`Δικό σας PIN για ${e.display_name} (6 ψηφία):`, { input: true, inputmode: "numeric" });
         if (pin === null) return;
         await api(`/admin/api/employees/${e.id}/pin`, { pin: pin.replace(/\s/g, "") });
         toast(`Το PIN για ${e.display_name} ορίστηκε`);
@@ -1736,7 +1736,7 @@
         await api(`/admin/api/employees/${e.id}/active`, { active: !e.active });
       }) }, e.active ? "Απενεργοποίηση" : "Ενεργοποίηση"),
       el("button", { class: "link danger", onclick: act(async () => {
-        if (!await askBox(`Οριστική διαγραφή του/της ${e.display_name};\n\nΓίνεται μόνο αν δεν υπάρχουν πραγματικές κινήσεις κάρτας (οι δοκιμαστικές διαγράφονται μαζί). Αλλιώς χρησιμοποίησε «Απενεργοποίηση».`)) return;
+        if (!await askBox(`Οριστική διαγραφή του/της ${e.display_name};\n\nΓίνεται μόνο αν δεν υπάρχουν πραγματικές κινήσεις κάρτας (οι δοκιμαστικές διαγράφονται μαζί). Αλλιώς χρησιμοποιήστε «Απενεργοποίηση».`)) return;
         const r = await api(`/admin/api/employees/${e.id}/delete`, {}); editorsFor = null;
         toast(`Διαγράφηκε: ${e.display_name}${r.test_movements ? ` (και ${r.test_movements} δοκιμαστικές κινήσεις)` : ""}`);
       }) }, "Διαγραφή"),
@@ -2018,9 +2018,9 @@
     calBox.replaceChildren(el("div", { class: "cal-head" }, prev, el("strong", {}, `${MONTHS[m - 1]} ${y}`), next),
       el("div", { class: "cal-grid" }, ...["Δε", "Τρ", "Τε", "Πε", "Πα", "Σα", "Κυ"].map(w => el("span", { class: "cal-wd", "aria-hidden": "true" }, w)), ...cells),
       el("p", { class: "cal-legend" }, el("span", {}, el("i", { class: "dot" }), "έχει χτυπήματα"),
-        el("span", {}, el("s", {}, "25"), "κλειστό / ρεπό / άδεια"), el("span", {}, "αχνό: τίποτα να δεις")));
-    selLine.textContent = !mv.from ? "Διάλεξε ημέρα στο ημερολόγιο."
-      : mv.from === mv.to ? `${dayTitle(mv.from)}${mv.anchor ? " · πάτα κι άλλη ημέρα για διάστημα" : ""}`
+        el("span", {}, el("s", {}, "25"), "κλειστό / ρεπό / άδεια"), el("span", {}, "αχνό: τίποτα να δείτε")));
+    selLine.textContent = !mv.from ? "Διαλέξτε ημέρα στο ημερολόγιο."
+      : mv.from === mv.to ? `${dayTitle(mv.from)}${mv.anchor ? " · πατήστε κι άλλη ημέρα για διάστημα" : ""}`
       : `${dayTitle(mv.from)} – ${dayTitle(mv.to)}`;
   }
   // one punch: time, punch in/out and how, what Ergani got, and what you can do about it
@@ -2035,7 +2035,7 @@
         await api(`/admin/api/movements/${m.id}/retry`, {}); toast("Μπήκε ξανά στην ουρά");
       }) }, "Νέα αποστολή") : null,
       m.status === "uncertain" ? el("div", {},
-        el("div", { class: "small warn-text" }, "Δεν ξέρουμε αν έφτασε στο ΕΡΓΑΝΗ. Έλεγξε τις κινήσεις κάρτας στο ΕΡΓΑΝΗ πριν διαλέξεις:"),
+        el("div", { class: "small warn-text" }, "Δεν ξέρουμε αν έφτασε στο ΕΡΓΑΝΗ. Ελέγξτε τις κινήσεις κάρτας στο ΕΡΓΑΝΗ πριν διαλέξετε:"),
         el("button", { class: "link", onclick: moveAct(async () => {
           const protocol = await askBox("Υπάρχει στο ΕΡΓΑΝΗ. Αριθμός πρωτοκόλλου (προαιρετικό):", { input: true });
           if (protocol === null) return;
@@ -2081,7 +2081,7 @@
     }
     if (!r.days.length) kids.push(el("p", { class: "small muted" }, "Τίποτα για αυτές τις ημέρες."));
     if (r.skipped && r.start !== r.end) kids.push(el("p", { class: "small muted" },
-      `${r.skipped} ${r.skipped === 1 ? "ημέρα" : "ημέρες"} χωρίς κάτι να δεις (κλειστό, ρεπό, άδεια) δεν εμφανίζονται.`));
+      `${r.skipped} ${r.skipped === 1 ? "ημέρα" : "ημέρες"} χωρίς κάτι να δείτε (κλειστό, ρεπό, άδεια) δεν εμφανίζονται.`));
     movResult.replaceChildren(...kids);
   }
   function renderAttention(d) {
@@ -2098,10 +2098,10 @@
     RETRO = !!d.retro;
     if (editorsFor !== editorsKey(d)) renderEditors(d);
     document.getElementById("erganiState").textContent = d.ergani_configured
-      ? "Στοιχεία σύνδεσης ΕΡΓΑΝΗ: ρυθμισμένα." : "Στοιχεία σύνδεσης ΕΡΓΑΝΗ: συμπλήρωσέ τα παραπάνω, στο «Επιχείρηση και σύνδεση με το ΕΡΓΑΝΗ».";
+      ? "Στοιχεία σύνδεσης ΕΡΓΑΝΗ: ρυθμισμένα." : "Στοιχεία σύνδεσης ΕΡΓΑΝΗ: συμπληρώστε τα παραπάνω, στο «Επιχείρηση και σύνδεση με το ΕΡΓΑΝΗ».";
     document.getElementById("erganiCheck").disabled = !d.ergani_configured;
     document.getElementById("ntfyState").textContent = d.ntfy
-      ? "Οι ειδοποιήσεις έρχονται και στο κινητό σου (ntfy)."
+      ? "Οι ειδοποιήσεις έρχονται και στο κινητό σας (ntfy)."
       : "Ειδοποιήσεις κινητού ανενεργές: ρυθμίζονται στις «Ρυθμίσεις» → «Ειδοποιήσεις στο κινητό».";
     const alertRows = d.alerts.map(a => el("div", { class: `alert-row ${a.level}${a.resolved_at ? " done" : ""}` },
       el("span", { class: "when" }, fmt(a.created_at)),
@@ -2127,11 +2127,11 @@
     if (d.mode === "trial") tmKids.push(el("p", { class: "an-line warn" },
       "Δοκιμαστικό ΕΡΓΑΝΗ: οι κινήσεις πάνε στο trialv2eservices.yeka.gr, σημειώνονται «ΑΚΥΡΟ» και δεν έχουν καμία νομική ισχύ. Δεν στέλνονται ποτέ στο πραγματικό ΕΡΓΑΝΗ."));
     if (d.stuck_other_mode) tmKids.push(el("p", { class: "an-line bad" },
-      `${d.stuck_other_mode} κινήσεις σε αναμονή έγιναν σε άλλη λειτουργία και δεν θα σταλούν σε αυτή (π.χ. δοκιμαστικές όταν είσαι σε παραγωγή).`));
+      `${d.stuck_other_mode} κινήσεις σε αναμονή έγιναν σε άλλη λειτουργία και δεν θα σταλούν σε αυτή (π.χ. δοκιμαστικές όταν είστε σε παραγωγή).`));
     if (d.test_movements) tmKids.push(el("div", { class: "er-actions" },
       el("span", { class: "small" }, `${d.test_movements} δοκιμαστικές κινήσεις (dry run / δοκιμαστικό ΕΡΓΑΝΗ). `),
       el("button", { class: "link danger", onclick: act(async () => {
-        if (!await askBox(`Διαγραφή ${d.test_movements} δοκιμαστικών κινήσεων;\n\nΟι πραγματικές κινήσεις (ΕΡΓΑΝΗ παραγωγής) δεν αγγίζονται ποτέ. Κάν' το πριν περάσεις σε παραγωγή, ώστε ωράρια, ειδοποιήσεις και αναφορά να ξεκινούν καθαρά.`)) return;
+        if (!await askBox(`Διαγραφή ${d.test_movements} δοκιμαστικών κινήσεων;\n\nΟι πραγματικές κινήσεις (ΕΡΓΑΝΗ παραγωγής) δεν αγγίζονται ποτέ. Κάντε το πριν περάσετε σε παραγωγή, ώστε ωράρια, ειδοποιήσεις και αναφορά να ξεκινούν καθαρά.`)) return;
         const r = await api("/admin/api/movements/purge-tests", {}); toast(`Διαγράφηκαν ${r.deleted} δοκιμαστικές κινήσεις`);
       }) }, "Διαγραφή δοκιμαστικών κινήσεων")));
     tm.replaceChildren(...tmKids);
@@ -2172,7 +2172,7 @@
     const c = document.getElementById("code");
     c.hidden = false;
     c.replaceChildren(el("strong", {}, r.code),
-      `Ισχύει ${r.expires_minutes} λεπτά. Στο tablet άνοιξε ${location.host}/enroll και πληκτρολόγησέ τον.`);
+      `Ισχύει ${r.expires_minutes} λεπτά. Στο tablet ανοίξτε ${location.host}/enroll και πληκτρολογήστε τον.`);
     ev.target.reset();
   }));
 
@@ -2190,12 +2190,12 @@
     const lines = [];
     const em = r.employer;
     if (r.mode === "trial") lines.push(el("div", { class: "er-line warn" },
-      "Αυτά είναι τα στοιχεία του ΔΟΚΙΜΑΣΤΙΚΟΥ ΕΡΓΑΝΗ (trialv2eservices), όχι του πραγματικού. Μην κάνεις εισαγωγή ή απενεργοποίηση με βάση αυτή τη λίστα."));
+      "Αυτά είναι τα στοιχεία του ΔΟΚΙΜΑΣΤΙΚΟΥ ΕΡΓΑΝΗ (trialv2eservices), όχι του πραγματικού. Μην κάνετε εισαγωγή ή απενεργοποίηση με βάση αυτή τη λίστα."));
     lines.push(el("div", { class: "er-line " + (em.afm_matches ? "" : "bad") },
       `Εργοδότης: ${em.name || "—"} · ` + (em.afm_matches ? "ο ΑΦΜ ταιριάζει ✓" : "ο ΑΦΜ ΔΕΝ ταιριάζει με το ΑΦΜ στις «Ρυθμίσεις»")));
     lines.push(el("div", { class: "er-line " + (em.in_card_sector === true ? "" : "warn") },
       em.in_card_sector === true ? "Η επιχείρηση είναι ενταγμένη στην ψηφιακή κάρτα ✓"
-        : em.in_card_sector === false ? "Το ΕΡΓΑΝΗ δεν δείχνει ακόμα ένταξη στην ψηφιακή κάρτα — ρώτα τον λογιστή."
+        : em.in_card_sector === false ? "Το ΕΡΓΑΝΗ δεν δείχνει ακόμα ένταξη στην ψηφιακή κάρτα — ρωτήστε τον λογιστή."
         : "Δεν επιστράφηκε ένδειξη ένταξης στην κάρτα."));
     const found = r.branches.find(b => b.number === r.configured_branch);
     lines.push(el("div", { class: "er-line " + (found ? "" : "bad") },
@@ -2254,7 +2254,7 @@
           differs ? el("span", { class: "erp-status new" }, "⚠ άλλες ώρες στην Karta") : null),
         el("dl", { class: "erp-facts" }, ...rows.flatMap(([k, v]) => [el("dt", {}, k), el("dd", {}, v)])),
         p.status === "name_differs" ? el("p", { class: "small" }, `Στην εφαρμογή: ${p.app_name} → θα γίνει όπως στο ΕΡΓΑΝΗ.`) : null,
-        p.status === "new" ? el("label", { class: "erp-tablet" }, "Όνομα στο tablet (βάλε τόνους) ", name) : null);
+        p.status === "new" ? el("label", { class: "erp-tablet" }, "Όνομα στο tablet (βάλτε τόνους) ", name) : null);
       cb.addEventListener("click", ev => ev.stopPropagation());
       det.dataset.name = `${p.last_name} ${p.first_name}`.toLocaleLowerCase("el");
       return det;
@@ -2267,7 +2267,7 @@
       const res = await api("/admin/api/ergani/import", { people });
       if (res.created.length) {
         pinsBox.replaceChildren(el("div", { class: "pins" },
-          el("p", { class: "small" }, "PIN των νέων εργαζομένων — δώσ' τα στον καθένα. Τα ξαναβλέπεις με «Εμφάνιση PIN» στους Εργαζόμενους, ή τα αλλάζεις με «Ορισμός PIN»."),
+          el("p", { class: "small" }, "PIN των νέων εργαζομένων — δώστε τα στον καθένα. Τα ξαναβλέπετε με «Εμφάνιση PIN» στους Εργαζόμενους, ή τα αλλάζετε με «Ορισμός PIN»."),
           ...res.created.map(c => el("div", {}, c.name, el("strong", {}, c.pin.replace(/(\d{3})(\d{3})/, "$1 $2"))))));
       }
       toast(`Έτοιμο: ${res.created.length} νέοι, ${people.length - res.created.length} ενημερώθηκαν`);

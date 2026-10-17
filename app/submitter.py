@@ -234,18 +234,18 @@ def _alert_failure(row, kind: str | None, error: str, attempts: int) -> None:
     if kind == "rejected":
         monitor.raise_alert("ergani_rejected", row["employee_id"], now.date(), "urgent",
                             f"{row['display_name']}: το ΕΡΓΑΝΗ απέρριψε την {what} {when}{test}: «{_ergani_text(error)}». "
-                            "Η κίνηση κρατιέται και ξαναστέλνεται αυτόματα — διόρθωσε το στοιχείο στο ΕΡΓΑΝΗ (π.χ. μέσω λογιστή).",
+                            "Η κίνηση κρατιέται και ξαναστέλνεται αυτόματα — διορθώστε το στοιχείο στο ΕΡΓΑΝΗ (π.χ. μέσω λογιστή).",
                             None, now)
     elif kind == "auth":
         monitor.raise_alert("ergani_auth", None, now.date(), "urgent",
                             f"Το ΕΡΓΑΝΗ δεν δέχεται τα στοιχεία σύνδεσης{test}: «{_ergani_text(error)}». "
-                            "Οι κινήσεις κρατιούνται και ξαναστέλνονται — έλεγξε χρήστη/κωδικό web services στο .env.", None, now)
+                            "Οι κινήσεις κρατιούνται και ξαναστέλνονται — ελέγξτε χρήστη/κωδικό web services στο .env.", None, now)
     elif kind == "uncertain":
         # one alert per attempt: if a «Νέα αποστολή» times out again the same day, it must alert again
         monitor.raise_alert(f"{uncertain_alert_prefix(row['id'])}{attempts}", row["employee_id"], now.date(), "urgent",
                             f"{row['display_name']}: δεν ξέρουμε αν η {what} {when}{test} έφτασε στο ΕΡΓΑΝΗ "
                             f"(«{_ergani_text(error)[:160]}»). ΔΕΝ ξαναστέλνεται αυτόματα, για να μη γίνει διπλή κίνηση. "
-                            "Έλεγξε στο ΕΡΓΑΝΗ και πάτα στη διαχείριση «Υπάρχει στο ΕΡΓΑΝΗ» ή «Νέα αποστολή».", None, now)
+                            "Ελέγξτε στο ΕΡΓΑΝΗ και πατήστε στη διαχείριση «Υπάρχει στο ΕΡΓΑΝΗ» ή «Νέα αποστολή».", None, now)
     elif kind == "down" and attempts == 3:
         monitor.raise_alert("ergani_down", None, now.date(), "warning",
                             f"Το ΕΡΓΑΝΗ δεν απαντά (3 προσπάθειες για {row['display_name']} {what} {when}){test}. "

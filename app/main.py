@@ -144,7 +144,7 @@ def notify_closed(emp, closed) -> None:
         monitor.raise_alert("closed_punch", emp["id"], now.date(), "warning",
                             f"{emp['display_name']}: προσπάθησε να χτυπήσει προσέλευση στις {now:%H:%M}, ενώ σήμερα "
                             f"{closed['label'][0].lower() + closed['label'][1:]}. Δεν καταγράφηκε. Αν πρέπει να δουλέψει, "
-                            "δήλωσε ΠΡΩΤΑ ωράριο για σήμερα στο ΕΡΓΑΝΗ και μετά πέρασέ το στη διαχείριση "
+                            "δηλώστε ΠΡΩΤΑ ωράριο για σήμερα στο ΕΡΓΑΝΗ και μετά περάστε το στη διαχείριση "
                             "(«Υπερωρία / αλλαγή ημέρας…»).", None, now)
     except Exception:
         log.exception("closed_punch alert failed")
@@ -177,8 +177,8 @@ def notify_early(emp, early) -> None:
     try:
         monitor.raise_alert("early_punch", emp["id"], now.date(), "warning",
                             f"{emp['display_name']}: προσπάθησε να χτυπήσει προσέλευση στις {now:%H:%M}, πριν από την έναρξη "
-                            f"του ωραρίου ({early['start']}). Δεν καταγράφηκε. Αν πρέπει να ξεκινήσει νωρίτερα, δήλωσε ΠΡΩΤΑ "
-                            "αλλαγή ωραρίου στο ΕΡΓΑΝΗ και μετά πάτα «Νωρίτερη προσέλευση σήμερα» στη διαχείριση.", None, now)
+                            f"του ωραρίου ({early['start']}). Δεν καταγράφηκε. Αν πρέπει να ξεκινήσει νωρίτερα, δηλώστε ΠΡΩΤΑ "
+                            "αλλαγή ωραρίου στο ΕΡΓΑΝΗ και μετά πατήστε «Νωρίτερη προσέλευση σήμερα» στη διαχείριση.", None, now)
     except Exception:
         log.exception("early_punch alert failed")
 
@@ -560,7 +560,7 @@ def kiosk_leaving_unpunched(body: LeavingIn, request: Request):
         monitor.resolve_employee(emp["id"], now)     # the «δεν χτύπησε προσέλευση» banners: you are told now
         monitor.raise_alert("left_unpunched", emp["id"], now.date(), "warning",
                             f"{emp['display_name']}: φεύγει στις {now:%H:%M} χωρίς να έχει χτυπήσει προσέλευση σήμερα{when}. "
-                            "Δεν καταγράφηκε και δεν στάλθηκε τίποτα στο ΕΡΓΑΝΗ. Αν δούλεψε, πέρασε τη βάρδια "
+                            "Δεν καταγράφηκε και δεν στάλθηκε τίποτα στο ΕΡΓΑΝΗ. Αν δούλεψε, περάστε τη βάρδια "
                             "«μόνο στην κάρτα» από τη διαχείριση («Ξεχασμένη βάρδια…»).", None, now)
     except Exception:
         log.exception("left_unpunched alert failed")
@@ -740,7 +740,7 @@ def admin_first_steps(body: FirstStepIn, admin: str = Depends(security.require_a
 def admin_ntfy_test(admin: str = Depends(security.require_admin)):
     """Sends a test phone notification right away and says whether ntfy accepted it."""
     if not (config.NTFY_URL and config.NTFY_TOPIC):
-        raise HTTPException(status_code=409, detail="Οι ειδοποιήσεις κινητού δεν είναι ρυθμισμένες: συμπλήρωσε server και θέμα στις «Ρυθμίσεις».")
+        raise HTTPException(status_code=409, detail="Οι ειδοποιήσεις κινητού δεν είναι ρυθμισμένες: συμπληρώστε server και θέμα στις «Ρυθμίσεις».")
     try:
         monitor.ntfy_post("Κάρτα: δοκιμή", "Δοκιμαστική ειδοποίηση από τη σελίδα διαχείρισης. Αν τη βλέπετε, όλα είναι σωστά.", "info")
     except Exception as e:
@@ -1153,7 +1153,7 @@ def admin_show_pin(employee_id: int, admin: str = Depends(security.require_admin
     pin = security.open_pin(emp["pin_enc"])
     if pin is None:
         raise HTTPException(status_code=409, detail=f"Το PIN του/της {emp['display_name']} ορίστηκε πριν ενεργοποιηθεί η προβολή "
-                                                    "και δεν μπορεί να εμφανιστεί. Πάτα «Νέο PIN» ή «Ορισμός PIN» μία φορά.")
+                                                    "και δεν μπορεί να εμφανιστεί. Πατήστε «Νέο PIN» ή «Ορισμός PIN» μία φορά.")
     db.audit(admin, "pin_viewed", f"employee={employee_id}")
     return {"name": emp["display_name"], "pin": pin}
 
@@ -1242,7 +1242,7 @@ def admin_depart(employee_id: int, body: DepartIn, admin: str = Depends(security
         past_day = arrived.date() != now.date()
         if past_day and not body.at:
             # "now" would mean a shift running across midnight(s) up to today
-            raise HTTPException(status_code=400, detail=f"Η προσέλευση είναι της {arrived:%d/%m}: γράψε την ώρα που "
+            raise HTTPException(status_code=400, detail=f"Η προσέλευση είναι της {arrived:%d/%m}: γράψτε την ώρα που "
                                                         f"έφυγε εκείνη την ημέρα.")
         if body.at:
             h, m = map(int, body.at.split(":"))
@@ -1259,9 +1259,9 @@ def admin_depart(employee_id: int, body: DepartIn, admin: str = Depends(security
         onb = target["status"] == onboarding.STATUS
         if body.local:
             if not body.at:
-                raise HTTPException(status_code=400, detail="Γράψε την ώρα που έφυγε.")
+                raise HTTPException(status_code=400, detail="Γράψτε την ώρα που έφυγε.")
             if not note:
-                raise HTTPException(status_code=400, detail="Γράψε μια σημείωση (π.χ. «ξέχασε να χτυπήσει αποχώρηση»).")
+                raise HTTPException(status_code=400, detail="Γράψτε μια σημείωση (π.χ. «ξέχασε να χτυπήσει αποχώρηση»).")
             cur = c.execute(
                 """INSERT INTO movements(employee_id, type, movement_at, created_at, device_id, client_ip,
                                          mode, status, next_attempt_at, auth_method, note)
@@ -1271,7 +1271,7 @@ def admin_depart(employee_id: int, body: DepartIn, admin: str = Depends(security
             movement_id = cur.lastrowid
         late = (now - when).total_seconds() > config.LATE_THRESHOLD_SECONDS
         if not body.local and not onb and late and not body.justification:
-            raise HTTPException(status_code=400, detail="Αποχώρηση σε προηγούμενη ώρα = εκπρόθεσμη δήλωση: διάλεξε αιτιολογία ΕΡΓΑΝΗ "
+            raise HTTPException(status_code=400, detail="Αποχώρηση σε προηγούμενη ώρα = εκπρόθεσμη δήλωση: διαλέξτε αιτιολογία ΕΡΓΑΝΗ "
                                                         "(μόνο αν υπήρξε πραγματικό τεχνικό πρόβλημα) ή «Ξέχασε να χτυπήσει».")
         if not body.local:
             cur = c.execute(
@@ -1414,7 +1414,7 @@ def admin_local_shift(employee_id: int, body: LocalShiftIn, admin: str = Depends
         raise HTTPException(status_code=404)
     note = body.note.strip()
     if not note:
-        raise HTTPException(status_code=400, detail="Γράψε μια σημείωση.")
+        raise HTTPException(status_code=400, detail="Γράψτε μια σημείωση.")
     try:
         day = datetime.fromisoformat(body.day).date()
         a = datetime.fromisoformat(f"{body.day}T{body.start}:00")
@@ -1433,7 +1433,7 @@ def admin_local_shift(employee_id: int, body: LocalShiftIn, admin: str = Depends
         for s_, e_ in hours.intervals(rows, None):
             if e_ is None or (s_ < b and a < e_):
                 raise HTTPException(status_code=409, detail="Εκείνη την ημέρα υπάρχει ήδη κίνηση σε αυτές τις ώρες "
-                                                            "(ή ανοιχτή προσέλευση). Κλείσε πρώτα εκείνη.")
+                                                            "(ή ανοιχτή προσέλευση). Κλείστε πρώτα εκείνη.")
         for r in rows:
             if a <= datetime.fromisoformat(r["movement_at"]) <= b:
                 raise HTTPException(status_code=409, detail="Εκείνη την ημέρα υπάρχει ήδη κίνηση σε αυτές τις ώρες.")
@@ -1674,9 +1674,9 @@ def admin_local_holidays(body: LocalHolidaysIn, admin: str = Depends(security.re
         try:
             _date.fromisoformat(f"2024-{md}")          # leap year: 02-29 allowed
         except ValueError:
-            raise HTTPException(status_code=400, detail="Γράψε την ημερομηνία ως ημέρα/μήνα.")
+            raise HTTPException(status_code=400, detail="Γράψτε την ημερομηνία ως ημέρα/μήνα.")
         if len(name) < 2:
-            raise HTTPException(status_code=400, detail="Γράψε όνομα για την τοπική αργία.")
+            raise HTTPException(status_code=400, detail="Γράψτε όνομα για την τοπική αργία.")
         out.append({"md": md, "name": name})
     with db.tx() as c:
         db.put_setting(c, "local_holidays", json.dumps(out, ensure_ascii=False))
@@ -1710,7 +1710,7 @@ def admin_day_change(employee_id: int, body: DayChangeIn, admin: str = Depends(s
         except ValueError:
             sp = None
         if sp is None:
-            raise HTTPException(status_code=400, detail="Γράψε το ωράριο της ημέρας, π.χ. 10:00-18:30/+30 ή 10:00-19:00/30.")
+            raise HTTPException(status_code=400, detail="Γράψτε το ωράριο της ημέρας, π.χ. 10:00-18:30/+30 ή 10:00-19:00/30.")
         text = sp.text
     with db.tx() as c:
         c.execute("INSERT INTO day_changes(employee_id, day, kind, text, note, created_at, created_by) VALUES (?,?,?,?,?,?,?) "
@@ -1853,7 +1853,7 @@ def admin_delete_employee(employee_id: int, admin: str = Depends(security.requir
     if real:
         raise HTTPException(status_code=409, detail=(
             f"{emp['display_name']}: υπάρχουν {real} πραγματικές κινήσεις κάρτας (ΕΡΓΑΝΗ παραγωγής). "
-            "Το αρχείο χρόνου εργασίας πρέπει να διατηρείται, οπότε δεν διαγράφεται — χρησιμοποίησε «Απενεργοποίηση»."))
+            "Το αρχείο χρόνου εργασίας πρέπει να διατηρείται, οπότε δεν διαγράφεται — χρησιμοποιήστε «Απενεργοποίηση»."))
     with db.tx() as c:
         tests = c.execute("DELETE FROM movements WHERE employee_id=?", (employee_id,)).rowcount
         for table in ("alerts", "schedule_versions", "ergani_info", "ergani_week", "card_links", "leaves", "day_changes"):
@@ -1988,8 +1988,8 @@ def admin_set_schedule(employee_id: int, body: ScheduleIn, admin: str = Depends(
             span = hours.parse_span(text)
         except ValueError:
             raise HTTPException(status_code=400,
-                                detail=f"{hours.WEEKDAYS[int(wd)]}: γράψε το ωράριο ως 10:00-18:00 ή 10:00-18:30/30 "
-                                       f"(διάλειμμα σε λεπτά), σπαστό ως 10:00-14:00+17:00-21:00, ή άφησέ το κενό")
+                                detail=f"{hours.WEEKDAYS[int(wd)]}: γράψτε το ωράριο ως 10:00-18:00 ή 10:00-18:30/30 "
+                                       f"(διάλειμμα σε λεπτά), σπαστό ως 10:00-14:00+17:00-21:00, ή αφήστε το κενό")
         if span:
             parsed[int(wd)] = span
     today = now_local().date()
@@ -2323,7 +2323,7 @@ def admin_salon_hours(body: ScheduleIn, admin: str = Depends(security.require_ad
         try:
             span = hours.parse_span(text)
         except ValueError:
-            raise HTTPException(status_code=400, detail=f"{hours.WEEKDAYS[int(wd)]}: γράψε π.χ. 10:00-21:00 ή κενό αν είναι κλειστά")
+            raise HTTPException(status_code=400, detail=f"{hours.WEEKDAYS[int(wd)]}: γράψτε π.χ. 10:00-21:00 ή κενό αν είναι κλειστά")
         if span:
             clean[wd] = "+".join(f"{a}-{b}" for a, b in span.segments)
     with db.tx() as c:

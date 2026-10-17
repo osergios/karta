@@ -24,7 +24,7 @@ class ErganiReadError(Exception):
 READ_DEADLINE = 60
 _reader = ThreadPoolExecutor(max_workers=2, thread_name_prefix="ergani-read")
 SLOW = ("Το ΕΡΓΑΝΗ δεν απάντησε μέσα σε {s} δευτερόλεπτα. Συμβαίνει όταν είναι φορτωμένο· "
-        "δοκίμασε ξανά σε λίγα λεπτά.")
+        "δοκιμάστε ξανά σε λίγα λεπτά.")
 
 
 def _within_deadline(fn):
@@ -75,7 +75,7 @@ def fetch() -> dict:
     except AuthenticationError as e:
         from .setup import auth_error_text, ergani_unavailable
         hint = "" if ergani_unavailable(e) else \
-            " Έλεγξε όνομα χρήστη/κωδικό και ότι είναι για το σωστό περιβάλλον (παραγωγή ή trial)."
+            " Ελέγξτε όνομα χρήστη/κωδικό και ότι είναι για το σωστό περιβάλλον (παραγωγή ή trial)."
         raise ErganiReadError(f"Η σύνδεση στο ΕΡΓΑΝΗ απέτυχε: {auth_error_text(e)}.{hint}")
     except APIError as e:
         raise ErganiReadError(f"Σφάλμα ΕΡΓΑΝΗ: {e}")
