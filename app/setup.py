@@ -131,6 +131,40 @@ def write_env(path: str, env: dict) -> str | None:
 
 # ------------------------------------------------------------------ Ergani
 
+def ergani_unavailable(e) -> bool:
+    """A failed login that is Ergani's side (down, maintenance), not wrong credentials: HTTP 5xx, or its maintenance
+    page («ΠΣ ΕΡΓΑΝΗ — Προσωρινή συντήρηση», whatever the status)."""
+    resp = getattr(e, "response", None)
+    code = getattr(resp, "status_code", None)
+    body = (getattr(resp, "text", "") or "")[:5000].lower()
+    return (code is not None and code >= 500) or "συντήρηση" in body or "maintenance" in body
+
+
+def auth_error_text(e) -> str:
+    """A failed Ergani login in plain Greek, with the HTTP status. The SDK drops the status from its message when the
+    reply is an error (`if self.response:` is False for a 4xx/5xx Response), so a reply without a message of its own
+    read as just «Error message:»."""
+    resp = getattr(e, "response", None)
+    code = getattr(resp, "status_code", None)
+    said = str(getattr(e, "message", None) or "").strip()
+    if said.startswith("<"):          # an HTML page (e.g. Ergani's maintenance page), not a message
+        said = ""
+    if code is None:
+        return said or str(e)
+    body = (getattr(resp, "text", "") or "")[:5000].lower()
+    if "συντήρηση" in body or "maintenance" in body:
+        return f"το ΕΡΓΑΝΗ είναι σε συντήρηση· δοκιμάστε ξανά αργότερα (HTTP {code})"
+    if code >= 500:
+        why = "το ΕΡΓΑΝΗ δεν είναι διαθέσιμο αυτή τη στιγμή (συνήθως προσωρινό, π.χ. συντήρηση)· δοκιμάστε ξανά αργότερα"
+    elif code in (400, 401, 403):
+        why = "λάθος όνομα χρήστη, κωδικός ή τύπος χρήστη, ή ο χρήστης δεν είναι ενεργός για web services"
+    elif code == 429:
+        why = "πολλές προσπάθειες σύνδεσης· δοκιμάστε ξανά σε λίγα λεπτά"
+    else:
+        why = "απρόσμενη απάντηση"
+    return f"{why} (HTTP {code}{': ' + said if said else ''})"
+
+
 def ergani_login(username: str, password: str, user_type: str, base_url: str = ERGANI_PRODUCTION) -> tuple[bool, str]:
     """Tries to log in (read-only: nothing is submitted). Returns (ok, message)."""
     os.environ["ERGANI_USER_TYPE"] = user_type        # read by the vendored SDK at login
@@ -142,7 +176,7 @@ def ergani_login(username: str, password: str, user_type: str, base_url: str = E
         ErganiAuthentication(username, password, base_url=base_url)
         return True, "η σύνδεση στο ΕΡΓΑΝΗ πέτυχε"
     except AuthenticationError as e:
-        return False, f"το ΕΡΓΑΝΗ απέρριψε τη σύνδεση: {e}"
+        return False, f"η σύνδεση στο ΕΡΓΑΝΗ απέτυχε: {auth_error_text(e)}"
     except requests.RequestException as e:
         return False, f"δεν απαντά το ΕΡΓΑΝΗ ({type(e).__name__}). Ελέγξτε τη σύνδεση στο internet."
     finally:

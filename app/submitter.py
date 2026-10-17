@@ -115,7 +115,11 @@ def process(movement_id: int, force: bool = False):
         try:
             result = _get_client().submit_work_card(company_work_cards=payload)
         except AuthenticationError as e:
-            reason, error, kind = "EMPLOYER_SYSTEMS_UNAVAILABLE", f"AuthenticationError: {e}", "auth"
+            from .setup import auth_error_text, ergani_unavailable
+            if ergani_unavailable(e):       # the login failed because Ergani is down / in maintenance
+                reason, error, kind = "ERGANI_SYSTEMS_UNAVAILABLE", f"Ergani login: {auth_error_text(e)}", "down"
+            else:
+                reason, error, kind = "EMPLOYER_SYSTEMS_UNAVAILABLE", f"AuthenticationError: {auth_error_text(e)}", "auth"
         except APIError as e:
             code = getattr(getattr(e, "response", None), "status_code", None)
             # the SDK drops the status code from the text of error responses (a Response is falsy on 4xx/5xx)
@@ -152,14 +156,20 @@ def process(movement_id: int, force: bool = False):
             except Exception:
                 log.exception("failure alert failed")
         else:
-            status = "failed" if attempts >= config.MAX_SUBMIT_ATTEMPTS else "pending"
+            # While Ergani is down (an outage, a maintenance of many hours) Karta never gives up: it tries again every
+            # 15 minutes. Only a refusal (wrong data, wrong login) ends as «Απέτυχε» after MAX_SUBMIT_ATTEMPTS.
+            status = "failed" if attempts >= config.MAX_SUBMIT_ATTEMPTS and kind != "down" else "pending"
             next_at = (datetime.now(timezone.utc) + timedelta(seconds=_retry_delay(attempts))
                        ).strftime("%Y-%m-%dT%H:%M:%S")
             with db.tx() as c:
+                # the first reason stays (it is the late justification sent to Ergani), except one an Ergani
+                # maintenance used to record as a login problem (until 1.9.1): it is Ergani's side
                 c.execute(
                     """UPDATE movements SET status=?, attempts=?, next_attempt_at=?,
-                       pending_reason=COALESCE(pending_reason, ?), last_error=? WHERE id=?""",
-                    (status, attempts, next_at, reason, error[:1000], movement_id))
+                       pending_reason=CASE WHEN pending_reason IS NULL OR (? = 'ERGANI_SYSTEMS_UNAVAILABLE'
+                           AND pending_reason = 'EMPLOYER_SYSTEMS_UNAVAILABLE' AND last_error LIKE 'AuthenticationError%')
+                           THEN ? ELSE pending_reason END, last_error=? WHERE id=?""",
+                    (status, attempts, next_at, reason, reason, error[:1000], movement_id))
             log.warning("Movement %s attempt %s failed: %s", movement_id, attempts, error)
             try:
                 _alert_failure(row, kind, error, attempts)
