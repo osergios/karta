@@ -73,7 +73,8 @@ def fetch() -> dict:
     except ErganiReadError:
         raise
     except AuthenticationError as e:
-        raise ErganiReadError(f"Το ΕΡΓΑΝΗ απέρριψε τα στοιχεία σύνδεσης ({e}). "
+        from .setup import auth_error_text
+        raise ErganiReadError(f"Η σύνδεση στο ΕΡΓΑΝΗ απέτυχε: {auth_error_text(e)}. "
                               "Έλεγξε όνομα χρήστη/κωδικό και ότι είναι για το σωστό περιβάλλον (παραγωγή ή trial).")
     except APIError as e:
         raise ErganiReadError(f"Σφάλμα ΕΡΓΑΝΗ: {e}")
@@ -326,7 +327,8 @@ def services() -> list[dict]:
     except ErganiReadError:
         raise
     except AuthenticationError as e:
-        raise ErganiReadError(f"Το ΕΡΓΑΝΗ απέρριψε τα στοιχεία σύνδεσης ({e}).")
+        from .setup import auth_error_text
+        raise ErganiReadError(f"Η σύνδεση στο ΕΡΓΑΝΗ απέτυχε: {auth_error_text(e)}.")
     except Exception as e:
         raise ErganiReadError(f"Δεν ήταν δυνατή η ανάγνωση της λίστας υπηρεσιών ({type(e).__name__}: {e})")
     found: list[dict] = []
@@ -438,7 +440,8 @@ def _day_query(code: str, key: str, day) -> list[dict]:
     except ErganiReadError:
         raise
     except AuthenticationError as e:
-        raise ErganiReadError(f"Το ΕΡΓΑΝΗ απέρριψε τα στοιχεία σύνδεσης ({e}).")
+        from .setup import auth_error_text
+        raise ErganiReadError(f"Η σύνδεση στο ΕΡΓΑΝΗ απέτυχε: {auth_error_text(e)}.")
     except APIError as e:
         if "criteria" in str(e).lower():
             raise ErganiReadError(NOT_YET.format(m=f"{day:%m/%Y}", d=f"{first_available(day):%d/%m/%Y}"))

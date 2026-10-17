@@ -667,3 +667,21 @@ database, encryption password, PIN_KEY — and showed these:
      weekly hours, break etc. are Ergani's current staff data). The «Ωράρια» card says so in a warning («⚠ Οι ώρες ανά
      ημέρα είναι του ψηφιακού ωραρίου που ίσχυε 17/09–30/09/2026…»), «Χρήση στοιχείων ΕΡΓΑΝΗ» asks before filling them
      in, and «Έλεγχος ΕΡΓΑΝΗ» labels them «όπως ίσχυαν … · μπορεί να άλλαξαν από τότε».
+
+# Ergani in maintenance (v1.9.2)
+
+Found on a Saturday, 17/10/2026, with Ergani showing «ΠΣ ΕΡΓΑΝΗ — Προσωρινή συντήρηση».
+
+131. **The right late justification when Ergani is down.** A failed login was always taken for a login problem: the
+     punch was queued with «002 Πρόβλημα στα συστήματα του εργοδότη» as its late justification (what Ergani gets when it
+     is finally sent) and the admin got «Το ΕΡΓΑΝΗ δεν δέχεται τα στοιχεία σύνδεσης… έλεγξε χρήστη/κωδικό». A login that
+     fails with HTTP 5xx or Ergani's maintenance page is now Ergani's side: «003 Πρόβλημα στα συστήματα του ΕΡΓΑΝΗ», the
+     alert «Το ΕΡΓΑΝΗ δεν απαντά», and a reason the old classification recorded is corrected on the next attempt
+     (`setup.ergani_unavailable`).
+132. **No giving up while Ergani is down.** After 30 attempts (about 6 hours) a punch became «Απέτυχε» and waited for a
+     manual resend; a long maintenance could do that. While Ergani is down a punch now stays «Σε αναμονή» and is tried
+     every 15 minutes until it goes through; only a refusal (wrong data, wrong login) ends as «Απέτυχε».
+133. **A failed login says what happened.** The SDK drops the HTTP status from its message for an error reply, so a reply
+     without a message of its own read «✗ το ΕΡΓΑΝΗ απέρριψε τη σύνδεση: Error message:». Now: «σε συντήρηση», «δεν
+     είναι διαθέσιμο (HTTP 503)» or «λάθος όνομα χρήστη, κωδικός ή τύπος χρήστη (HTTP 401)» (`setup.auth_error_text`),
+     in «Δοκιμή σύνδεσης», the mode switch and every reading from Ergani.
