@@ -714,3 +714,12 @@ Found on a Saturday, 17/10/2026, with Ergani showing «ΠΣ ΕΡΓΑΝΗ — Π�
 139. **The admin side says «εσείς».** The admin page, its alerts (phone too), errors and the accountant's report mixed
      «Πάτα / Γράψε / σου» with «Πατήστε / Γράψτε / σας»; now always «εσείς», like the wiki. What the employees read
      stays friendly («εσύ»): the shop screen, the card page on their phone and the message with their card link.
+
+# Next
+
+140. **Two weekly hours in Ergani, told apart.** Ergani keeps the weekly hours of the employment record (hiring / last
+     change, «WeekHours») apart from the digital schedule. They can differ — 35 in the record, 34 in the days — and
+     Karta showed «35 ώρες/εβδ.» next to days adding up to 34 without a word, which looked like a wrong sum. Now it
+     says «35 ώρες/εβδ. (στοιχεία πρόσληψης)», «Έλεγχος ΕΡΓΑΝΗ» marks the person «⚠ 34ω αντί 35ω» with a line
+     «Διαφορά μέσα στο ΕΡΓΑΝΗ», and in «Ωράρια», when Karta has exactly Ergani's days, the warning says the gap is
+     inside Ergani and to ask the accountant (record change or schedule).
