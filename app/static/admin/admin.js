@@ -1244,6 +1244,24 @@
   // break «εκτός ωραρίου» (/+30): outside the declared hours, so they are all paid; inside (/30): deducted after 4h
   const netMin = sp => { const g = sp.g; return sp.bo ? g : g - Math.min(sp.b, Math.max(0, g - 240)); };
   const H = m => { m = Math.round(m); const h = Math.floor(m / 60), r = m % 60; return r ? `${h}ω ${String(r).padStart(2, "0")}λ` : `${h}ω`; };
+  // Ergani keeps two things apart: the weekly hours of the employment record (hiring / last change, «WeekHours») and
+  // the digital schedule (the hours of each day). What the digital schedule adds up to, counted the way Ergani counts
+  // the weekly hours (a break «εκτός ωραρίου» is not deducted); null when it does not say.
+  function digitalWeekMin(F) {
+    if (!F || !F.proposal) return null;
+    let t = 0;
+    for (const v of Object.values(F.proposal)) {
+      const sp = parseSpan(v || "");
+      if (!sp) continue;
+      if (sp.error) return null;
+      t += F.break_within === false ? sp.g : sp.g - Math.min(F.break_minutes || 0, Math.max(0, sp.g - 240));
+    }
+    return t;
+  }
+  // minutes of the digital schedule when they differ from the employment record (more than 15′), else null
+  const recordGap = F => { const m = digitalWeekMin(F); return m == null || F.weekly_hours == null || Math.abs(m / 60 - F.weekly_hours) <= 0.25 ? null : m; };
+  const sameDays = (a, z) => DAYS.every((_, i) => { const x = parseSpan(a[i] || ""), y = parseSpan(z[String(i)] || "");
+    return (!x && !y) || (x && y && !x.error && !y.error && x.body === y.body); });
 
   function currentLimits(fallback) {
     const out = { ...fallback };
@@ -1304,9 +1322,12 @@
         const cmp = outside ? gross : total;
         const diff = cmp / 60 - F.weekly_hours;
         const how = outside ? ` (${H(gross)} ωραρίου χωρίς να αφαιρεθεί το διάλειμμα, όπως μετρά το ΕΡΓΑΝΗ)` : "";
-        lines.push(Math.abs(diff) <= 0.25
-          ? { cls: "ok", text: `Ταιριάζει με τις ${F.weekly_hours} ώρες/εβδομάδα που είναι δηλωμένες στο ΕΡΓΑΝΗ${how} ✓` }
-          : { cls: "warn", text: `Στο ΕΡΓΑΝΗ είναι δηλωμένες ${F.weekly_hours} ώρες/εβδομάδα, εδώ ${H(cmp)}${how} (${diff > 0 ? "+" : "−"}${H(Math.abs(diff) * 60)}). Πρέπει να ταιριάζουν.` });
+        const gap = Math.abs(diff) > 0.25, inErgani = gap && F.proposal && sameDays(values, F.proposal);
+        lines.push(!gap
+          ? { cls: "ok", text: `Ταιριάζει με τις ${F.weekly_hours} ώρες/εβδομάδα των στοιχείων πρόσληψης στο ΕΡΓΑΝΗ${how} ✓` }
+          : inErgani      // Karta has exactly Ergani's digital schedule: the gap is inside Ergani
+          ? { cls: "warn", text: `Στα στοιχεία πρόσληψης του ΕΡΓΑΝΗ: ${F.weekly_hours} ώρες/εβδομάδα. Το ψηφιακό ωράριο του ΕΡΓΑΝΗ, όπως και εδώ, κάνει ${H(cmp)}${how} (${diff > 0 ? "+" : "−"}${H(Math.abs(diff) * 60)}). Η διαφορά είναι μέσα στο ΕΡΓΑΝΗ: ρωτήστε τον λογιστή αν πρέπει να αλλάξουν τα στοιχεία πρόσληψης (μεταβολή) ή το ωράριο.` }
+          : { cls: "warn", text: `Στα στοιχεία πρόσληψης του ΕΡΓΑΝΗ: ${F.weekly_hours} ώρες/εβδομάδα, εδώ ${H(cmp)}${how} (${diff > 0 ? "+" : "−"}${H(Math.abs(diff) * 60)}). Πρέπει να ταιριάζουν.` });
       }
       // the break and the flexible arrival must be the ones declared in Ergani
       const wb = work.find(x => x.sp.b), b = wb ? wb.sp.b : 0, bo = wb ? wb.sp.bo : false;
@@ -1374,7 +1395,7 @@
 
   function erganiFacts(F) {
     return [
-      F.weekly_hours != null && `${F.weekly_hours} ώρες/εβδ.`,
+      F.weekly_hours != null && `${F.weekly_hours} ώρες/εβδ. (στοιχεία πρόσληψης)`,
       F.week_days && `${F.week_days}ήμερο`,
       F.full_time === true ? "πλήρης" : F.full_time === false ? "μερική" : null,
       F.break_minutes != null && `διάλειμμα ${F.break_minutes}′${F.break_within === true ? " εντός ωραρίου" : F.break_within === false ? " εκτός ωραρίου" : ""}`,
@@ -2235,6 +2256,7 @@
         ["Στοιχεία ΕΡΓΑΝΗ", erganiFacts(F)],
         F.proposal ? [F.proposal_week ? `Ώρες ανά ημέρα (όπως ίσχυαν ${dmy(F.proposal_week.from)}–${dmy(F.proposal_week.to)}· μπορεί να άλλαξαν από τότε)` : "Ώρες ανά ημέρα",
                       ERGANI_DAYS(F.proposal)] : null,
+        recordGap(F) != null ? ["⚠ Διαφορά μέσα στο ΕΡΓΑΝΗ", `Οι ημέρες του ψηφιακού ωραρίου κάνουν ${H(recordGap(F))}, ενώ τα στοιχεία πρόσληψης γράφουν ${F.weekly_hours} ώρες/εβδ. Ρωτήστε τον λογιστή ποιο ισχύει (αν εκείνη η εβδομάδα είχε αργία ή αλλαγή, μπορεί να μην είναι η συνηθισμένη).`] : null,
         !F.proposal && F.digital ? ["Ώρες ανά ημέρα", "δεν βρέθηκαν στο ψηφιακό ωράριο των τελευταίων ημερών που δίνει το ΕΡΓΑΝΗ"] : null,
         !F.proposal && F.schedule_text ? ["Ωράριο (κείμενο ΕΡΓΑΝΗ)", F.schedule_text] : null,
       ].filter(Boolean);
@@ -2242,8 +2264,7 @@
       if (p.employee_id && lastD) {
         const cur = (lastD.schedules || {})[String(p.employee_id)] || {};
         const mine = DAYS.map((_, i) => cur[String(i)] || "");
-        const same = F.proposal && DAYS.every((_, i) => { const a = parseSpan(mine[i]), z = parseSpan(F.proposal[String(i)] || "");
-          return (!a && !z) || (a && z && !a.error && !z.error && a.body === z.body); });
+        const same = F.proposal && sameDays(mine, F.proposal);
         differs = !!F.proposal && !same;
         rows.push(["Στην Karta", weekText(mine) + (F.proposal ? (same ? " — ίδιες ώρες ✓" : " — διαφέρουν από το ΕΡΓΑΝΗ") : "")]);
       }
@@ -2251,7 +2272,8 @@
         el("summary", {}, cb, el("span", { class: "erp-name" }, el("strong", {}, `${p.last_name} ${p.first_name}`),
             el("span", { class: "sub" }, `ΑΦΜ …${p.afm.slice(-3)} · παράρτημα #${p.branch ?? "—"}${p.in_branch ? "" : " (άλλο παράρτημα)"}`)),
           el("span", { class: `erp-status ${p.status}` }, STATUS_TXT[p.status]), el("span", { class: "erp-short" }, short || "—"),
-          differs ? el("span", { class: "erp-status new" }, "⚠ άλλες ώρες στην Karta") : null),
+          differs ? el("span", { class: "erp-status new" }, "⚠ άλλες ώρες στην Karta") : null,
+          recordGap(F) != null ? el("span", { class: "erp-status new" }, `⚠ ${H(recordGap(F))} αντί ${F.weekly_hours}ω`) : null),
         el("dl", { class: "erp-facts" }, ...rows.flatMap(([k, v]) => [el("dt", {}, k), el("dd", {}, v)])),
         p.status === "name_differs" ? el("p", { class: "small" }, `Στην εφαρμογή: ${p.app_name} → θα γίνει όπως στο ΕΡΓΑΝΗ.`) : null,
         p.status === "new" ? el("label", { class: "erp-tablet" }, "Όνομα στο tablet (βάλτε τόνους) ", name) : null);
