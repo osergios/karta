@@ -77,9 +77,9 @@ def clean(client):
 @pytest.fixture
 def clock(monkeypatch):
     """Freeze 'now' for every module that imported now_local."""
-    from app import erganiread, monitor, onboarding, report, submitter, timeutil
+    from app import erganicheck, erganiread, monitor, onboarding, report, submitter, timeutil
     clk = Clock(TUESDAY)
-    for mod in (timeutil, main, monitor, onboarding, report, submitter, erganiread):
+    for mod in (timeutil, main, monitor, onboarding, report, submitter, erganiread, erganicheck):
         monkeypatch.setattr(mod, "now_local", clk)
     return clk
 
