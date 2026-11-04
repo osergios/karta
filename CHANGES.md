@@ -715,7 +715,7 @@ Found on a Saturday, 17/10/2026, with Ergani showing «ΠΣ ΕΡΓΑΝΗ — Π�
      «Πάτα / Γράψε / σου» with «Πατήστε / Γράψτε / σας»; now always «εσείς», like the wiki. What the employees read
      stays friendly («εσύ»): the shop screen, the card page on their phone and the message with their card link.
 
-# Next
+# Two weekly hours in Ergani (v1.10.1)
 
 140. **Two weekly hours in Ergani, told apart.** Ergani keeps the weekly hours of the employment record (hiring / last
      change, «WeekHours») apart from the digital schedule. They can differ — 35 in the record, 34 in the days — and
